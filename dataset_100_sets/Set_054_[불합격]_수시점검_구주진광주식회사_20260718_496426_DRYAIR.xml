@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<QIRReport schema="kepco-qir-switchgear.v0.2">
+  <Header>
+    <SpecID>DRYAIR</SpecID>
+    <GSNo>GS-5925-0157</GSNo>
+    <Material>25.8kV Dry-air 절연 부하개폐기(지중용)</Material>
+    <Variant>3회로 수동형(127432)</Variant>
+    <Mode>수동</Mode>
+    <Install>지중</Install>
+    <Circuits>3</Circuits>
+    <Grade>B</Grade>
+    <GradeSource>기본값(미등록/미평가)</GradeSource>
+    <LotNo>496426</LotNo>
+    <Qty>13</Qty>
+    <Unit>대</Unit>
+    <Maker>구주진광 주식회사</Maker>
+    <InspectionType>수시점검</InspectionType>
+    <SerialsInput>SN-001, SN-002, SN-003, SN-004, SN-005, SN-006, SN-007, SN-008, SN-009, SN-010, SN-011, SN-012, SN-013</SerialsInput>
+    <PoolList><Pool>SN-001</Pool><Pool>SN-002</Pool><Pool>SN-003</Pool><Pool>SN-004</Pool><Pool>SN-005</Pool><Pool>SN-006</Pool><Pool>SN-007</Pool><Pool>SN-008</Pool><Pool>SN-009</Pool><Pool>SN-010</Pool><Pool>SN-011</Pool><Pool>SN-012</Pool><Pool>SN-013</Pool></PoolList>
+    <TestDates start="2026-07-18" end="2026-07-21"/>
+    <EarlyTerminated>true</EarlyTerminated>
+    <EarlyTerminatedStepIndex>3</EarlyTerminatedStepIndex>
+    <Attendants>
+      <Inspector>이영희</Inspector>
+      <Tester>서아인</Tester>
+    </Attendants>
+  </Header>
+  <Final>
+    <Judgement>불합격(중도종료)</Judgement>
+    <Remark>※ [불합격 발생] 일부 제조번호 시험수치 기준 미달로 최종 불합격 처리됨</Remark>
+  </Final>
+  <Results>
+    <Step key="appear" title="외관·구조검사">
+      <Overall>합격</Overall>
+      <Remark></Remark>
+      <Item key="ap_body" name="구조 및 외관검사(본체)" ref="7.2.1">
+        <Kind>jdg</Kind>
+        <Crit>5·6항 만족</Crit>
+        <Exempt>false</Exempt>
+        <NA>false</NA>
+        <Samp>0대</Samp>
+        <Judgement>양호</Judgement>
+        <Serials><SN>SN-001</SN><SN>SN-002</SN></Serials>
+        <Res>
+          <SNRes sn="SN-001" val="" jdg="양호">
+            <Fields></Fields>
+          </SNRes>
+          <SNRes sn="SN-002" val="" jdg="양호">
+            <Fields></Fields>
+          </SNRes>
+        </Res>
+      </Item>
+      <Item key="ap_ctrl" name="제어함 구조 및 외관검사" ref="7.2.23">
+        <Kind>jdg</Kind>
+        <Crit>5·6항 만족</Crit>
+        <Exempt>false</Exempt>
+        <NA>true</NA>
+        <Samp>해당없음</Samp>
+        <Judgement></Judgement>
+        <Res>
+        </Res>
+      </Item>
+    </Step>
+    <Step key="insul" title="절연·가스시험">
+      <Overall>합격</Overall>
+      <Remark></Remark>
+      <Item key="ac_wv" name="상용주파 내전압시험" ref="7.2.2.1">
+        <Kind>full</Kind>
+        <Crit>48kV·1분(절연캡 접지)</Crit>
+        <Exempt>false</Exempt>
+        <NA>false</NA>
+        <Samp>전량</Samp>
+        <Judgement>양호</Judgement>
+        <Full jdg="양호"><BadSerials></BadSerials></Full>
+        <Res>
+        </Res>
+      </Item>
+      <Item key="imp_wv" name="충격파 내전압시험" ref="7.2.2.2">
+        <Kind>jdg</Kind>
+        <Crit>125/165kV</Crit>
+        <Exempt>false</Exempt>
+        <NA>false</NA>
+        <Samp>0대</Samp>
+        <Judgement>양호</Judgement>
+        <Serials><SN>SN-001</SN><SN>SN-002</SN></Serials>
+        <Res>
+          <SNRes sn="SN-001" val="" jdg="양호">
+            <Fields></Fields>
+          </SNRes>
+          <SNRes sn="SN-002" val="" jdg="양호">
+            <Fields></Fields>
+          </SNRes>
+        </Res>
+      </Item>
+      <Item key="pd" name="부분방전시험" ref="7.2.2.3">
+        <Kind>measureAuto</Kind>
+        <Crit>20pC 이하</Crit>
+        <Exempt>false</Exempt>
+        <NA>false</NA>
+        <Samp>0대</Samp>
+        <Judgement>양호</Judgement>
+        <Serials><SN>SN-001</SN><SN>SN-002</SN></Serials>
+        <Res>
+          <SNRes sn="SN-001" val="6.03" jdg="양호">
+            <Fields></Fields>
+          </SNRes>
+          <SNRes sn="SN-002" val="9.03" jdg="양호">
+            <Fields></Fields>
+          </SNRes>
+        </Res>
+      </Item>
+      <Item key="mr" name="주회로 저항측정" ref="7.2.3">
+        <Kind>resistance</Kind>
+        <Crit>단자쌍별 측정(µΩ, 무전압개폐 후)</Crit>
+        <Exempt>false</Exempt>
+        <NA>false</NA>
+        <Samp>0대</Samp>
+        <Judgement>양호</Judgement>
+        <Serials><SN>SN-001</SN><SN>SN-002</SN></Serials>
+        <Res>
+          <SNRes sn="SN-001" val="" jdg="양호">
+            <Fields><Field name="A1-A2">27.7</Field><Field name="A1-A3">29</Field><Field name="A2-A3">31.3</Field><Field name="B1-B2">31.7</Field><Field name="B1-B3">26.6</Field><Field name="B2-B3">27.2</Field><Field name="C1-C2">24.4</Field><Field name="C1-C3">28</Field><Field name="C2-C3">28.4</Field></Fields>
+          </SNRes>
+          <SNRes sn="SN-002" val="" jdg="양호">
+            <Fields><Field name="A1-A2">27.8</Field><Field name="A1-A3">26</Field><Field name="A2-A3">27.8</Field><Field name="B1-B2">25.1</Field><Field name="B1-B3">26.4</Field><Field name="B2-B3">27.6</Field><Field name="C1-C2">25.2</Field><Field name="C1-C3">27.4</Field><Field name="C2-C3">30.4</Field></Fields>
+          </SNRes>
+        </Res>
+      </Item>
+      <Item key="tight" name="기밀시험" ref="7.2.7">
+        <Kind>measureAuto</Kind>
+        <Crit>연누기율 0.5% 이하</Crit>
+        <Exempt>false</Exempt>
+        <NA>false</NA>
+        <Samp>0대</Samp>
+        <Judgement>양호</Judgement>
+        <Serials><SN>SN-001</SN><SN>SN-002</SN><SN>SN-003</SN></Serials>
+        <Res>
+          <SNRes sn="SN-001" val="0.28" jdg="양호">
+            <Fields></Fields>
+          </SNRes>
+          <SNRes sn="SN-002" val="0.13" jdg="양호">
+            <Fields></Fields>
+          </SNRes>
+          <SNRes sn="SN-003" val="0.35" jdg="양호">
+            <Fields></Fields>
+          </SNRes>
+        </Res>
+      </Item>
+      <Item key="ir" name="절연저항 측정(제어회로)" ref="7.2.15">
+        <Kind>measureManual</Kind>
+        <Crit>측정</Crit>
+        <Exempt>false</Exempt>
+        <NA>false</NA>
+        <Samp>0대</Samp>
+        <Judgement>양호</Judgement>
+        <Serials><SN>SN-001</SN><SN>SN-002</SN></Serials>
+        <Res>
+          <SNRes sn="SN-001" val="38.9" jdg="양호">
+            <Fields></Fields>
+          </SNRes>
+          <SNRes sn="SN-002" val="45.6" jdg="양호">
+            <Fields></Fields>
+          </SNRes>
+        </Res>
+      </Item>
+      <Item key="press" name="압력시험" ref="7.2.17">
+        <Kind>jdg</Kind>
+        <Crit>IEC 62271-200 7.103</Crit>
+        <Exempt>false</Exempt>
+        <NA>false</NA>
+        <Samp>0대</Samp>
+        <Judgement>양호</Judgement>
+        <Serials><SN>SN-001</SN></Serials>
+        <Res>
+          <SNRes sn="SN-001" val="" jdg="양호">
+            <Fields></Fields>
+          </SNRes>
+        </Res>
+      </Item>
+      <Item key="gaspurity" name="가스순도시험" ref="7.2.32">
+        <Kind>cert</Kind>
+        <Crit>5.8.2 불순물 기준</Crit>
+        <Exempt>false</Exempt>
+        <NA>false</NA>
+        <Samp>성적서 대체</Samp>
+        <Judgement>양호</Judgement>
+        <Cert submit="제출" date="2026-07-18"/>
+        <Res>
+        </Res>
+      </Item>
+      <Item key="presslock" name="압력저하표시·잠금시험" ref="7.2.33">
+        <Kind>jdg</Kind>
+        <Crit>6.5.1항</Crit>
+        <Exempt>false</Exempt>
+        <NA>false</NA>
+        <Samp>0대</Samp>
+        <Judgement>양호</Judgement>
+        <Serials><SN>SN-001</SN></Serials>
+        <Res>
+          <SNRes sn="SN-001" val="" jdg="양호">
+            <Fields></Fields>
+          </SNRes>
+        </Res>
+      </Item>
+    </Step>
+    <Step key="func" title="동작·기능시험">
+      <Overall>불합격</Overall>
+      <Remark></Remark>
+      <Item key="novolt" name="무전압 개폐시험" ref="7.2.12">
+        <Kind>full</Kind>
+        <Crit>20회 이상없음</Crit>
+        <Exempt>false</Exempt>
+        <NA>false</NA>
+        <Samp>전량</Samp>
+        <Judgement>양호</Judgement>
+        <Full jdg="양호"><BadSerials></BadSerials></Full>
+        <Res>
+        </Res>
+      </Item>
+      <Item key="gasrelief" name="가스방출장치 동작시험" ref="7.2.21">
+        <Kind>jdg</Kind>
+        <Crit>동작압력(도면승인)</Crit>
+        <Exempt>false</Exempt>
+        <NA>false</NA>
+        <Samp>0대</Samp>
+        <Judgement>불량</Judgement>
+        <Serials><SN>SN-001</SN></Serials>
+        <Res>
+          <SNRes sn="SN-001" val="" jdg="불량">
+            <Fields></Fields>
+          </SNRes>
+        </Res>
+      </Item>
+      <Item key="ctrlfunc" name="제어기능 확인시험" ref="7.2.26">
+        <Kind>full</Kind>
+        <Crit>5.10.5·6항</Crit>
+        <Exempt>false</Exempt>
+        <NA>true</NA>
+        <Samp>해당없음</Samp>
+        <Judgement></Judgement>
+        <Res>
+        </Res>
+      </Item>
+      <Item key="sys" name="시스템연결 동작시험" ref="7.2.27">
+        <Kind>jdg</Kind>
+        <Crit>6.5항</Crit>
+        <Exempt>false</Exempt>
+        <NA>true</NA>
+        <Samp>해당없음</Samp>
+        <Judgement></Judgement>
+        <Res>
+        </Res>
+      </Item>
+      <Item key="ctrl_ac" name="제어회로 상용주파 내전압" ref="7.2.24.1">
+        <Kind>jdg</Kind>
+        <Crit>IEC 62271-1 a)조건</Crit>
+        <Exempt>false</Exempt>
+        <NA>true</NA>
+        <Samp>해당없음</Samp>
+        <Judgement></Judgement>
+        <Res>
+        </Res>
+      </Item>
+    </Step>
+    <Step key="meas" title="계측·기타">
+      <Overall>합격</Overall>
+      <Remark></Remark>
+      <Item key="av" name="전압계측 정밀도시험" ref="7.2.28">
+        <Kind>jdg</Kind>
+        <Crit>±1%·±40분</Crit>
+        <Exempt>false</Exempt>
+        <NA>true</NA>
+        <Samp>해당없음</Samp>
+        <Judgement></Judgement>
+        <Res>
+        </Res>
+      </Item>
+      <Item key="ai" name="전류계측 정밀도시험" ref="7.2.29">
+        <Kind>jdg</Kind>
+        <Crit>1.0급·10P20</Crit>
+        <Exempt>false</Exempt>
+        <NA>true</NA>
+        <Samp>해당없음</Samp>
+        <Judgement></Judgement>
+        <Res>
+        </Res>
+      </Item>
+      <Item key="paint" name="도장시험" ref="7.2.34">
+        <Kind>measureAuto</Kind>
+        <Crit>두께 60㎛ 이상</Crit>
+        <Exempt>false</Exempt>
+        <NA>false</NA>
+        <Samp>0대</Samp>
+        <Judgement>양호</Judgement>
+        <Serials><SN>SN-001</SN></Serials>
+        <Res>
+          <SNRes sn="SN-001" val="100.06" jdg="양호">
+            <Fields></Fields>
+          </SNRes>
+        </Res>
+      </Item>
+      <Item key="steel_m" name="강판 재질시험(기계적성질)" ref="7.2.31">
+        <Kind>cert</Kind>
+        <Crit>KS D 3705</Crit>
+        <Exempt>false</Exempt>
+        <NA>false</NA>
+        <Samp>년 1회</Samp>
+        <Judgement>양호</Judgement>
+        <Cert submit="제출" date="2026-07-18"/>
+        <Res>
+        </Res>
+      </Item>
+      <Item key="steel_c" name="강판 재질시험(화학성분)" ref="7.2.31">
+        <Kind>cert</Kind>
+        <Crit>KS D 3705</Crit>
+        <Exempt>false</Exempt>
+        <NA>false</NA>
+        <Samp>년 1회</Samp>
+        <Judgement>양호</Judgement>
+        <Cert submit="제출" date="2026-07-18"/>
+        <Res>
+        </Res>
+      </Item>
+    </Step>
+  </Results>
+</QIRReport>
