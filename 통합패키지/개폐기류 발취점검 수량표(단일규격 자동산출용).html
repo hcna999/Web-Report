@@ -1,0 +1,1363 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<title>개폐기류 규격별 발취점검 수량표 (단일규격용)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', '맑은 고딕', system-ui, sans-serif;
+    font-size: 9.5pt;
+    background: #f8fafc;
+    color: #0f172a;
+    padding: 8mm;
+    line-height: 1.5;
+  }
+  .app-container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .header-bar {
+    background: #ffffff;
+    border: 1px solid #94a3b8;
+    border-radius: 8px;
+    padding: 15px 20px;
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  .title-box { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
+  .title-box h1 { font-size: 16pt; font-weight: 900; color: #000000; letter-spacing: -0.5px; }
+  .title-box p { font-size: 9pt; color: #475569; font-weight: 600; margin-top: 4px; }
+  
+  .spec-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .spec-btn {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    color: #334155;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 9pt;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .spec-btn:hover { background: #e2e8f0; }
+  .spec-btn.active {
+    background: #0f172a;
+    color: #ffffff;
+    border-color: #0f172a;
+  }
+
+  .ctrl-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f1f5f9;
+    padding: 10px 15px;
+    border-radius: 6px;
+    border: 1px solid #94a3b8;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .ctrl-item { display: flex; align-items: center; gap: 8px; font-weight: 800; color: #000000; }
+  .ctrl-item select, .ctrl-item input {
+    font-family: inherit; font-size: 9pt; font-weight: 800;
+    padding: 4px 8px; border-radius: 4px; border: 1px solid #475569; outline: none;
+  }
+  .ctrl-item input { width: 70px; text-align: right; }
+  
+  .qty-btns { display: flex; gap: 4px; }
+  .qty-btn {
+    background: #ffffff; border: 1px solid #475569; color: #000000;
+    font-size: 8.5pt; font-weight: 800; padding: 4px 10px; border-radius: 4px; cursor: pointer;
+  }
+  .qty-btn:hover { background: #e2e8f0; }
+  .qty-btn.reset { color: #dc2626; border-color: #dc2626; }
+  .qty-btn.reset:hover { background: #fef2f2; }
+
+  .filter-bar {
+    display: flex; align-items: center; gap: 10px; font-size: 8.5pt; font-weight: 700;
+    margin-bottom: 12px; padding: 0 5px;
+  }
+  .filter-bar input[type="checkbox"] { width: 14px; height: 14px; cursor: pointer; }
+  .filter-bar label { cursor: pointer; display: flex; align-items: center; gap: 5px; }
+
+  .table-container { background: #ffffff; border-radius: 6px; overflow: hidden; border: 1px solid #475569; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+  table { width: 100%; border-collapse: collapse; font-size: 11pt; }
+  thead th { background: #0f172a; color: #ffffff; padding: 10px 12px; text-align: left; border: 1px solid #334155; font-weight: 800; vertical-align: middle; font-size: 11pt; }
+  thead th.th-val { text-align: center; }
+  thead th.th-sub { text-align: center; background: #1e293b; color: #e2e8f0; font-size: 10pt; width: 25%; }
+  
+  tbody tr td { background: #ffffff; border: 1px solid #94a3b8; padding: 8px 12px; vertical-align: middle; line-height: 1.4; }
+  tbody tr:hover td { background: #f1f5f9 !important; }
+  
+  td.cell-item { font-weight: 800; color: #000000 !important; background: #f8fafc !important; width: 35%; font-size: 11pt; position: relative; cursor: help; }
+  td.cell-item:hover .tooltip { opacity: 1; visibility: visible; transform: translateY(0); }
+  .tooltip {
+    position: absolute; left: 10px; bottom: 100%; margin-bottom: 5px;
+    background: rgba(15, 23, 42, 0.95); color: #ffffff; padding: 10px 14px;
+    border-radius: 6px; font-size: 10.5pt; font-weight: 700;
+    white-space: normal; width: max-content; max-width: 350px; line-height: 1.4;
+    opacity: 0; visibility: hidden; transform: translateY(5px);
+    transition: all 0.2s ease-out; z-index: 50; pointer-events: none;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);
+  }
+  .tooltip::after {
+    content: ''; position: absolute; top: 100%; left: 15px;
+    border-width: 6px; border-style: solid;
+    border-color: rgba(15, 23, 42, 0.95) transparent transparent transparent;
+  }
+  td.cell-rule { text-align: center; color: #334155; font-weight: 700; white-space: pre-line; font-size: 10.5pt; }
+  td.cell-calc { text-align: center; }
+
+  .calc-text { display: inline-block; font-size: 11pt; font-weight: 900; color: #0369a1; }
+
+  /* Colors for calc-text based on rule type */
+  .calc-full   { color: #1d4ed8; }
+  .calc-cert   { color: #334155; }
+  .calc-norm   { color: #0369a1; }
+  .calc-spec   { color: #c2410c; }
+  .calc-exempt { color: #be185d; }
+  
+  .empty-state { padding: 40px; text-align: center; color: #64748b; font-weight: 700; font-size: 11pt; }
+</style>
+</head>
+<body>
+
+<div class="app-container">
+  <div class="header-bar">
+    <div class="title-box">
+      <div>
+        <h1>📋 개폐기류 발취점검 수량표 (단일규격 산출)</h1>
+        <p>한국전력공사 전력기자재센터 | 단일 규격 전용 자동계산기</p>
+      </div>
+    </div>
+
+    <!-- 규격 선택 버튼들 -->
+    <div class="spec-selector" id="specSelector">
+      <!-- Generated via JS -->
+    </div>
+
+    <div class="ctrl-bar">
+      <div class="ctrl-item">
+        <label for="selGrade">품질등급:</label>
+        <select id="selGrade">
+          <option value="S">S등급 (0.5배)</option>
+          <option value="A">A등급 (0.5배)</option>
+          <option value="B" selected>B등급 (Normal - 1.0배)</option>
+          <option value="C">C등급 (2.0배)</option>
+          <option value="D">D등급 (2.0배)</option>
+        </select>
+      </div>
+
+      <div class="ctrl-item">
+        <label for="inpQty">납품수량:</label>
+        <input type="number" id="inpQty" value="0" min="0" max="9999"/> 대
+        <div class="qty-btns">
+          <button class="qty-btn reset" onclick="addQty('reset')">초기화</button>
+          <button class="qty-btn" onclick="addQty(1)">+1</button>
+          <button class="qty-btn" onclick="addQty(10)">+10</button>
+          <button class="qty-btn" onclick="addQty(100)">+100</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <label><input type="checkbox" id="chkHideNa" checked> 미해당 항목(-) 숨기기</label>
+  </div>
+
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th rowspan="2">시험검사 항목명</th>
+          <th colspan="2" class="th-val" id="thSpecName">규격을 선택하세요</th>
+        </tr>
+        <tr>
+          <th class="th-sub">기준 (발취 조건)</th>
+          <th class="th-sub">산출수량</th>
+        </tr>
+      </thead>
+      <tbody id="matrixBody">
+        <tr><td colspan="3" class="empty-state">위에서 규격을 선택해 주세요.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  const GRADE_MULT = { S:0.5, A:0.5, B:1.0, C:2.0, D:2.0 };
+  const S_FNS = {
+    note2_efi:  (q) => q <= 50 ? 1 : 3,
+    note1_dry:  (q) => q <= 20 ? 2 : 2 + Math.ceil((q - 20) / 20),
+    note4_dry:  (q) => q < 5 ? q : 1 + Math.ceil((q - 5) / 5),
+    note7_dry:  (q) => q <= 100 ? 1 : (q <= 200 ? 2 : 3),
+    note15_dry: (q) => q < 20 ? 1 : 1 + Math.ceil((q - 20) / 20),
+    per_10:     (q) => Math.max(1, Math.ceil(q / 10)),
+    per_20:     (q) => Math.max(1, Math.ceil(q / 20)),
+    per_25:     (q) => Math.max(1, Math.ceil(q / 25)),
+    per_50:     (q) => Math.max(1, Math.ceil(q / 50)),
+    per_100:    (q) => Math.max(1, Math.ceil(q / 100)),
+    fixed_1:    (q) => 1,
+  };
+
+    const TOOLTIP_DATA = {
+    "1. 본체 구조 및 외관검사": "구조 및 외관이 개발시험 성적서의 승인도면과 일치하는지 치수 및 육안 확인",
+    "2. 차단부 / 개폐부 외관검사": "내부 차단부 및 개폐부의 조립 상태, 이물질 유무 등 육안 확인",
+    "3. 무전압 개폐시험": "기계적, 전기적으로 개폐조작이 원활하고 확실하게 동작하는지 확인",
+    "4. 최소동작/Trip전류 & T-C특성": "제어함에 설정된 최소동작전류 및 동작특성 곡선에 맞게 차단기가 정확히 동작하는지 확인",
+    "5. 동작기능 / 조작확인시험": "현장 및 원격(SCADA)에서 제어기능 동작이 정상적으로 가능한지 확인",
+    "6. 상용주파 내전압시험 (본체)": "전기적으로 충분한 내력을 가지는지 상용주파 내전압(60kV 또는 48kV)을 1분간 인가하여 절연강도 확인",
+    "7. 충격파 내전압시험": "낙뢰, 개폐 서지 등에 대한 내력을 확인하기 위해 150kV(1.2x50㎲) 정·부극성 3회 인가 후 이상유무 확인",
+    "8. 주회로 저항측정": "개폐기 내부 주회로 접속개소의 접촉저항을 측정하여 접속 불량 여부 확인",
+    "9. 절연저항 측정 (제어회로)": "본체 및 제어함의 조작회로와 제어회로의 대지간 절연저항 측정 확인",
+    "10. 제어함 구조 및 외관검사": "제어함의 구조를 육안으로 확인하고 줄자/캘리퍼스로 치수 측정 확인",
+    "11. 전류계측 정밀도시험": "개폐기 1차에 정격전류를 인가하여 제어함 센서 단자에서 측정한 값의 오차 확인",
+    "12. 전압계측 정밀도시험": "개폐기 1차에 정격전압을 인가하여 제어함 센서 단자에서 측정한 전압 및 위상 오차 확인",
+    "13. 시스템연결 동작시험": "배전자동화(DAS) 시스템에 적합하도록 원활한 원격제어 및 통신 여부 확인",
+    "14. 제어기능 확인시험": "단말장치(FRTU)의 현장 및 원격 제어, 각종 보호기능 동작 여부 확인",
+    "15. 방향성 동작시험": "방향성 요소에 의한 정/역방향 사고전류 발생 시 정확히 차단 또는 보호하는지 확인",
+    "16. 가스방출장치 동작시험": "가스 압력 이상 상승 시 가스 방출 장치가 규정된 압력에서 정상 파열(동작)하는지 확인",
+    "17. 펄스 동작시험 (무전압/최소동작)": "펄스 신호에 의한 무전압 개폐 및 최소동작전류 투입/개방 동작 확인",
+    "18. Sequence Test": "제어함에 설정된 재폐로(Sequence) 사이클(투입-차단)에 맞게 동작하는지 확인",
+    "19. 제어회로 상용주파 내전압": "제어회로와 대지간 상용주파 내전압(2kV)을 1분간 인가하여 절연내력 이상 유무 확인",
+    "20. 부분방전시험 (PD)": "제품 내부의 Void 및 이물질 등에 의한 절연 불량 및 방전현상(PD) 발생 여부 확인",
+    "21. 본체 밀봉시험 (IP X8)": "개폐기를 수심 15cm 이상 수조에 1시간 이상 침수시킨 뒤 꺼내어 내전압 시험 및 누수 여부 확인",
+    "22. 기밀시험 (SF6 / Dry-Air)": "정격 가스압력 상태에서 가스누설 탐지기를 이용하여 밀봉부의 가스 누설 여부 확인",
+    "23. 압력시험 / 압력저하 잠금": "가스압력 저하시 압력스위치 접점 동작 및 조작 잠금(Lock-out) 기능 확인",
+    "24. 가스순도시험": "본체에 충진된 절연 가스의 순도(%) 및 수분량이 규격 기준치 이내인지 확인",
+    "25. PT 50kV 유도내전압시험": "내장된 PT(전압변성기)에 50kV를 인가하여 층간 절연 및 내력을 확인",
+    "26. PT 부분방전시험": "PT(전압변성기) 내부 절연상태를 확인하고 부분방전(PD) 발생 여부 측정",
+    "27. 도장시험 (두께)": "외함 도장상태(밀착성) 및 도막 두께가 규격에 맞는지 두께 측정기로 확인",
+    "28. 강판 재질시험": "외함에 규격에 맞는 재질의 강판을 사용하였는지 확인 (공인 성적서 대체)",
+    "29. 축전지 성능시험": "제어함 축전지의 충/방전 성능 및 용량이 규격을 만족하는지 확인 (공인 성적서 대체)",
+    "30. 취부금구 도금 시험": "설치용 취부금구의 도막(도금) 두께 및 부식 방지 처리 정상 여부 확인",
+    "31. 부싱단자 시험": "부싱단자의 절연 성능 및 기계적 인장 하중 등 특성 확인 (공인 성적서 대체)",
+    "32. 절연커버 시험": "절연커버의 내전압 및 재질 특성 확인 (공인 성적서 대체)",
+    "33. 상연결 접속재 시험": "상연결 접속재의 절연 및 체결 성능 확인 (공인 성적서 대체)",
+    "34. 절연유 특성시험": "절연유의 내전압, 산가 등 물리/화학적 절연 특성 확인 (공인 성적서 대체)",
+    "35. 밀봉재(O-링) 재질시험": "본체 밀봉부 O-링 재질이 KS B 2805 3종(EPDM) 또는 4종C(실리콘) 기준에 적합한지 공인성적서로 확인 (성적서 대체)",
+    "36. 고체절연물 물성시험(에폭시)": "에폭시 등 고체절연물의 유리전이온도·열팽창·굴곡·인장·충격·절연강도 등 물성이 규격 기준에 적합한지 원제조사 공인성적서로 확인 (성적서 대체)",
+    "37. 기타 부품 성적서": "주요 부속 부품이 승인 규격과 일치하는지 공인성적서로 확인 (성적서 대체)"
+  };
+
+  const FLAT_ITEMS = [
+  {
+    "name": "1. 본체 구조 및 외관검사",
+    "rules": {
+      "POLE": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "GIB": {
+        "rule": "2대/20대",
+        "fnKey": "per_10",
+        "type": "spec"
+      },
+      "EPOXY": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "spec"
+      },
+      "DRYAIR": {
+        "rule": "2대/20대",
+        "fnKey": "per_10",
+        "type": "spec"
+      },
+      "AIRPAD": {
+        "rule": "2대/20대",
+        "fnKey": "per_10",
+        "type": "spec"
+      },
+      "DREC": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "PREC": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "EFI": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "REC": {
+        "rule": "전량",
+        "type": "full"
+      }
+    }
+  },
+  {
+    "name": "2. 차단부 / 개폐부 외관검사",
+    "rules": {}
+  },
+  {
+    "name": "3. 무전압 개폐시험",
+    "rules": {
+      "POLE": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "GIB": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "EPOXY": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "DRYAIR": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "AIRPAD": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "DREC": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "PREC": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "EFI": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "REC": {
+        "rule": "전량",
+        "type": "full"
+      }
+    }
+  },
+  {
+    "name": "4. 최소동작/Trip전류 & T-C특성",
+    "rules": {
+      "EFI": {
+        "rule": "1대/50대",
+        "fnKey": "per_50",
+        "type": "norm"
+      },
+      "REC": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "norm"
+      }
+    }
+  },
+  {
+    "name": "5. 동작기능 / 조작확인시험",
+    "rules": {
+      "EFI": {
+        "rule": "1대/50대",
+        "fnKey": "per_50",
+        "type": "spec"
+      }
+    }
+  },
+  {
+    "name": "6. 상용주파 내전압시험 (본체)",
+    "rules": {
+      "POLE": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "GIB": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "EPOXY": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "DRYAIR": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "AIRPAD": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "DREC": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "PREC": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "EFI": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "REC": {
+        "rule": "전량",
+        "type": "full"
+      }
+    }
+  },
+  {
+    "name": "7. 충격파 내전압시험",
+    "rules": {
+      "POLE": {
+        "rule": "1대/50대",
+        "fnKey": "per_50",
+        "type": "spec"
+      },
+      "GIB": {
+        "rule": "2대/20대",
+        "fnKey": "per_10",
+        "type": "spec"
+      },
+      "EPOXY": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "spec"
+      },
+      "DRYAIR": {
+        "rule": "2대/20대",
+        "fnKey": "per_10",
+        "type": "spec"
+      },
+      "AIRPAD": {
+        "rule": "2대/20대",
+        "fnKey": "per_10",
+        "type": "spec"
+      },
+      "PREC": {
+        "rule": "1대/50대",
+        "fnKey": "per_50",
+        "type": "spec"
+      },
+      "EFI": {
+        "rule": "1대/50대",
+        "fnKey": "per_50",
+        "type": "spec"
+      },
+      "REC": {
+        "rule": "-",
+        "type": "na"
+      }
+    }
+  },
+  {
+    "name": "8. 주회로 저항측정",
+    "rules": {
+      "POLE": {
+        "rule": "1대/50대",
+        "fnKey": "per_50",
+        "type": "spec"
+      },
+      "GIB": {
+        "rule": "2대/20대",
+        "fnKey": "per_10",
+        "type": "spec"
+      },
+      "EPOXY": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "spec"
+      },
+      "DRYAIR": {
+        "rule": "2대/20대",
+        "fnKey": "per_10",
+        "type": "spec"
+      },
+      "AIRPAD": {
+        "rule": "2대/20대",
+        "fnKey": "per_10",
+        "type": "spec"
+      },
+      "DREC": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "spec"
+      },
+      "PREC": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "spec"
+      },
+      "EFI": {
+        "rule": "1대/50대",
+        "fnKey": "per_50",
+        "type": "spec"
+      },
+      "REC": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "norm"
+      }
+    }
+  },
+  {
+    "name": "9. 절연저항 측정",
+    "rules": {
+      "POLE": {
+        "rule": "1대/50대",
+        "fnKey": "per_50",
+        "type": "spec"
+      },
+      "GIB": {
+        "rule": "2대/20대",
+        "fnKey": "per_10",
+        "type": "spec"
+      },
+      "EPOXY": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "DRYAIR": {
+        "rule": "2대/20대",
+        "fnKey": "per_10",
+        "type": "spec"
+      },
+      "AIRPAD": {
+        "rule": "2대/20대",
+        "fnKey": "per_10",
+        "type": "spec"
+      },
+      "DREC": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "PREC": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "EFI": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "REC": {
+        "rule": "1대/50대",
+        "fnKey": "per_50",
+        "type": "norm"
+      }
+    }
+  },
+  {
+    "name": "10. 제어함 구조 및 외관검사",
+    "rules": {
+      "POLE": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "GIB": {
+        "rule": "2대/20대",
+        "fnKey": "per_10",
+        "type": "spec"
+      },
+      "EPOXY": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "DRYAIR": {
+        "rule": "2대/20대",
+        "fnKey": "per_10",
+        "type": "spec"
+      },
+      "AIRPAD": {
+        "rule": "2대/20대",
+        "fnKey": "per_10",
+        "type": "spec"
+      },
+      "EFI": {
+        "rule": "1대/50대",
+        "fnKey": "per_50",
+        "type": "norm"
+      },
+      "REC": {
+        "rule": "전량",
+        "type": "full"
+      }
+    }
+  },
+  {
+    "name": "11. 전류계측 정밀도시험",
+    "rules": {
+      "POLE": {
+        "rule": "1대/50대",
+        "fnKey": "per_50",
+        "type": "spec"
+      },
+      "GIB": {
+        "rule": "2대/20대",
+        "fnKey": "per_10",
+        "type": "spec"
+      },
+      "EPOXY": {
+        "rule": "1대/10대",
+        "fnKey": "per_10",
+        "type": "spec"
+      },
+      "DRYAIR": {
+        "rule": "2대/20대",
+        "fnKey": "per_10",
+        "type": "spec"
+      },
+      "AIRPAD": {
+        "rule": "2대/20대",
+        "fnKey": "per_10",
+        "type": "spec"
+      },
+      "DREC": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "spec"
+      },
+      "PREC": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "spec"
+      },
+      "EFI": {
+        "rule": "1대/25대",
+        "type": "norm"
+      },
+      "REC": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "norm",
+        "exemptSA": true
+      }
+    }
+  },
+  {
+    "name": "12. 전압계측 정밀도시험",
+    "rules": {
+      "POLE": {
+        "rule": "1대/50대",
+        "fnKey": "per_50",
+        "type": "spec"
+      },
+      "GIB": {
+        "rule": "2대/20대",
+        "fnKey": "per_10",
+        "type": "spec"
+      },
+      "EPOXY": {
+        "rule": "1대/10대",
+        "fnKey": "per_10",
+        "type": "spec"
+      },
+      "DRYAIR": {
+        "rule": "2대/20대",
+        "fnKey": "per_10",
+        "type": "spec"
+      },
+      "AIRPAD": {
+        "rule": "2대/20대",
+        "fnKey": "per_10",
+        "type": "spec"
+      },
+      "DREC": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "spec"
+      },
+      "PREC": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "spec"
+      },
+      "EFI": {
+        "rule": "1대/25대",
+        "type": "norm"
+      },
+      "REC": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "norm",
+        "exemptSA": true
+      }
+    }
+  },
+  {
+    "name": "13. 시스템연결 동작시험",
+    "rules": {
+      "POLE": {
+        "rule": "1대/50대",
+        "fnKey": "per_50",
+        "type": "spec"
+      },
+      "GIB": {
+        "rule": "2대/20대",
+        "fnKey": "per_10",
+        "type": "spec"
+      },
+      "EPOXY": {
+        "rule": "1대/10대",
+        "fnKey": "per_10",
+        "type": "spec"
+      },
+      "DRYAIR": {
+        "rule": "2대/20대",
+        "fnKey": "per_10",
+        "type": "spec"
+      },
+      "AIRPAD": {
+        "rule": "2대/20대",
+        "fnKey": "per_10",
+        "type": "spec"
+      },
+      "DREC": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "spec"
+      },
+      "PREC": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "spec"
+      },
+      "EFI": {
+        "rule": "1대/50대",
+        "fnKey": "per_50",
+        "type": "spec"
+      },
+      "REC": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "norm"
+      }
+    }
+  },
+  {
+    "name": "14. 제어기능 확인시험",
+    "rules": {
+      "POLE": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "GIB": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "EPOXY": {
+        "rule": "1대/10대",
+        "fnKey": "per_10",
+        "type": "spec"
+      },
+      "DRYAIR": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "AIRPAD": {
+        "rule": "전량",
+        "type": "full"
+      }
+    }
+  },
+  {
+    "name": "15. 방향성 동작시험",
+    "rules": {
+      "EFI": {
+        "rule": "1대/50대",
+        "fnKey": "per_50",
+        "type": "spec"
+      }
+    }
+  },
+  {
+    "name": "16. 가스방출장치 동작시험",
+    "rules": {
+      "GIB": {
+        "rule": "1대/100대",
+        "fnKey": "per_100",
+        "type": "spec"
+      },
+      "DRYAIR": {
+        "rule": "1대/100대",
+        "fnKey": "per_100",
+        "type": "spec"
+      },
+      "AIRPAD": {
+        "rule": "1대/100대",
+        "fnKey": "per_100",
+        "type": "spec"
+      }
+    }
+  },
+  {
+    "name": "17. 펄스 동작시험 (무전압/최소동작)",
+    "rules": {
+      "PREC": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "spec"
+      }
+    }
+  },
+  {
+    "name": "18. Sequence Test",
+    "rules": {
+      "DREC": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "spec"
+      },
+      "PREC": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "spec"
+      },
+      "REC": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "norm"
+      }
+    }
+  },
+  {
+    "name": "19. 제어회로 상용주파 내전압",
+    "rules": {
+      "POLE": {
+        "rule": "1대/50대",
+        "fnKey": "per_50",
+        "type": "spec"
+      },
+      "GIB": {
+        "rule": "2대/20대",
+        "fnKey": "per_10",
+        "type": "spec"
+      },
+      "EPOXY": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "spec"
+      },
+      "DRYAIR": {
+        "rule": "성적서 대체",
+        "type": "cert"
+      },
+      "AIRPAD": {
+        "rule": "성적서 대체",
+        "type": "cert"
+      },
+      "DREC": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "spec"
+      },
+      "PREC": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "spec"
+      },
+      "EFI": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "REC": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "norm"
+      }
+    }
+  },
+  {
+    "name": "20. 부분방전시험 (PD)",
+    "rules": {
+      "POLE": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "spec"
+      },
+      "GIB": {
+        "rule": "1대/10대",
+        "fnKey": "per_10",
+        "type": "spec"
+      },
+      "EPOXY": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "spec"
+      },
+      "DRYAIR": {
+        "rule": "1대/10대",
+        "fnKey": "per_10",
+        "type": "spec"
+      },
+      "AIRPAD": {
+        "rule": "1대/10대",
+        "fnKey": "per_10",
+        "type": "spec"
+      },
+      "DREC": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "EFI": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "spec"
+      },
+      "REC": {
+        "rule": "-",
+        "type": "na"
+      }
+    }
+  },
+  {
+    "name": "21. 본체 밀봉시험 (IP X8)",
+    "rules": {
+      "POLE": {
+        "rule": "1대/50대",
+        "fnKey": "per_50",
+        "type": "spec"
+      },
+      "EFI": {
+        "rule": "1대/50대",
+        "fnKey": "per_50",
+        "type": "spec"
+      }
+    }
+  },
+  {
+    "name": "22. 기밀시험 (SF6 / Dry-Air)",
+    "rules": {
+      "GIB": {
+        "rule": "5대 미만 전량\n(5대 초과시 1대/5대 추가)",
+        "fnKey": "note4_dry",
+        "type": "spec"
+      },
+      "DRYAIR": {
+        "rule": "5대 미만 전량\n(5대 초과시 1대/5대 추가)",
+        "fnKey": "note4_dry",
+        "type": "spec"
+      },
+      "AIRPAD": {
+        "rule": "5대 미만 전량\n(5대 초과시 1대/5대 추가)",
+        "fnKey": "note4_dry",
+        "type": "spec"
+      }
+    }
+  },
+  {
+    "name": "23. 압력시험 / 압력저하 잠금",
+    "rules": {
+      "GIB": {
+        "rule": "100대이하: 1대\n(101~200: 2대, 200초과: 3대)",
+        "fnKey": "note7_dry",
+        "type": "spec"
+      },
+      "DRYAIR": {
+        "rule": "100대이하: 1대\n(101~200: 2대, 200초과: 3대)",
+        "fnKey": "note7_dry",
+        "type": "spec"
+      },
+      "AIRPAD": {
+        "rule": "100대이하: 1대\n(101~200: 2대, 200초과: 3대)",
+        "fnKey": "note7_dry",
+        "type": "spec"
+      }
+    }
+  },
+  {
+    "name": "24. 가스순도시험",
+    "rules": {
+      "GIB": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "spec"
+      },
+      "DRYAIR": {
+        "rule": "성적서 대체",
+        "type": "cert"
+      },
+      "AIRPAD": {
+        "rule": "성적서 대체",
+        "type": "cert"
+      }
+    }
+  },
+  {
+    "name": "25. PT 50kV 유도내전압시험",
+    "rules": {
+      "GIB": {
+        "rule": "1대/50대",
+        "fnKey": "per_50",
+        "type": "spec"
+      },
+      "EPOXY": {
+        "rule": "1대/50대",
+        "fnKey": "per_50",
+        "type": "spec"
+      },
+      "DRYAIR": {
+        "rule": "성적서 대체",
+        "type": "cert"
+      },
+      "AIRPAD": {
+        "rule": "1대/50대",
+        "fnKey": "per_50",
+        "type": "spec"
+      }
+    }
+  },
+  {
+    "name": "26. PT 부분방전시험",
+    "rules": {
+      "GIB": {
+        "rule": "1대/50대",
+        "fnKey": "per_50",
+        "type": "spec"
+      },
+      "EPOXY": {
+        "rule": "1대/50대",
+        "fnKey": "per_50",
+        "type": "spec"
+      },
+      "DRYAIR": {
+        "rule": "성적서 대체",
+        "type": "cert"
+      },
+      "AIRPAD": {
+        "rule": "1대/50대",
+        "fnKey": "per_50",
+        "type": "spec"
+      }
+    }
+  },
+  {
+    "name": "27. 도장시험 (두께)",
+    "rules": {
+      "GIB": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "spec"
+      },
+      "EPOXY": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "spec"
+      },
+      "DRYAIR": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "spec"
+      },
+      "AIRPAD": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "spec"
+      }
+    }
+  },
+  {
+    "name": "28. 강판 재질시험",
+    "rules": {
+      "POLE": {
+        "rule": "성적서 대체",
+        "type": "cert"
+      },
+      "GIB": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "EPOXY": {
+        "rule": "성적서 대체",
+        "type": "cert"
+      },
+      "DRYAIR": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "AIRPAD": {
+        "rule": "성적서 대체",
+        "type": "cert"
+      },
+      "DREC": {
+        "rule": "성적서 대체",
+        "type": "cert"
+      },
+      "PREC": {
+        "rule": "성적서 대체",
+        "type": "cert"
+      },
+      "EFI": {
+        "rule": "성적서 대체",
+        "type": "cert"
+      },
+      "REC": {
+        "rule": "성적서 대체",
+        "type": "cert"
+      }
+    }
+  },
+  {
+    "name": "29. 축전지 성능시험",
+    "rules": {
+      "POLE": {
+        "rule": "성적서 대체",
+        "type": "cert"
+      },
+      "EFI": {
+        "rule": "성적서 대체",
+        "type": "cert"
+      }
+    }
+  },
+  {
+    "name": "30. 취부금구 도금 시험",
+    "rules": {
+      "POLE": {
+        "rule": "1대/50대",
+        "fnKey": "per_50",
+        "type": "spec"
+      },
+      "DREC": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "PREC": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "EFI": {
+        "rule": "1대/50대",
+        "fnKey": "per_50",
+        "type": "spec"
+      },
+      "REC": {
+        "rule": "1대/50대",
+        "fnKey": "per_50",
+        "type": "norm"
+      }
+    }
+  },
+  {
+    "name": "31. 부싱 및 접속재 시험",
+    "rules": {
+      "EPOXY": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "spec"
+      },
+      "DRYAIR": {
+        "rule": "성적서 대체",
+        "type": "cert"
+      },
+      "AIRPAD": {
+        "rule": "1대/10대",
+        "fnKey": "per_10",
+        "type": "spec"
+      },
+      "DREC": {
+        "rule": "성적서 대체",
+        "type": "cert"
+      },
+      "EFI": {
+        "rule": "성적서 대체",
+        "type": "cert"
+      },
+      "REC": {
+        "rule": "성적서 대체",
+        "type": "cert"
+      }
+    }
+  },
+  {
+    "name": "32. 절연커버 시험",
+    "rules": {
+      "POLE": {
+        "rule": "성적서 대체",
+        "type": "cert"
+      },
+      "DREC": {
+        "rule": "성적서 대체",
+        "type": "cert"
+      },
+      "EFI": {
+        "rule": "성적서 대체",
+        "type": "cert"
+      },
+      "REC": {
+        "rule": "성적서 대체",
+        "type": "cert"
+      }
+    }
+  },
+  {
+    "name": "33. 상연결 접속재 시험",
+    "rules": {
+      "EPOXY": {
+        "rule": "1대/10대",
+        "fnKey": "per_10",
+        "type": "spec"
+      }
+    }
+  },
+  {
+    "name": "34. 절연유 특성시험",
+    "rules": {
+      "EPOXY": {
+        "rule": "생산중인 제품에서 임의 발취",
+        "type": "norm"
+      }
+    }
+  },
+  {
+    "name": "35. 밀봉재(O-링) 재질시험",
+    "rules": {
+      "DRYAIR": {
+        "rule": "성적서 대체",
+        "type": "cert"
+      }
+    }
+  },
+  {
+    "name": "36. 고체절연물 물성시험(에폭시)",
+    "rules": {
+      "DRYAIR": {
+        "rule": "성적서 대체",
+        "type": "cert"
+      }
+    }
+  },
+  {
+    "name": "37. 기타 부품 성적서",
+    "rules": {}
+  }
+];
+  const SPECS_KEYS = ["POLE","GIB","EPOXY","DRYAIR","AIRPAD","DREC","PREC","EFI","REC"];
+  const SPEC_HEADERS = {"POLE":{"name":"ECO 부하개폐기","tag":"가공용"},"GIB":{"name":"가스절연 다회로차단기","tag":"지중용"},"EPOXY":{"name":"에폭시절연 부하개폐기","tag":"지상용"},"DRYAIR":{"name":"Dry air 절연 부하개폐기","tag":"지중용"},"AIRPAD":{"name":"일반형 공기절연 부하개폐기","tag":"지중/지상용"},"DREC":{"name":"폴리머절연 방향성 R/C","tag":"가공용"},"PREC":{"name":"펄스기능부 폴리머R/C","tag":"가공용"},"EFI":{"name":"에폭시절연 고장구간 차단기","tag":"가공용"},"REC":{"name":"폴리머절연 리클로저","tag":"가공용"}};
+  
+  let currentSpec = SPECS_KEYS[0]; // Default to POLE
+
+  function initUI() {
+    const selDiv = document.getElementById('specSelector');
+    selDiv.innerHTML = SPECS_KEYS.map(k => {
+      const h = SPEC_HEADERS[k];
+      return `<button class="spec-btn ${k === currentSpec ? 'active' : ''}" data-key="${k}">${h.name} (${h.tag})</button>`;
+    }).join('');
+
+    document.querySelectorAll('.spec-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.spec-btn').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        currentSpec = e.target.getAttribute('data-key');
+        renderTable();
+      });
+    });
+
+    document.getElementById('selGrade').addEventListener('change', renderTable);
+    document.getElementById('inpQty').addEventListener('input', renderTable);
+    document.getElementById('chkHideNa').addEventListener('change', renderTable);
+    
+    renderTable();
+  }
+
+  function addQty(val) {
+    const inp = document.getElementById('inpQty');
+    if (val === 'reset') {
+      inp.value = 0;
+    } else {
+      let cur = parseInt(inp.value) || 0;
+      inp.value = cur + val;
+    }
+    renderTable();
+  }
+
+  function renderTable() {
+    if(!currentSpec) return;
+
+    const grade = document.getElementById('selGrade').value;
+    const qty = parseInt(document.getElementById('inpQty').value) || 0;
+    const mult = GRADE_MULT[grade] || 1.0;
+    const hideNa = document.getElementById('chkHideNa').checked;
+    const h = SPEC_HEADERS[currentSpec];
+
+    document.getElementById('thSpecName').innerHTML = `${h.name} <span style="font-size:7.5pt; background:#334155; padding:2px 5px; border-radius:4px; margin-left:4px;">${h.tag}</span>`;
+
+    const tbody = document.getElementById('matrixBody');
+    tbody.innerHTML = '';
+
+    let visibleCount = 0;
+
+    FLAT_ITEMS.forEach((item) => {
+      const ruleObj = item.rules[currentSpec];
+      if (!ruleObj) {
+        if(!hideNa) {
+           tbody.innerHTML += `<tr><td class="cell-item">${item.name}</td><td class="cell-val" style="color:#94a3b8;">해당없음 (-)</td></tr>`;
+        }
+        return;
+      }
+      
+      if (ruleObj.type === 'na' || ruleObj.rule === '-') {
+        if(hideNa) return;
+        tbody.innerHTML += `<tr><td class="cell-item">${item.name}</td><td class="cell-val" style="color:#94a3b8;">해당없음 (-)</td></tr>`;
+        return;
+      }
+
+      visibleCount++;
+      const tr = document.createElement('tr');
+      let html = `<td class="cell-item">
+        ${item.name}
+        <div class="tooltip">${(TOOLTIP_DATA[item.name] || '요약 정보가 없습니다.').replace(/\n/g, '<br>')}</div>
+      </td>`;
+
+      let cssClass = 'cell-val ';
+      if (ruleObj.type === 'full') cssClass += 'c-full';
+      else if (ruleObj.type === 'cert') cssClass += 'c-cert';
+      else if (ruleObj.type === 'spec') cssClass += 'c-spec';
+      else cssClass += 'c-norm';
+
+      if (ruleObj.exemptSA && (grade === 'S' || grade === 'A')) cssClass += ' c-exempt';
+
+      let ruleDisp = ruleObj.rule;
+      let calcDisp = '';
+
+      if (qty === 0) {
+        // When qty is 0, do not show any calculated value
+        calcDisp = '';
+      } else if (ruleObj.type === 'full') {
+        calcDisp = `${qty}대 (전량)`;
+      } else if (ruleObj.type === 'cert') {
+        calcDisp = '제출확인';
+      } else if (ruleObj.exemptSA && (grade === 'S' || grade === 'A')) {
+        calcDisp = '면제';
+      } else if (ruleObj.fnKey && S_FNS[ruleObj.fnKey]) {
+        const baseCount = S_FNS[ruleObj.fnKey](qty);
+        let finalCount = Math.max(1, Math.round(baseCount * mult));
+        if (ruleObj.fnKey === 'fixed_1') finalCount = 1;
+        calcDisp = `${finalCount}대`;
+      }
+
+      // Add Rule Cell (기준)
+      html += `<td class="cell-rule">${ruleDisp}</td>`;
+      
+      let calcClass = 'calc-norm';
+      if (ruleObj.type === 'full') calcClass = 'calc-full';
+      else if (ruleObj.type === 'cert') calcClass = 'calc-cert';
+      else if (ruleObj.type === 'spec') calcClass = 'calc-spec';
+      if (ruleObj.exemptSA && (grade === 'S' || grade === 'A')) calcClass = 'calc-exempt';
+
+      // Add Calc Cell (산출수량)
+      html += `<td class="cell-calc">
+        ${calcDisp ? `<div class="calc-text ${calcClass}">${calcDisp}</div>` : ''}
+      </td>`;
+
+      tr.innerHTML = html;
+      tbody.appendChild(tr);
+    });
+
+    if(visibleCount === 0) {
+      tbody.innerHTML = '<tr><td colspan="2" class="empty-state">표시할 항목이 없습니다.</td></tr>';
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', initUI);
+</script>
+</body>
+</html>
