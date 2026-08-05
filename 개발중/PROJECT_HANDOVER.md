@@ -2,7 +2,7 @@
 
 > 차기 담당 Agent(Claude Code 등)가 이 프로젝트를 바로 이어서 작업할 수 있도록 현재 상태를 정리한 문서입니다. 이전 버전 문서(2026-08-03 오전 작성분)는 실제 코드와 어긋난 부분이 많아 전면 재작성했습니다.
 
-**최종 갱신**: 2026-08-03
+**최종 갱신**: 2026-08-05
 
 ---
 
@@ -45,7 +45,7 @@
 └── .claude/
 ```
 
-> **주의**: `.git` 폴더는 이 프로젝트 폴더가 Windows-FUSE 마운트라서 `unlink`(파일 삭제/git object 정리)가 안 되는 문제로 정상 동작하지 않아 삭제했습니다. 이미 `https://github.com/hcna999/Web-Report.git` (main 브랜치)에 초기 커밋이 푸시되어 있으니, 이어서 git 작업이 필요하면 **`/tmp` 등 네이티브 파일시스템에 별도로 클론**해서 작업 후 push하세요. 이 폴더에서 직접 `git init`/`git add`는 실패합니다.
+> **주의(2026-08-03 기록, 2026-08-05 갱신)**: 당시 환경(Windows-FUSE 마운트)에서는 `.git`의 `unlink`가 안 되는 문제로 로컬 git이 동작하지 않아 삭제했었습니다. **2026-08-05, 네이티브 Windows 환경(Claude Code)에서 재확인한 결과 이 폴더에서 git이 정상 동작**하여 `git init` 후 `https://github.com/hcna999/Web-Report.git`(main)에 그대로 커밋·푸시를 재개했습니다. 즉 FUSE 문제는 특정 실행 환경(Cowork 샌드박스 등)에만 해당하며, 네이티브 환경에서는 이 폴더에서 바로 `git add`/`commit`/`push`가 가능합니다. (혹시 다시 FUSE류 환경에서 작업하게 되면 이 주의사항이 재발할 수 있으니, 그럴 땐 네이티브 파일시스템에 별도 클론 후 작업하세요.)
 
 ---
 
@@ -83,13 +83,22 @@ GIB는 "개폐기"가 아니라 "차단기" 계열입니다. 과거 발취점검
 
 ### 4.2 출력 기능
 - **PDF 저장** (`btnDownloadPDF` → `downloadPDF(q,'both')`): html2pdf.js(jsPDF) 사용. 저장 컨테이너에 `reportStyles('.print-shell-export')`로 스코프 CSS를 주입해서 라이브 앱 스타일(`.item{border-radius}` 등)이 섞여 표 셀이 깨지는 문제를 막음. 워터마크(한전 로고, opacity 0.25)는 CSS `position:fixed`가 캔버스 래스터라이즈에는 페이지마다 반복 적용되지 않으므로, `pdf.setPage(p)` + `pdf.addImage()`로 매 페이지 수동 스탬핑.
-- **XLSX 저장** (`btnPrintLoadedDetail` → `exportToExcel(q)`): 시트 순서 = 갑지 → 을지 → [저항측정 항목별 시트] → [성적서대체 항목별 시트] → 사진대지 → 시료 리스트. `safeSheetName()`으로 31자 제한/중복 시트명 처리.
+- **XLSX 저장** (`btnPrintLoadedDetail` → `exportToExcel(q)`, **2026-08-05 ExcelJS로 전면 재작성**): 시트 순서 = 갑지 → 을지 → [저항측정 항목별 시트] → [성적서대체 항목별 시트] → 사진대지 → 시료 리스트. `safeSheetName()`으로 31자 제한/중복 시트명 처리.
+  - 기존엔 SheetJS(`xlsx@0.18.5`, 무료판)로 값만 나열해 병합 셀·테두리·배경색이 전혀 없었음. SheetJS 무료판은 저장 시 셀 서식을 쓸 수 없는 제약이 있어, 한전 실물 성적서(갑지/을지) 예시와 같은 병합 셀·테두리·헤더 음영을 내려면 **ExcelJS(CDN `exceljs@4.4.0`)로 라이브러리를 교체**함. `<head>`의 SheetJS `<script>` 태그도 함께 교체됨.
+  - 공통 팔레트/헬퍼: `XLS_COLOR`, `xlsStyle(cell,opts)`, `xlsJudgeStyle(v)` (PDF `reportStyles()`의 색상 톤과 동일하게 통일 — 제목 `#0d47a1`, 헤더 음영 `#dde9f8`, 라벨 음영 `#eef4fc`, 양호/불량 강조색 등).
+  - 갑지: 제목(병합)+메타 5행(검사로트번호/품명·제작회사/규격·시험년월일/수량·시험자/제조번호·시험입회자)+항목 2열 그리드+종합판정 푸터를 실물 예시와 동일한 구조로 병합 셀·테두리 적용.
+  - 을지: 제조번호를 열로 갖는 매트릭스(시료 7대 초과 시 자동 landscape), 별첨(cert) 항목은 값 칸을 전체 병합해 텍스트로 표기.
+  - 모든 시트에 `pageSetup:{fitToPage:true, fitToWidth:1, fitToHeight:0}` 적용해 인쇄/PDF 변환 시 열이 잘리지 않도록 처리(요청사항: "엑셀하고 PDF 안 깨지게").
+  - `exportToExcel()`은 `ExcelJS.Workbook.xlsx.writeBuffer()`(비동기)를 쓰므로 **`async` 함수로 변경**됨. 호출부(`btnExportExcel`/`btnPrintLoadedDetail`의 onclick)는 fire-and-forget으로 그대로 둬도 동작함.
+  - 검증: 브라우저에서 실제로 여러 규격(POLE·GIB)·수량(2대/8대)으로 성적서를 채운 뒤 `exportToExcel()` 실행 → 반환된 버퍼를 같은 세션에서 `new ExcelJS.Workbook().xlsx.load()`로 재로드해 시트명/병합 개수/행렬 크기/서식이 기대값과 정확히 일치하는지 확인함(콘솔 에러 없음).
 - 버튼 문구는 전부 "출력"이 아니라 "저장"으로 통일(인쇄 대화상자 대신 파일 다운로드).
 
-### 4.3 개선의견 → 구글시트 연동 (2026-08-03 추가, ⚠️미완성)
-- 상단바 **💬 개선의견** 버튼 → 모달(작성자명/의견) → `fetch(FEEDBACK_WEBAPP_URL, {mode:'no-cors', body: URLSearchParams})`로 Google Apps Script 웹앱에 POST.
-- **`FEEDBACK_WEBAPP_URL` 상수가 아직 `'YOUR_APPS_SCRIPT_WEBAPP_URL_HERE'` 플레이스홀더 상태**입니다. 코드 위치: 메인 앱 `$('btnBack').onclick=...` 직후, `// ===== 개선의견 (Google Sheet 연동) =====` 주석 아래.
-- 사용자가 구글시트 + Apps Script 웹앱을 만들고 배포 URL을 알려주면 이 상수만 교체하면 바로 동작. Apps Script `doPost` 예시 코드는 대화 이력 참고 (시트 헤더: 제출일시/작성자명/개선의견/출처).
+### 4.3 개선의견 → 구글시트 연동 (2026-08-03 추가, **2026-08-05 URL 반영 완료 ✅**)
+- 상단바 **💬 개선의견** 버튼 → 모달(이름/회사명 · 의견, 2026-08-05에 "작성자명"→"이름/회사명"으로 라벨·placeholder 변경해 회사명 입력도 명시적으로 허용) → `fetch(FEEDBACK_WEBAPP_URL, {mode:'no-cors', body: URLSearchParams})`로 Google Apps Script 웹앱에 POST.
+- **`FEEDBACK_WEBAPP_URL`에 실제 배포 URL이 반영되어 동작 중**입니다(`https://script.google.com/macros/s/AKfycbz2Qu-.../exec`). 코드 위치: 메인 앱 `$('btnBack').onclick=...` 직후, `// ===== 개선의견 (Google Sheet 연동) =====` 주석 아래.
+- Apps Script `doPost`는 시트에 `[timestamp, author, opinion, source]` 4개 필드를 append하는 구조(시트 헤더: 제출일시/작성자명/개선의견/출처). 배포 액세스 권한은 "모든 사용자"로 되어 있어야 익명 제출이 동작함.
+- ⚠️ 참고: `mode:'no-cors'`라서 프론트엔드는 실제 응답을 읽지 못하고 성공으로 간주함 → Apps Script 배포가 풀리거나 액세스 권한이 바뀌면 프론트는 "접수되었습니다"라고 뜨는데 실제로는 시트에 안 쌓이는 조용한 실패가 날 수 있음. 주기적으로 시트에 실제로 쌓이는지 확인 필요.
+- ⚠️ 이 URL은 인증 없는 공개 엔드포인트이므로, 저장소가 퍼블릭이면 누구나 스팸성 POST를 보낼 수 있음(레포를 private으로 유지하거나 추후 토큰 검증 추가 권장).
 
 ---
 
@@ -118,9 +127,19 @@ GIB는 "개폐기"가 아니라 "차단기" 계열입니다. 과거 발취점검
 
 ---
 
+## 6-1. 이번 세션 주요 변경 이력 (2026-08-05)
+
+1. **git 환경 재확인**: 네이티브 Windows(Claude Code) 환경에서는 이 폴더 안에서 git이 정상 동작함을 확인 → `git init` 후 기존 `Web-Report` 저장소(main)에 이어서 커밋·푸시 재개 (2절 주의사항 갱신).
+2. **개선의견 구글시트 연동 완료**: `FEEDBACK_WEBAPP_URL`에 실제 Apps Script 배포 URL 반영. 모달 라벨을 "작성자명"→"이름/회사명"으로 변경(회사명 입력 명시적 허용).
+3. **종합판정 실시간 갱신 버그 수정**: 시험 단계 화면에서 판정 드롭다운을 바꿔도 "종합 판정(자동)" 필드가 다음 페이지로 갔다가 돌아와야 갱신되던 문제 → `updateStepCalc()`에서 `#stepOverallInput` 값을 즉시 다시 계산하도록 수정 (`stepOverall()` 결과를 매 변경마다 반영).
+4. **XLSX 저장 기능 전면 재작성 (SheetJS → ExcelJS)**: 4.2절 참고. 실제 한전 성적서 예시 엑셀 4종(`시험성적서 예시/*.xlsx`)을 `openpyxl`로 정밀 분석해 갑지/을지 스타일(병합 셀·테두리·헤더 음영)을 재현. 사용자와 협의해 **범위는 갑지/을지 스타일 통일까지**로 한정(9개 규격별 회로/상 단위 병합 구조 1:1 복제는 범위 밖 — 필요 시 추후 규격별 개별 검증 필요).
+
+---
+
 ## 7. 다음 담당자를 위한 체크리스트 / 열린 이슈
 
-- [ ] `FEEDBACK_WEBAPP_URL`에 실제 Apps Script 배포 URL 반영 필요 (사용자가 시트 만든 후 전달 예정).
+- [x] `FEEDBACK_WEBAPP_URL`에 실제 Apps Script 배포 URL 반영 완료 (2026-08-05).
+- [ ] XLSX 내보내기는 현재 **갑지/을지 스타일 통일**까지만 반영됨. 저항측정/전압·전류측정 등 항목별 상세 시트는 회로수·상별 병합 구조를 실물 예시처럼 1:1 재현하지 않음(간단한 표+테두리 수준) — 필요 시 규격별로 개별 작업 필요(공수 큼, 6-1절 참고).
 - [ ] `개폐기류 발취점검 수량표(출력용).html`은 정적 HTML이라 향후 규격 변경 시 수기 수정 필요 — 가능하면 `(단일규격 자동산출용)`처럼 데이터 구동 방식으로 통합 리팩터링 검토 여지 있음.
 - [ ] 신규 규격 추가 시: `SPECS` 배열에 항목 추가 → 메인 앱에는 자동 반영되지만, 발취점검 수량표 2종과 대시보드는 **수동으로 별도 반영**해야 함(자동 동기화 없음).
 - [ ] 구매규격 원문 대조가 필요할 땐 `관련 규정 및 지침/구매규격 Json 파일/*.json`을 먼저 확인 — PDF 원문 발췌·정리가 되어 있어 빠르게 조항 대조 가능.

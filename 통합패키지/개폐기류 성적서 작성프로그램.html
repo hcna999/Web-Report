@@ -2,8 +2,10 @@
 <html lang="ko">
 
 <head>
-  <!-- SheetJS & html2pdf.js for Excel & PDF Export -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- ExcelJS & html2pdf.js for Excel & PDF Export -->
+  <!-- (SheetJS 무료판은 저장 시 셀 서식(테두리/배경색/병합)을 쓸 수 없어, 한전 실제 성적서 양식과 동일한
+       디자인(병합 셀/테두리/헤더 음영)을 내보내기 위해 ExcelJS로 교체함 (2026-08-05) -->
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <meta charset="utf-8" />
@@ -2235,105 +2237,198 @@
       return fail ? '불량' : '양호';
     }
 
-    function exportToExcel(q) {
-      if (typeof XLSX === 'undefined') {
-        alert('SheetJS 라이브러리가 로드되지 않았습니다. 인터넷 연결을 확인하거나 CDN 링크를 확인하세요.');
+    // 엑셀 서식 공통 팔레트 (PDF 리포트 CSS와 동일 톤으로 통일 - reportStyles() 참고)
+    const XLS_COLOR = {
+      title: 'FF0D47A1', good: 'FF1565C0', bad: 'FFC62828', gray: 'FF888888',
+      headerBg: 'FFDDE9F8', labelBg: 'FFEEF4FC', goodBg: 'FFEEF5FF', badBg: 'FFFDEEEE',
+      zebraBg: 'FFF7FAFD', resultBg: 'FFEEF1F6'
+    };
+    const XLS_THIN = { style: 'thin', color: { argb: 'FF000000' } };
+    const XLS_BORDER_ALL = { top: XLS_THIN, left: XLS_THIN, bottom: XLS_THIN, right: XLS_THIN };
+    // 셀 하나에 폰트/배경/테두리/정렬을 한 번에 적용하는 헬퍼 (병합 셀은 반드시 mergeCells() 호출 "후"
+    // 앵커(좌상단) 셀에 대해 호출해야 스타일이 병합 범위 전체에 반영됨)
+    function xlsStyle(cell, opts = {}) {
+      cell.font = Object.assign(
+        { name: 'Malgun Gothic', size: opts.size || 10.5 },
+        opts.bold ? { bold: true } : {},
+        opts.color ? { color: { argb: opts.color } } : {}
+      );
+      cell.alignment = { vertical: 'middle', wrapText: opts.wrap !== false, horizontal: opts.align || 'center' };
+      if (opts.border !== false) cell.border = XLS_BORDER_ALL;
+      if (opts.bg) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: opts.bg } };
+    }
+    // 판정값(양호/불량 등)에 따른 강조색 - PDF의 jbP()와 동일 기준
+    function xlsJudgeStyle(v) {
+      if (v === '불량' || v === '불합격' || v === '불합격(중도종료)') return { color: XLS_COLOR.bad, bold: true };
+      if (v === '시험중단') return { color: XLS_COLOR.gray };
+      return {};
+    }
+
+    async function exportToExcel(q) {
+      if (typeof ExcelJS === 'undefined') {
+        alert('ExcelJS 라이브러리가 로드되지 않았습니다. 인터넷 연결을 확인하거나 CDN 링크를 확인하세요.');
         return;
       }
-      const wb = XLSX.utils.book_new();
+      const wb = new ExcelJS.Workbook();
+      wb.creator = 'KEPCO 개폐기류 성적서 작성 프로그램';
+      wb.created = new Date();
+
       const pool = q.pool_list || [];
       const td = q.test_dates || {};
       const dateStr = td.start && td.end ? (td.start === td.end ? td.start : td.start + ' ~ ' + td.end) : (td.start || td.end || '');
+      const printMargins = { left: 0.4, right: 0.4, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3 };
 
-      // ====== 1. 갑지 Sheet (엑셀 예시 형식과 동일) ======
-      const gapjiRows = [
-        ['시  험  성  적  서'],
-        [''],
-        ['검사로트번호 :', q.lot_no || ''],
-        [''],
-        ['품    명 :', q.material || '', '', '', '제작회사 :', q.maker || ''],
-        ['규    격 :', q.variant || '', '', '', '시험년월일 :', dateStr],
-        ['수    량 :', (q.qty || 0) + ' 대', '', '', '시  험  자 :', (q.attendants || {}).tester || ''],
-        ['제조번호 :', serialRange(pool), '', '', '시험입회자 :', (q.attendants || {}).inspector || ''],
-        [''],
-        ['시험항목[기준]', '결   과', '', '시험항목[기준]', '결   과']
+      // ====== 1. 갑지 Sheet (한전 실물 성적서 갑지와 동일한 병합 셀/테두리/음영 서식) ======
+      const wsGapji = wb.addWorksheet('갑지', {
+        pageSetup: { orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: printMargins }
+      });
+      wsGapji.columns = [{ width: 32 }, { width: 15 }, { width: 32 }, { width: 15 }];
+
+      wsGapji.mergeCells('A1:D1');
+      const gTitle = wsGapji.getCell('A1');
+      gTitle.value = '시  험  성  적  서';
+      xlsStyle(gTitle, { bold: true, size: 20, color: XLS_COLOR.title, align: 'center', border: false });
+      gTitle.border = { bottom: { style: 'medium', color: { argb: XLS_COLOR.title } } };
+      wsGapji.getRow(1).height = 32;
+
+      const metaRowsG = [
+        ['검사로트번호', q.lot_no || '-', null, null],
+        ['품    명', q.material || '-', '제작회사', q.maker || '-'],
+        ['규    격', q.variant || '-', '시험년월일', dateStr || '-'],
+        ['수    량', (q.qty || 0) + ' 대', '시  험  자', (q.attendants || {}).tester || '-'],
+        ['제조번호', serialRange(pool), '시험입회자', (q.attendants || {}).inspector || '-']
       ];
+      let r = 2;
+      metaRowsG.forEach((row, idx) => {
+        if (idx === 0) wsGapji.mergeCells(`B${r}:D${r}`);
+        const rr = wsGapji.getRow(r);
+        xlsStyle(rr.getCell(1), { bold: true, bg: XLS_COLOR.labelBg }); rr.getCell(1).value = row[0];
+        xlsStyle(rr.getCell(2), { align: 'left' }); rr.getCell(2).value = row[1];
+        if (idx !== 0) {
+          xlsStyle(rr.getCell(3), { bold: true, bg: XLS_COLOR.labelBg }); rr.getCell(3).value = row[2];
+          xlsStyle(rr.getCell(4), { align: 'left' }); rr.getCell(4).value = row[3];
+        }
+        rr.height = 20;
+        r++;
+      });
+
+      r++; // 여백용 빈 행 (테두리 없음)
+
+      const hdrRowG = wsGapji.getRow(r);
+      ['시험항목[기준]', '결   과', '시험항목[기준]', '결   과'].forEach((t, i) => {
+        xlsStyle(hdrRowG.getCell(i + 1), { bold: true, bg: XLS_COLOR.headerBg }); hdrRowG.getCell(i + 1).value = t;
+      });
+      hdrRowG.height = 20;
+      r++;
 
       const allItems = [];
       Object.values(q.results || {}).forEach(grp => {
         (grp.items || []).forEach(it => {
           let resVal;
-          if (it.na) resVal = '해당없음 (-)';
+          if (it.na) resVal = '해당없음';
           else if (it.exempt) resVal = '시험면제';
           else if (it.kind === 'cert') {
-            const dt = (it.cert||{}).date || '';
+            const dt = (it.cert || {}).date || '';
             resVal = '공인기관 성적서 대체, 별첨' + (dt ? ' (' + dt + ')' : '');
           }
           else resVal = it.jdg || '-';
           allItems.push([it.name + (it.crit ? ' [' + it.crit + ']' : ''), resVal]);
         });
       });
-
       const half = Math.ceil(allItems.length / 2);
       for (let i = 0; i < half; i++) {
         const l = allItems[i] || ['', ''];
-        const r = allItems[i + half] || ['', ''];
-        gapjiRows.push([l[0], l[1], '', r[0], r[1]]);
+        const rItem = allItems[i + half] || ['', ''];
+        const row = wsGapji.getRow(r);
+        xlsStyle(row.getCell(1), { align: 'left', size: 9.5 }); row.getCell(1).value = l[0];
+        xlsStyle(row.getCell(2), Object.assign({ size: 9.5 }, xlsJudgeStyle(l[1]))); row.getCell(2).value = l[1];
+        xlsStyle(row.getCell(3), { align: 'left', size: 9.5 }); row.getCell(3).value = rItem[0];
+        xlsStyle(row.getCell(4), Object.assign({ size: 9.5 }, xlsJudgeStyle(rItem[1]))); row.getCell(4).value = rItem[1];
+        row.height = 26;
+        r++;
       }
 
-      const jdgDisplay = (q.final||{}).judgement === '합격' ? '시험합격' : ((q.final||{}).judgement || '-');
-      gapjiRows.push(['']);
-      gapjiRows.push(['시험근거 : ' + (q.gsNo || ''), '', '', '종 합 판 정', jdgDisplay]);
-      gapjiRows.push(['품질등급 : ' + (q.grade || ''), '', '', '한국전력공사', '']);
-      if ((q.final||{}).remark) gapjiRows.push(['비고 : ' + q.final.remark]);
+      const jdgTxt = (q.final || {}).judgement;
+      const jdgDisplay = jdgTxt === '합격' ? '시험합격' : (jdgTxt || '-');
+      const isGood = jdgTxt === '합격';
+      wsGapji.mergeCells(`A${r}:B${r}`);
+      const footRow1 = wsGapji.getRow(r);
+      xlsStyle(footRow1.getCell(1), { align: 'left', size: 9.5 });
+      footRow1.getCell(1).value = `시험근거 : ${q.gsNo || '-'}\n품질등급 : ${q.grade || '-'}`;
+      xlsStyle(footRow1.getCell(3), { bold: true }); footRow1.getCell(3).value = '종 합 판 정';
+      xlsStyle(footRow1.getCell(4), { bold: true, size: 13, color: isGood ? XLS_COLOR.good : XLS_COLOR.bad, bg: isGood ? XLS_COLOR.goodBg : XLS_COLOR.badBg });
+      footRow1.getCell(4).value = jdgDisplay;
+      footRow1.height = 32;
+      r++;
+      wsGapji.mergeCells(`A${r}:B${r}`);
+      wsGapji.mergeCells(`C${r}:D${r}`);
+      const footRow2 = wsGapji.getRow(r);
+      xlsStyle(footRow2.getCell(1), { align: 'left', size: 9, color: XLS_COLOR.gray });
+      footRow2.getCell(1).value = (q.final || {}).remark || '';
+      xlsStyle(footRow2.getCell(3), { bold: true }); footRow2.getCell(3).value = '한국전력공사';
+      footRow2.height = 20;
 
-      const wsGapji = XLSX.utils.aoa_to_sheet(gapjiRows);
-      // 열 너비 설정
-      wsGapji['!cols'] = [{wch:30},{wch:18},{wch:2},{wch:30},{wch:18}];
-      XLSX.utils.book_append_sheet(wb, wsGapji, '갑지');
-
-      // ====== 2. 을지 Sheet ======
-      const euljiRows = [
-        ['시  험  성  적  서'],
-        [''],
-        ['검사로트번호 :', q.lot_no || ''],
-        ['품    명 :', q.material || '', '', '제작회사 :', q.maker || ''],
-        ['규    격 :', q.variant || '', '', '시험년월일 :', dateStr],
-        ['수    량 :', (q.qty || 0) + ' 대', '', '시  험  자 :', (q.attendants || {}).tester || ''],
-        ['제조번호 :', serialRange(pool), '', '시험입회자 :', (q.attendants || {}).inspector || ''],
-        ['']
-      ];
-
-      const headerRow = ['제조번호 \ 시험항목', ...pool];
-      euljiRows.push(headerRow);
-
+      // ====== 2. 을지 Sheet (제조번호 매트릭스) ======
+      const itemsForEulji = [];
       Object.values(q.results || {}).forEach(grp => {
-        (grp.items || []).forEach(it => {
-          if (it.na) return;
-          if (it.kind === 'cert') {
-            const dt = (it.cert||{}).date || '';
-            const certTxt = '공인기관 성적서 대체, 별첨' + (dt ? ' (' + dt + ')' : '');
-            euljiRows.push([it.name, certTxt]);
-            return;
-          }
-          const row = [it.name + (it.crit ? ' [' + it.crit + ']' : '')];
-          pool.forEach(sn => {
-            const r = (it.res || {})[sn];
-            if (!r) { row.push('-'); return; }
-            if (r.val !== undefined && r.val !== null && r.val !== '') row.push(r.val);
-            else row.push(r.jdg || '-');
+        (grp.items || []).forEach(it => { if (!it.na) itemsForEulji.push(it); });
+      });
+      const nCols = 1 + Math.max(pool.length, 1);
+      const wsEulji = wb.addWorksheet('을지', {
+        pageSetup: {
+          orientation: pool.length > 6 ? 'landscape' : 'portrait',
+          fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: printMargins
+        }
+      });
+      wsEulji.getColumn(1).width = 30;
+      pool.forEach((_, i) => { wsEulji.getColumn(i + 2).width = 11; });
+
+      wsEulji.mergeCells(1, 1, 1, nCols);
+      const eTitle = wsEulji.getCell(1, 1);
+      eTitle.value = '시  험  성  적  서';
+      xlsStyle(eTitle, { bold: true, size: 18, color: XLS_COLOR.title, border: false });
+      eTitle.border = { bottom: { style: 'medium', color: { argb: XLS_COLOR.title } } };
+      wsEulji.getRow(1).height = 28;
+
+      let er = 3; // 2행은 여백
+      const eHdr = wsEulji.getRow(er);
+      xlsStyle(eHdr.getCell(1), { bold: true, bg: XLS_COLOR.headerBg, size: 9 }); eHdr.getCell(1).value = '제조번호 \\ 시험항목';
+      pool.forEach((sn, i) => { xlsStyle(eHdr.getCell(i + 2), { bold: true, bg: XLS_COLOR.headerBg }); eHdr.getCell(i + 2).value = sn; });
+      eHdr.height = 22;
+      er++;
+
+      itemsForEulji.forEach((it, idx) => {
+        const zebra = idx % 2 === 1 ? XLS_COLOR.zebraBg : null;
+        const row = wsEulji.getRow(er);
+        if (it.kind === 'cert') {
+          if (nCols > 2) wsEulji.mergeCells(er, 2, er, nCols);
+          xlsStyle(row.getCell(1), { align: 'left', size: 9, bg: zebra }); row.getCell(1).value = it.name + (it.crit ? ' [' + it.crit + ']' : '');
+          const dt = (it.cert || {}).date || '';
+          xlsStyle(row.getCell(2), { size: 9, color: XLS_COLOR.gray, bg: zebra }); row.getCell(2).value = '공인기관 성적서 대체, 별첨' + (dt ? ' (' + dt + ')' : '');
+        } else {
+          xlsStyle(row.getCell(1), { align: 'left', size: 9, bg: zebra }); row.getCell(1).value = it.name + (it.crit ? ' [' + it.crit + ']' : '');
+          pool.forEach((sn, i) => {
+            const rv = (it.res || {})[sn];
+            let v;
+            if (!rv) v = '-';
+            else if (rv.val !== undefined && rv.val !== null && rv.val !== '') v = rv.val;
+            else v = rv.jdg || '-';
+            xlsStyle(row.getCell(i + 2), Object.assign({ size: 9.5, bg: zebra }, xlsJudgeStyle(v)));
+            row.getCell(i + 2).value = v;
           });
-          euljiRows.push(row);
-        });
+        }
+        row.height = 20;
+        er++;
       });
 
-      const resRow = ['결    과'];
-      pool.forEach(sn => resRow.push(serialResultForQIR(q, sn)));
-      euljiRows.push(resRow);
-
-      const wsEulji = XLSX.utils.aoa_to_sheet(euljiRows);
-      wsEulji['!cols'] = [{wch:28}, ...pool.map(()=>({wch:10}))];
-      XLSX.utils.book_append_sheet(wb, wsEulji, '을지');
+      const resRowE = wsEulji.getRow(er);
+      xlsStyle(resRowE.getCell(1), { bold: true, bg: XLS_COLOR.resultBg }); resRowE.getCell(1).value = '결    과';
+      pool.forEach((sn, i) => {
+        const v = serialResultForQIR(q, sn);
+        xlsStyle(resRowE.getCell(i + 2), Object.assign({ bold: true, bg: XLS_COLOR.resultBg }, xlsJudgeStyle(v)));
+        resRowE.getCell(i + 2).value = v;
+      });
+      resRowE.height = 22;
 
       // 시트명 중복 방지용 (한전 예시 양식과 동일하게 '갑지','을지'는 먼저 선점)
       const usedSheetNames = new Set(['갑지', '을지']);
@@ -2343,73 +2438,121 @@
         const serials = pool.filter(sn => it.res && it.res[sn]);
         if (!serials.length) return;
         const fieldSet = resistanceFieldSet(it, serials);
-        const rows = [
-          [it.name + (it.crit ? ' [' + it.crit + ']' : '')],
-          ['제조번호', ...serials]
-        ];
-        fieldSet.forEach(fk => {
-          rows.push([fk, ...serials.map(sn => {
-            const v = ((it.res[sn] || {}).fields || {})[fk];
-            return (v === undefined || v === null || v === '') ? '-' : v;
-          })]);
+        const ws = wb.addWorksheet(safeSheetName(it.name, usedSheetNames), {
+          pageSetup: { orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: printMargins }
         });
-        rows.push(['결    과', ...serials.map(sn => (it.res[sn] || {}).jdg || '-')]);
-        const wsRes = XLSX.utils.aoa_to_sheet(rows);
-        wsRes['!cols'] = [{wch:18}, ...serials.map(()=>({wch:10}))];
-        XLSX.utils.book_append_sheet(wb, wsRes, safeSheetName(it.name, usedSheetNames));
+        ws.getColumn(1).width = 20;
+        serials.forEach((_, i) => { ws.getColumn(i + 2).width = 11; });
+        ws.mergeCells(1, 1, 1, serials.length + 1);
+        xlsStyle(ws.getCell(1, 1), { bold: true, size: 13, color: XLS_COLOR.title, border: false });
+        ws.getCell(1, 1).value = it.name + (it.crit ? ' [' + it.crit + ']' : '');
+        const hr = ws.getRow(2);
+        xlsStyle(hr.getCell(1), { bold: true, bg: XLS_COLOR.headerBg }); hr.getCell(1).value = '제조번호';
+        serials.forEach((sn, i) => { xlsStyle(hr.getCell(i + 2), { bold: true, bg: XLS_COLOR.headerBg }); hr.getCell(i + 2).value = sn; });
+        let rr = 3;
+        fieldSet.forEach(fk => {
+          const row = ws.getRow(rr);
+          xlsStyle(row.getCell(1), { align: 'left', size: 9.5 }); row.getCell(1).value = fk;
+          serials.forEach((sn, i) => {
+            const v = ((it.res[sn] || {}).fields || {})[fk];
+            xlsStyle(row.getCell(i + 2), { size: 9.5 });
+            row.getCell(i + 2).value = (v === undefined || v === null || v === '') ? '-' : v;
+          });
+          rr++;
+        });
+        const resRow = ws.getRow(rr);
+        xlsStyle(resRow.getCell(1), { bold: true, bg: XLS_COLOR.resultBg }); resRow.getCell(1).value = '결    과';
+        serials.forEach((sn, i) => {
+          const v = (it.res[sn] || {}).jdg || '-';
+          xlsStyle(resRow.getCell(i + 2), Object.assign({ bold: true, bg: XLS_COLOR.resultBg }, xlsJudgeStyle(v)));
+          resRow.getCell(i + 2).value = v;
+        });
       });
 
       // ====== 4. 별첨(공인기관 성적서 대체) 항목별 Sheet (항목마다 분리) ======
       certItemsList(q).forEach(it => {
         const files = it.certFiles || [];
-        const rows = [
-          [it.name + (it.crit ? ' [' + it.crit + ']' : '')],
+        const ws = wb.addWorksheet(safeSheetName(it.name, usedSheetNames), { pageSetup: { orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: printMargins } });
+        ws.getColumn(1).width = 10; ws.getColumn(2).width = 40; ws.getColumn(3).width = 16;
+        ws.mergeCells(1, 1, 1, 3);
+        xlsStyle(ws.getCell(1, 1), { bold: true, size: 13, color: XLS_COLOR.title, border: false });
+        ws.getCell(1, 1).value = it.name + (it.crit ? ' [' + it.crit + ']' : '');
+        const metaLines = [
           ['판정기준', it.crit || '-'],
-          ['제출여부', (it.cert||{}).submit || '미제출'],
-          ['제출일자', (it.cert||{}).date || '-'],
-          ['발취/주기', it.samp || it.cycle || '-'],
-          [''],
-          ['연번', '첨부파일명', '파일형식']
+          ['제출여부', (it.cert || {}).submit || '미제출'],
+          ['제출일자', (it.cert || {}).date || '-'],
+          ['발취/주기', it.samp || it.cycle || '-']
         ];
-        if (files.length) {
-          files.forEach((f, idx) => rows.push([idx + 1, f.name || '-', f.type || '-']));
-        } else {
-          rows.push(['-', '첨부파일 없음', '-']);
-        }
-        rows.push(['']);
-        rows.push(['※ 첨부 이미지/PDF 원본은 PDF 출력물에서 확인할 수 있습니다.']);
-        const wsCert = XLSX.utils.aoa_to_sheet(rows);
-        wsCert['!cols'] = [{wch:6},{wch:36},{wch:16}];
-        XLSX.utils.book_append_sheet(wb, wsCert, safeSheetName(it.name, usedSheetNames));
+        let rr = 2;
+        metaLines.forEach(([k, v]) => {
+          ws.mergeCells(rr, 2, rr, 3);
+          const row = ws.getRow(rr);
+          xlsStyle(row.getCell(1), { bold: true, bg: XLS_COLOR.labelBg }); row.getCell(1).value = k;
+          xlsStyle(row.getCell(2), { align: 'left' }); row.getCell(2).value = v;
+          rr++;
+        });
+        rr++;
+        const hdr2 = ws.getRow(rr);
+        ['연번', '첨부파일명', '파일형식'].forEach((t, i) => { xlsStyle(hdr2.getCell(i + 1), { bold: true, bg: XLS_COLOR.headerBg }); hdr2.getCell(i + 1).value = t; });
+        rr++;
+        const fileRows = files.length ? files.map((f, idx) => [idx + 1, f.name || '-', f.type || '-']) : [['-', '첨부파일 없음', '-']];
+        fileRows.forEach(fr => {
+          const row = ws.getRow(rr);
+          [1, 2, 3].forEach(ci => xlsStyle(row.getCell(ci), { align: ci === 2 ? 'left' : 'center' }));
+          row.getCell(1).value = fr[0]; row.getCell(2).value = fr[1]; row.getCell(3).value = fr[2];
+          rr++;
+        });
+        rr++;
+        ws.mergeCells(rr, 1, rr, 3);
+        xlsStyle(ws.getCell(rr, 1), { align: 'left', size: 9, color: XLS_COLOR.gray, border: false });
+        ws.getCell(rr, 1).value = '※ 첨부 이미지/PDF 원본은 PDF 출력물에서 확인할 수 있습니다.';
       });
 
       // ====== 5. 시험 사진대지 Sheet ======
-      const photoRows = [['연번', '캡션', '비고']];
-      const photos = q.photos || [];
-      if (photos.length) {
-        photos.forEach((p, idx) => photoRows.push([idx + 1, p.caption || '시험 진행 사진', '']));
-      } else {
-        photoRows.push(['-', '첨부된 사진 없음', '']);
+      {
+        const ws = wb.addWorksheet(safeSheetName('사진대지', usedSheetNames), { pageSetup: { orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: printMargins } });
+        ws.getColumn(1).width = 8; ws.getColumn(2).width = 36; ws.getColumn(3).width = 20;
+        const hdr = ws.getRow(1);
+        ['연번', '캡션', '비고'].forEach((t, i) => { xlsStyle(hdr.getCell(i + 1), { bold: true, bg: XLS_COLOR.headerBg }); hdr.getCell(i + 1).value = t; });
+        const photos = q.photos || [];
+        const photoRows = photos.length ? photos.map((p, idx) => [idx + 1, p.caption || '시험 진행 사진', '']) : [['-', '첨부된 사진 없음', '']];
+        let rr = 2;
+        photoRows.forEach(pr => {
+          const row = ws.getRow(rr);
+          [1, 2, 3].forEach(ci => xlsStyle(row.getCell(ci), { align: ci === 2 ? 'left' : 'center' }));
+          row.getCell(1).value = pr[0]; row.getCell(2).value = pr[1]; row.getCell(3).value = pr[2];
+          rr++;
+        });
+        rr++;
+        ws.mergeCells(rr, 1, rr, 3);
+        xlsStyle(ws.getCell(rr, 1), { align: 'left', size: 9, color: XLS_COLOR.gray, border: false });
+        ws.getCell(rr, 1).value = '※ 실제 사진 이미지는 PDF 출력물의 "시험사진대지" 페이지에서 확인할 수 있습니다.';
       }
-      photoRows.push(['']);
-      photoRows.push(['※ 실제 사진 이미지는 PDF 출력물의 "시험사진대지" 페이지에서 확인할 수 있습니다.']);
-      const wsPhoto = XLSX.utils.aoa_to_sheet(photoRows);
-      wsPhoto['!cols'] = [{wch:6},{wch:30},{wch:20}];
-      XLSX.utils.book_append_sheet(wb, wsPhoto, safeSheetName('사진대지', usedSheetNames));
 
       // ====== 6. 시료 리스트 Sheet ======
-      const sampleRows = [['연번', '제조번호 (Serial)', '품질등급', '개별 판정']];
-      pool.forEach((sn, idx) => {
-        sampleRows.push([idx + 1, sn, q.grade || 'B', serialResultForQIR(q, sn)]);
-      });
-      const wsSample = XLSX.utils.aoa_to_sheet(sampleRows);
-      wsSample['!cols'] = [{wch:6},{wch:20},{wch:10},{wch:10}];
-      XLSX.utils.book_append_sheet(wb, wsSample, safeSheetName('시료 리스트', usedSheetNames));
+      {
+        const ws = wb.addWorksheet(safeSheetName('시료 리스트', usedSheetNames), { pageSetup: { orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: printMargins } });
+        ws.getColumn(1).width = 8; ws.getColumn(2).width = 22; ws.getColumn(3).width = 12; ws.getColumn(4).width = 12;
+        const hdr = ws.getRow(1);
+        ['연번', '제조번호 (Serial)', '품질등급', '개별 판정'].forEach((t, i) => { xlsStyle(hdr.getCell(i + 1), { bold: true, bg: XLS_COLOR.headerBg }); hdr.getCell(i + 1).value = t; });
+        pool.forEach((sn, idx) => {
+          const v = serialResultForQIR(q, sn);
+          const row = ws.getRow(idx + 2);
+          [1, 2, 3].forEach(ci => xlsStyle(row.getCell(ci), {}));
+          xlsStyle(row.getCell(4), Object.assign({ bold: true }, xlsJudgeStyle(v)));
+          row.getCell(1).value = idx + 1; row.getCell(2).value = sn; row.getCell(3).value = q.grade || 'B'; row.getCell(4).value = v;
+        });
+      }
 
       const lotTag = q.lot_no || '발취';
-      const dateTag = (td.start || new Date().toISOString().slice(0,10)).replace(/-/g,'');
-      const fileName = `${lotTag}_${q.material||'개폐기'}_${pool.length}대_${dateTag}.xlsx`;
-      XLSX.writeFile(wb, fileName);
+      const dateTag = (td.start || new Date().toISOString().slice(0, 10)).replace(/-/g, '');
+      const fileName = `${lotTag}_${q.material || '개폐기'}_${pool.length}대_${dateTag}.xlsx`;
+      const buf = await wb.xlsx.writeBuffer();
+      const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = fileName; document.body.appendChild(a); a.click();
+      setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 0);
     }
 
     function downloadPDF(q, kind = 'both') {
