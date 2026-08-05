@@ -418,7 +418,7 @@
     <div class="modal-overlay" id="feedbackModalOverlay" style="display:none">
       <div class="modal-box" style="max-width:480px">
         <h3 style="margin-bottom:14px">💬 개선의견 보내기</h3>
-        <div class="field"><label>작성자명</label><input id="fbAuthor" placeholder="이름을 입력하세요"></div>
+        <div class="field"><label>이름/회사명</label><input id="fbAuthor" placeholder="이름 또는 회사명(예: OO산전)을 입력하세요"></div>
         <div class="field"><label>개선의견</label><textarea id="fbOpinion" placeholder="불편한 점이나 개선했으면 하는 내용을 자유롭게 적어주세요" style="min-height:120px"></textarea></div>
         <div class="row" style="justify-content:flex-end;gap:8px;margin-top:8px">
           <button class="btn secondary" id="btnFeedbackCancel">취소</button>
@@ -1075,7 +1075,7 @@
     function submitFeedback(){
       const author = $('fbAuthor').value.trim();
       const opinion = $('fbOpinion').value.trim();
-      if(!author){ alert('작성자명을 입력해주세요.'); return; }
+      if(!author){ alert('이름 또는 회사명을 입력해주세요.'); return; }
       if(!opinion){ alert('개선의견을 입력해주세요.'); return; }
       if(!FEEDBACK_WEBAPP_URL || FEEDBACK_WEBAPP_URL==='YOUR_APPS_SCRIPT_WEBAPP_URL_HERE'){
         alert('개선의견 저장 주소가 아직 설정되지 않았습니다. 관리자에게 문의해주세요.');
@@ -1520,12 +1520,14 @@
         <table class="tbl"><thead><tr><th style="width:24%">시험/검사 항목</th><th style="width:22%">판정기준</th><th style="width:10%">발취/주기</th><th style="width:44%">시험결과(제조번호별)</th></tr></thead>
           <tbody>${rows||'<tr><td colspan=4 class="muted">해당 항목 없음</td></tr>'}</tbody></table>
         <div class="split2" style="margin-top:12px">
-          <div class="field"><label>종합 판정(자동)</label><input value="${overall}" readonly></div>
+          <div class="field"><label>종합 판정(자동)</label><input id="stepOverallInput" value="${overall}" readonly></div>
           <div class="field"><label>비고</label><input data-k="__remark_${sd.key}" data-f="v" value="${(STATE['__remark_'+sd.key]||{}).v||''}"></div>
         </div>${navRow()}</div>`;
     }
     function updateStepCalc(sd) {
       if(!sd) return;
+      const overallInput=$('stepOverallInput');
+      if(overallInput) overallInput.value=stepOverall(sd);
       updateSummary();
       buildStepper();
       setupKeyboardAccess();
