@@ -505,7 +505,7 @@
   </div>
 
   <script>
-    const MAKERS = [{"name":"(주)디투엔지니어링"},{"name":"(주)비츠로일렉트릭","g":{"DREC":"A"}},{"name":"(주)에스얜에스","g":{"EPOXY":"D"}},{"name":"(주)엘파워텍"},{"name":"(주)엠에스그리드"},{"name":"(주)이앤엠테크"},{"name":"(주)이엔에스일렉트릭"},{"name":"(주)이페스"},{"name":"(주)이플전기"},{"name":"(주)케이피 일렉트릭"},{"name":"(주)테크프로","g":{"EPOXY":"D"}},{"name":"경동중전기(주)"},{"name":"구주기술(주)"},{"name":"구주진광 주식회사"},{"name":"동방전기공업 주식회사"},{"name":"동우일렉트릭 주식회사","g":{"POLE":"A"}},{"name":"보국전기공업(주)"},{"name":"보성파워텍(주)"},{"name":"부흥시스템 주식회사"},{"name":"샤든코리아 (주)"},{"name":"서창전기통신(주)","g":{"EPOXY":"S"}},{"name":"선도전기(주)"},{"name":"선일전기공업(주)"},{"name":"신성산전(주)","g":{"REC":"S"}},{"name":"신우전기제조(주)"},{"name":"쌍용전기 주식회사","g":{"EPOXY":"A"}},{"name":"유호전기공업(주)"},{"name":"이엔테크 주식회사"},{"name":"인텍전기전자 주식회사","g":{"REC":"A","DREC":"A","PREC":"A","EPOXY":"A","GIB":"C","EFI":"A"}},{"name":"일진홀딩스(주)","g":{"DREC":"A","EFI":"C"}},{"name":"주식회사 광명전기","g":{"REC":"C","DREC":"C","EPOXY":"D","EFI":"A"}},{"name":"주식회사 델코코(Delcoco Co.Ltd)","g":{"EPOXY":"D"}},{"name":"주식회사 동양이이씨","g":{"EPOXY":"A","EFI":"S"}},{"name":"주식회사 두레콤"},{"name":"주식회사 디티알"},{"name":"주식회사 서전기전"},{"name":"주식회사 스위코진광","g":{"DREC":"D"}},{"name":"주식회사 알텍시스템"},{"name":"주식회사 에스지이엠"},{"name":"주식회사 이피이"},{"name":"주식회사 정인시스템"},{"name":"주식회사파워맥스"},{"name":"중앙산업(주)"},{"name":"중원 주식회사","g":{"REC":"S","EFI":"S"}},{"name":"피앤에이파워시스템 주식회사","g":{"EPOXY":"D"}},{"name":"피에스텍(주)","g":{"POLE":"A"}}];
+    const MAKERS = [{"name":"(주)디투엔지니어링"},{"name":"(주)비츠로일렉트릭","g":{"DREC":"A"}},{"name":"(주)에스얜에스","g":{"EPOXY":"D"}},{"name":"(주)엘파워텍"},{"name":"(주)엠에스그리드"},{"name":"(주)이앤엠테크"},{"name":"(주)이엔에스일렉트릭"},{"name":"(주)이페스"},{"name":"(주)이플전기"},{"name":"(주)케이피 일렉트릭"},{"name":"(주)테크프로","g":{"EPOXY":"D"}},{"name":"경동중전기(주)"},{"name":"구주기술(주)"},{"name":"구주진광 주식회사"},{"name":"동방전기공업 주식회사"},{"name":"동우일렉트릭 주식회사","g":{"POLE":"A"}},{"name":"보국전기공업(주)"},{"name":"보성파워텍(주)"},{"name":"부흥시스템 주식회사"},{"name":"샤든코리아 (주)"},{"name":"서창전기통신(주)","g":{"EPOXY":"S"}},{"name":"선도전기(주)"},{"name":"선일전기공업(주)"},{"name":"신성산전(주)","g":{"REC":"S"}},{"name":"신우전기제조(주)"},{"name":"쌍용전기 주식회사","g":{"EPOXY":"A"}},{"name":"유호전기공업(주)"},{"name":"이엔테크 주식회사"},{"name":"인텍전기전자 주식회사","g":{"REC":"A","DREC":"A","PREC":"A","EPOXY":"A","EFI":"A"}},{"name":"일진홀딩스(주)","g":{"DREC":"A","EFI":"C"}},{"name":"주식회사 광명전기","g":{"REC":"C","DREC":"C","EPOXY":"D","EFI":"A"}},{"name":"주식회사 델코코(Delcoco Co.Ltd)","g":{"EPOXY":"D"}},{"name":"주식회사 동양이이씨","g":{"EPOXY":"A","EFI":"S"}},{"name":"주식회사 두레콤"},{"name":"주식회사 디티알"},{"name":"주식회사 서전기전"},{"name":"주식회사 스위코진광","g":{"DREC":"D"}},{"name":"주식회사 알텍시스템"},{"name":"주식회사 에스지이엠"},{"name":"주식회사 이피이"},{"name":"주식회사 정인시스템"},{"name":"주식회사파워맥스"},{"name":"중앙산업(주)"},{"name":"중원 주식회사","g":{"REC":"S","EFI":"S"}},{"name":"피앤에이파워시스템 주식회사","g":{"EPOXY":"D"}},{"name":"피에스텍(주)","g":{"POLE":"A"}}];
 
     // ===== 등급 규칙 (업무절차서 부록9) =====
     const GRADE_MULT = { S:0.5, A:0.5, B:1, C:2, D:2 };
@@ -658,48 +658,42 @@
         exemptKeys:['imp_wv','av','ai'],
       },
       {
-        id:'GIB', gsNo:'ES-5925-0008', name:'25.8kV 가스절연 다회로차단기(지중용)',
-        install:'지중', unit:'대', keywords:['가스절연','다회로차단기','지중','sf6','차단기','gib'],
-        variants:[ {value:'3회로 1차단형(108121)',mode:'자동',circuits:3}, {value:'3회로 1차단형 광고물(121527)',mode:'자동',circuits:3},
-                   {value:'3회로 2차단형 광고물(126873)',mode:'자동',circuits:3}, {value:'4회로 2차단형(108122)',mode:'자동',circuits:4},
-                   {value:'4회로 2차단형 광고물(121528)',mode:'자동',circuits:4}, {value:'4회로 3차단형 광고물(126874)',mode:'자동',circuits:4} ],
+        id:'EMCB', gsNo:'GS-5925-0012', name:'25.8kV 에폭시 다회로차단기',
+        install:'지상', unit:'대', keywords:['에폭시','다회로차단기','다회로','차단기','지중','지상','원격조작','emcb'],
+        variants:[ {value:'33-1B-A-125 3회로 1차단형(108174)',mode:'자동',circuits:3}, {value:'33-1B-A-125-P 3회로 1차단형 광고물(121466)',mode:'자동',circuits:3},
+                   {value:'33-2B-A-125-P 3회로 2차단형 광고물(126869)',mode:'자동',circuits:3}, {value:'44-2B-A-125 4회로 2차단형(108175)',mode:'자동',circuits:4},
+                   {value:'44-2B-A-125-P 4회로 2차단형 광고물(121467)',mode:'자동',circuits:4}, {value:'44-3B-A-125-P 4회로 3차단형 광고물(126870)',mode:'자동',circuits:4} ],
         steps:[
-          { key:'cb', title:'차단부 시험', items:[
-            { key:'cb_ap', name:'구조 및 외관검사(차단부)', ref:'7.2.1', crit:'5항 만족(외관 전량)', full:true },
-            { key:'cb_ac', name:'상용주파 내전압시험(차단부)', ref:'7.2.2', crit:'48kV·1분(절연캡 접지)', full:true },
-            { key:'cb_pd', name:'부분방전시험(차단부)', ref:'7.2.14', crit:'20pC 이하(최저 가스압)', unit:'pC', thr:{v:20,dir:'le'}, sampFn:S.per(20) },
-            { key:'cb_mr', name:'주회로 저항측정(차단부)', ref:'7.2.3', crit:'단자쌍별(µΩ, 전류前 1.2배)', resistance:'underground', full:true },
-            { key:'cb_tight', name:'기밀시험(차단부)', ref:'7.2.7', crit:'누설 1×10⁻⁵cc/s 이하(24h)', sampFn:S.note4_dry },
-            { key:'cb_trip', name:'최소동작전류시험(차단부)', ref:'7.2.13', crit:'3상중1상 최소/중간/최대', unit:'A', measureManual:true, sampFn:S.per(20) },
-            { key:'cb_tc', name:'T-C 특성시험(차단부)', ref:'7.2.16', crit:'150/300/500/1000%', unit:'s', measureManual:true, sampFn:S.per(20) },
-            { key:'cb_novolt', name:'무전압 개폐시험(차단부)', ref:'7.2.17', crit:'검수 10회 이상없음', full:true },
+          { key:'appear', title:'외관·구조검사', items:[
+            { key:'ap_body', name:'구조 및 외관검사', ref:'7.2.1', crit:'5항 만족(외관 전량)', full:true },
+            { key:'ap_ctrl', name:'제어함 구조 및 외관검사', ref:'7.2.18', crit:'5.4항 만족(외관 전량)', full:true },
           ]},
-          { key:'sw', title:'개폐부 시험', items:[
-            { key:'sw_ap', name:'구조 및 외관검사(개폐부)', ref:'7.3.1', crit:'5항 만족(외관 전량)', full:true },
-            { key:'sw_ac', name:'상용주파 내전압시험(개폐부)', ref:'7.3.2', crit:'48kV·1분(절연캡 접지)', full:true },
-            { key:'sw_mr', name:'주회로 저항측정(개폐부)', ref:'7.3.3', crit:'단자쌍별(µΩ, 전류前 1.2배)', resistance:'underground', full:true },
-            { key:'sw_tight', name:'기밀시험(개폐부)', ref:'7.3.7', crit:'누설 1×10⁻⁵cc/s 이하(24h)', sampFn:S.note4_dry },
-            { key:'sw_novolt', name:'무전압개폐·환경시험(개폐부)', ref:'7.3.12', crit:'검수 10회 이상없음', full:true },
+          { key:'insul', title:'절연·부분방전시험', items:[
+            { key:'ac_wv', name:'상용주파 내전압시험', ref:'7.2.8', crit:'48kV·1분(절연캡 접지)', full:true },
+            { key:'imp_wv', name:'충격파 내전압시험', ref:'7.2.8', crit:'주회로 125kV(1.2×50㎲)', sampFn:S.per(20), exemptSA:true },
+            { key:'pd', name:'부분방전시험', ref:'7.2.10', crit:'20pC 이하', unit:'pC', thr:{v:20,dir:'le'}, sampFn:S.per(20) },
+            { key:'mr', name:'주회로 저항측정', ref:'7.2.12', crit:'단자쌍별 측정(µΩ, 전류前 1.2배 이하)', resistance:'underground', sampFn:S.per(20) },
           ]},
-          { key:'etc', title:'절연·압력·기타시험', items:[
-            { key:'ir', name:'절연저항 측정(제어회로)', ref:'7.4.3', crit:'ES-5925-0001 5.6항', unit:'MΩ', measureManual:true, sampFn:S.per(20) },
-            { key:'press', name:'압력시험', ref:'7.4.5', crit:'IEEE C37.74 6.7.9(최저/최고 가스압)', sampFn:S.per(20) },
-            { key:'gaspurity', name:'가스순도시험', ref:'7.4.20', crit:'본체 SF6 98% 이상', unit:'%', thr:{v:98,dir:'ge'}, sampFn:S.per(20) },
-            { key:'gasrelief', name:'가스방출장치 동작시험', ref:'7.4.9', crit:'KS C 8330 안전막파괴(가스차단식)', sampFn:S.per(100) },
-            { key:'paint', name:'도장시험', ref:'7.4.19', crit:'평균 60㎛ 이상', unit:'㎛', thr:{v:60,dir:'ge'}, sampFn:S.note15_dry },
-            { key:'oring', name:'밀봉재(O-Ring) 재질시험', ref:'7.4.8', crit:'KS B 2805(볼트취부형)', cert:true, cycle:'성적서 대체' },
-            { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.4.18', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
-            { key:'pt', name:'전원용 PT 시험(유도내전압·부분방전)', ref:'7.4.21', crit:'IEC/PT업체 성적서(검수 매50대)', cert:true, cycle:'성적서 대체' },
+          { key:'func', title:'동작·기능시험', items:[
+            { key:'novolt', name:'무전압 개폐시험', ref:'7.2.6', crit:'검수 10회 이상없음', full:true },
+            { key:'trip', name:'최소동작전류 시험', ref:'7.2.19', crit:'3상중1상 최소/중간/최대', unit:'A', measureManual:true, sampFn:S.per(20) },
+            { key:'tc', name:'T-C 특성시험', ref:'7.2.20', crit:'150/300/500/1000%', unit:'s', measureManual:true, sampFn:S.per(20) },
+            { key:'ctrl_ac', name:'제어회로 상용주파 내전압', ref:'7.2.21.1', crit:'IEC 62271-111 6.10항', sampFn:S.per(20) },
+            { key:'sys', name:'시스템 연결동작 시험', ref:'7.2.22', crit:'6.6항(무전압개폐 3회)', full:true },
           ]},
-          { key:'ctrl', title:'제어·계측시험', items:[
-            { key:'ctrl_ap', name:'제어함 구조 및 외관검사', ref:'7.4.10', crit:'5.4항 만족(외관 전량)', full:true },
-            { key:'ctrl_ac', name:'제어회로 상용주파 내전압', ref:'7.4.11.1', crit:'2kV·1분', sampFn:S.per(10) },
-            { key:'sys', name:'시스템연결 동작시험', ref:'7.4.14', crit:'6.6항(무전압개폐 3회)', full:true },
-            { key:'av', name:'전압계측 정밀도 시험', ref:'7.4.15', crit:'±3%·±2°', sampFn:S.per(10), exemptSA:true },
-            { key:'ai', name:'전류계측 정밀도 시험', ref:'7.4.16', crit:'±3%·±2°·10P20', sampFn:S.per(10), exemptSA:true },
+          { key:'meas', title:'계측·기타', items:[
+            { key:'av', name:'전압계측 정밀도 시험', ref:'7.2.23', crit:'±1%·±40분', sampFn:S.per(20), exemptSA:true },
+            { key:'ai', name:'전류계측 정밀도 시험', ref:'7.2.24', crit:'1.0급·10P20', sampFn:S.per(20), exemptSA:true },
+            { key:'paint', name:'도장시험', ref:'7.2.29', crit:'평균 60㎛ 이상', unit:'㎛', thr:{v:60,dir:'ge'}, sampFn:S.note15_dry },
+            { key:'conn', name:'상연결 접속재 시험', ref:'7.2.16', crit:'절연층 최소두께 12㎜ 이상', unit:'mm', thr:{v:12,dir:'ge'}, sampFn:S.per(20) },
+            { key:'bushing', name:'부싱 시험', ref:'7.2.13', crit:'', sampFn:S.per(20) },
+            { key:'connector', name:'접속재 시험', ref:'7.2.13', crit:'IEEE 386', cert:true, cycle:'성적서 대체' },
+            { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.2.26', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
+            { key:'steel_t', name:'강판두께 측정', ref:'7.2.26', crit:'외함 2.0㎜↑·베이스 3.0㎜↑', full:true },
+            { key:'pt', name:'전압변성장치(PT) 시험', ref:'7.2.30', crit:'본체·케이블 내전압/부분방전', cert:true, cycle:'성적서 대체' },
           ]},
         ],
-        exemptKeys:['av','ai'],
+        exemptKeys:['imp_wv','av','ai'],
       },
       {
         id:'POLE', gsNo:'ES-5925-0004', name:'25.8kV 에폭시 주상개폐기(Eco)',
@@ -1041,7 +1035,7 @@
     // ===== 메인 목록 =====
     function renderSpecList(filter=''){
       const host=$('resultList'); host.innerHTML=''; const f=filter.trim().toLowerCase();
-      const ORDER={POLE:0,EPOXY:1,EFI:2,REC:3,DREC:4,PREC:5,GIB:6,DRYAIR:7,AIRPAD:8};
+      const ORDER={POLE:0,EPOXY:1,EFI:2,REC:3,DREC:4,PREC:5,EMCB:6,DRYAIR:7,AIRPAD:8};
       const list=SPECS.filter(s=>!f||s.name.toLowerCase().includes(f)||s.keywords.some(k=>k.includes(f))||s.gsNo.toLowerCase().includes(f)).sort((a,b)=>(ORDER[a.id]??99)-(ORDER[b.id]??99));
       $('resultCount').textContent=list.length+'건';
       if(!selectedSpec && list.length > 0){
