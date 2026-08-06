@@ -647,7 +647,7 @@
             { key:'ai', name:'전류계측 정밀도 시험', ref:'7.2.23', crit:'1.0급·10P20', autoOnly:true, sampFn:S.per(10), exemptSA:true },
             { key:'paint', name:'도장시험', ref:'7.2.26', crit:'평균 60㎛ 이상', unit:'㎛', thr:{v:60,dir:'ge'}, sampFn:S.note15_dry },
             { key:'conn', name:'상연결 접속재 시험', ref:'7.2.15', crit:'절연 최소두께 12mm↑(1상 3개소·주13)/기타 성적서(주16)', cert:true, cycle:'성적서/주13 실측' },
-            { key:'bushing', name:'부싱 시험', ref:'7.2.24', crit:'검수 극간충격파(매20대)+내한성(분기1회)·주11 / 성적서(주8)', cert:true, cycle:'성적서/주11 검수' },
+            { key:'bushing', name:'부싱 시험', ref:'7.2.24', crit:'', cert:true, cycle:'성적서/주11 검수' },
             { key:'connector', name:'접속재 시험', ref:'7.2.24', crit:'IEEE Std 386/성적서', cert:true, cycle:'성적서 대체' },
             { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.2.25', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
             { key:'pt', name:'전압변성장치(PT) 시험', ref:'7.2.27', crit:'IEC 61869-3/성적서(검수 매50대)', cert:true, cycle:'성적서 대체', autoOnly:true },
@@ -689,7 +689,7 @@
             { key:'paint', name:'도장시험', ref:'7.4.19', crit:'평균 60㎛ 이상', unit:'㎛', thr:{v:60,dir:'ge'}, sampFn:S.note15_dry },
             { key:'oring', name:'밀봉재(O-Ring) 재질시험', ref:'7.4.8', crit:'KS B 2805(볼트취부형)', cert:true, cycle:'성적서 대체' },
             { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.4.18', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
-            { key:'pt', name:'전원용 PT 시험(유도내전압·부분방전)', ref:'7.4.21', crit:'IEC/PT업체 성적서(검수 매50대)', cert:true, cycle:'성적서 대체' },
+            { key:'pt', name:'전원용 PT 시험(유도내전압·부분방전)', ref:'7.4.21', crit:'', cert:true, cycle:'성적서 대체' },
           ]},
           { key:'ctrl', title:'제어·계측시험', items:[
             { key:'ctrl_ap', name:'제어함 구조 및 외관검사', ref:'7.4.10', crit:'5.4항 만족(외관 전량)', full:true },
@@ -731,7 +731,7 @@
             { key:'av', name:'전압계측 정밀도 시험', ref:'7.3.20', crit:'전자식 1.0급(60044-7)', autoOnly:true, sampFn:S.per(50), exemptSA:true },
             { key:'batt', name:'축전지 성능시험', ref:'7.3.31', crit:'투개방 50회·24V(19~29V)', unit:'V', range:{min:19,max:29}, autoOnly:true, sampFn:S.per(20) },
             { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.3.24', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
-            { key:'cover', name:'절연커버 성능시험', ref:'7.3.27', crit:'ES-5970-0042(검수 내전압)', cert:true, cycle:'성적서 대체' },
+            { key:'cover', name:'절연커버 성능시험', ref:'7.3.27', crit:'', cert:true, cycle:'성적서 대체' },
             { key:'plate', name:'취부금구 도금시험', ref:'7.3.28', crit:'ES-0000-0003(조립전 사전시험)', cert:true, cycle:'성적서 대체' },
           ]},
         ],
@@ -1970,9 +1970,12 @@
           ${R('.mx tbody tr:nth-child(even) td','background:#f7fafd')}
           ${R('.mx .res-row td','font-weight:bold;background:#eef1f6!important;font-size:11px')}
           ${R('.pgbreak','page-break-before:always;break-before:page')}
-          ${R('.gapji-page','display:flex;flex-direction:column;min-height:257mm;box-sizing:border-box')}
+          /* flex+margin-top:auto로 종합판정을 페이지 하단에 붙이던 방식은 인쇄/PDF 변환기(html2pdf)가
+             flex 컨테이너를 페이지 단위로 나누지 못해 종합판정(한국전력공사) 표만 다음 페이지로
+             분리되는 문제가 있어 제거함. 표 바로 아래 고정 여백으로 배치하고 break-inside:avoid로 분리만 방지 */
+          ${R('.gapji-page','box-sizing:border-box')}
           ${R('.gapji-page>.res','margin-top:8px')}
-          ${R('.gapji-page>.foot','margin-top:auto')}
+          ${R('.gapji-page>.foot','margin-top:16px;page-break-inside:avoid;break-inside:avoid')}
           ${R('.good','color:#1565c0;font-weight:bold')}
           ${R('.bad','color:#c62828;font-weight:bold')}
           ${R('.na','color:#888')}
