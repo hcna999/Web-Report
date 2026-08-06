@@ -638,7 +638,7 @@
             { key:'av', name:'전압계측 정밀도 시험', ref:'7.2.22', crit:'±1%·±40분', autoOnly:true, sampFn:S.per(10), exemptSA:true },
             { key:'ai', name:'전류계측 정밀도 시험', ref:'7.2.23', crit:'1.0급·10P20', autoOnly:true, sampFn:S.per(10), exemptSA:true },
             { key:'paint', name:'도장시험', ref:'7.2.26', crit:'평균 60㎛ 이상', unit:'㎛', thr:{v:60,dir:'ge'}, sampFn:S.note15_dry },
-            { key:'conn', name:'상연결 접속재 시험', ref:'7.2.15', crit:'절연층 최소두께 12㎜ 이상', phaseConn:true, unit:'mm', thr:{v:12,dir:'ge'} },
+            { key:'conn', name:'상연결 접속재 시험', ref:'7.2.15', crit:'절연층 최소두께 12㎜ 이상', phaseConn:true, unit:'mm', thr:{v:12,dir:'ge'}, sampFn:S.per(10) },
             { key:'bushing', name:'부싱 시험', ref:'7.2.24', crit:'검수 극간충격파(매20대)+내한성(분기1회)·주11 / 성적서(주8)', cert:true, cycle:'성적서/주11 검수' },
             { key:'connector', name:'접속재 시험', ref:'7.2.24', crit:'IEEE Std 386/성적서', cert:true, cycle:'성적서 대체' },
             { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.2.25', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
@@ -677,7 +677,7 @@
             { key:'av', name:'전압계측 정밀도 시험', ref:'7.2.23', crit:'±1%·±40분', sampFn:S.per(20), exemptSA:true },
             { key:'ai', name:'전류계측 정밀도 시험', ref:'7.2.24', crit:'1.0급·10P20', sampFn:S.per(20), exemptSA:true },
             { key:'paint', name:'도장시험', ref:'7.2.29', crit:'평균 60㎛ 이상', unit:'㎛', thr:{v:60,dir:'ge'}, sampFn:S.note15_dry },
-            { key:'conn', name:'상연결 접속재 시험', ref:'7.2.16', crit:'절연층 최소두께 12㎜ 이상', phaseConn:true, unit:'mm', thr:{v:12,dir:'ge'} },
+            { key:'conn', name:'상연결 접속재 시험', ref:'7.2.16', crit:'절연층 최소두께 12㎜ 이상', phaseConn:true, unit:'mm', thr:{v:12,dir:'ge'}, sampFn:S.per(20) },
             { key:'bushing', name:'부싱 시험', ref:'7.2.13', crit:'', sampFn:S.per(20) },
             { key:'connector', name:'접속재 시험', ref:'7.2.13', crit:'IEEE 386', cert:true, cycle:'성적서 대체' },
             { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.2.26', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
@@ -940,18 +940,18 @@
       return P*31536000*(meas-atm)*Vv*pct/den*100;
     }
     // 발취 대상 여부(전수·주기제출 제외)
-    function isSampled(it){ return !it.full && !it.cert && !it.phaseConn; }
-    // ===== 상연결 접속재(phaseConn) — A·B·C상 각 3개소(9칸) 절연층 두께 실측 =====
-    // 항목단위 시험(제조번호별 아님). 9칸을 모두 채우면 최소값을 thr 기준과 비교해 자동 판정.
+    function isSampled(it){ return !it.full && !it.cert; }
+    // ===== 상연결 접속재(phaseConn) — 제조번호별 A·B·C상 각 3개소(9칸) 절연층 두께 실측 =====
+    // 규격 주13) 절연체 최소두께를 1상당 3개소 측정. 발취 대상이므로 제조번호별로 입력받는다.
+    // 9칸 값은 res[sn].fields(pc_A1…pc_C3)에 저장하고, 최소값을 res[sn].val로 넣어 기존 thr 자동판정에 연결.
     const PHASES=['A','B','C'];
-    function phaseObj(st){ const p=(st||{}).phase||{}; const o={};
-      PHASES.forEach(ph=>{ const a=Array.isArray(p[ph])?p[ph].slice(0,3):[]; while(a.length<3) a.push(''); o[ph]=a; });
-      return o; }
-    function phaseVals(st){ const o=phaseObj(st); return PHASES.flatMap(ph=>o[ph]).map(v=>String(v).trim()); }
-    function phaseFilled(st){ return phaseVals(st).every(v=>v!=='' && isFinite(Number(v))); }
-    function phaseMin(st){ const nums=phaseVals(st).filter(v=>v!=='' && isFinite(Number(v))).map(Number);
-      return nums.length?Math.min(...nums):null; }
-    function phaseAuto(it,st){ if(!phaseFilled(st)) return ''; return autoVal(it, phaseMin(st)); }
+    const PC_KEYS=PHASES.flatMap(p=>[1,2,3].map(i=>({k:'pc_'+p+i, ph:p, idx:i})));
+    function pcFields(st,sn){ return (((st.res||{})[sn])||{}).fields||{}; }
+    function pcNums(st,sn){ const f=pcFields(st,sn);
+      return PC_KEYS.map(x=>f[x.k]).filter(v=>v!==undefined&&String(v).trim()!==''&&isFinite(Number(v))).map(Number); }
+    function pcFilled(st,sn){ return pcNums(st,sn).length===9; }
+    function pcMin(st,sn){ const n=pcNums(st,sn); return n.length?Math.min(...n):''; }
+    function pcAuto(it,st,sn){ return pcFilled(st,sn)?autoVal(it,pcMin(st,sn)):''; }
     // ===== 부분방전시험(pdPhase) — 상간 3개 + 대지간 1개 인가부분별 측정 =====
     // 규격 표2 주2) 하우징을 실드 처리한 경우 상간의 최대부분방전량 측정은 생략할 수 있음
     const PD_ROWS=[ {k:'pd_a',lab:'Aa-BbCc',grp:'상 간'}, {k:'pd_b',lab:'Bb-AaCc',grp:'상 간'},
@@ -1470,23 +1470,24 @@
           </div>
         </div>`;
       }
-      // 상연결 접속재 — A·B·C상 각 3개소 두께 실측(9칸) + 자동/수동 판정
-      if(it.phaseConn){
-        const ph=phaseObj(st); const u=it.unit?`(${it.unit})`:'';
-        const mn=phaseMin(st); const auto=phaseAuto(it,st); const cur=st.jdg||'';
-        const grid=`<table class="rgrid tbl"><tr><th style="min-width:96px;white-space:nowrap">상 \\ 측정개소</th><th>1개소${u}</th><th>2개소${u}</th><th>3개소${u}</th></tr>
-          ${PHASES.map(p=>`<tr><th>${p}상</th>${[0,1,2].map(i=>
-            `<td><input data-k="${it.key}" data-phc="${p}" data-pci="${i}" value="${ph[p][i]||''}" style="width:84px"></td>`).join('')}</tr>`).join('')}</table>`;
-        return `<div>${grid}
-          <div class="row" style="gap:10px;margin-top:5px;align-items:center;flex-wrap:wrap">
-            <span class="muted" style="font-size:11px">최소두께 <b data-phmin="${it.key}" style="color:#0f172a">${mn!==null?mn:'-'}</b>${it.unit||''}</span>
-            <span class="muted" style="font-size:11px">자동판정 <span data-phauto="${it.key}" class="autojdg ${auto==='양호'?'aj-good':auto==='불량'?'aj-bad':'aj-none'}">${auto||'-'}</span></span>
-            판정 ${selBox(it.key,'phase-jdg',['','양호','불량'],cur)}
-          </div>
-          <div class="muted" style="font-size:11px;margin-top:3px">9칸을 모두 입력하면 최소값 기준으로 판정이 자동 갱신됩니다.</div></div>`;
-      }
       const serials=st.serials||[];
       if(!serials.length) return `<span class="muted" style="font-size:12px">발취 화면에서 먼저 발취하세요.</span>`;
+      // 상연결 접속재 — 제조번호별 A·B·C상 각 3개소(9칸) 두께 실측 → 최소값 자동판정
+      if(it.phaseConn){
+        const u=it.unit?`(${it.unit})`:'';
+        return serials.map(sn=>{
+          const f=pcFields(st,sn); const mn=pcMin(st,sn); const aj=pcAuto(it,st,sn);
+          const grid=`<table class="rgrid tbl"><tr><th style="min-width:96px;white-space:nowrap">상 \\ 측정개소</th><th>1개소${u}</th><th>2개소${u}</th><th>3개소${u}</th></tr>
+            ${PHASES.map(p=>`<tr><th>${p}상</th>${[1,2,3].map(i=>
+              `<td><input data-k="${it.key}" data-sn="${sn}" data-fld="pc_${p}${i}" value="${f['pc_'+p+i]||''}" style="width:84px"></td>`).join('')}</tr>`).join('')}</table>`;
+          return `<div style="margin-bottom:8px"><div class="muted" style="font-size:11px;margin-bottom:3px">제조번호 <b>${sn}</b></div>
+            ${grid}
+            <div class="row" style="gap:10px;margin-top:4px;align-items:center;flex-wrap:wrap">
+              <span class="muted" style="font-size:11px">최소두께 <b data-pcmin="${it.key}|${sn}" style="color:#0f172a">${mn!==''?mn:'-'}</b>${it.unit||''}</span>
+              <span class="muted" style="font-size:11px">판정 <span data-pcauto="${it.key}|${sn}" class="autojdg ${aj==='양호'?'aj-good':aj==='불량'?'aj-bad':'aj-none'}">${aj||'-'}</span></span>
+            </div></div>`;
+        }).join('');
+      }
       // 기밀시험(가스누설) — 기본값(클릭 수정) + 제조번호별 입력값 → 연간누설량 자동계산
       if(it.gasLeak){
         const d=Object.assign({},GAS_DEFAULTS,st.gasDef||{});
@@ -1691,7 +1692,6 @@
           el.addEventListener('input', updateGasDef);
           el.addEventListener('change', updateGasDef);
         }
-        else if(f==='phase-jdg'){ el.addEventListener('change',()=>{ STATE[k]=STATE[k]||{}; STATE[k].jdg=el.value; updateStepCalc(sd); }); }
         else if(f==='pd-shield'){
           el.addEventListener('change',()=>{
             const s=STATE[k]=STATE[k]||{}; s.shield=el.checked;
@@ -1707,28 +1707,6 @@
           el.addEventListener('change', updateV);
         }
       });
-      // 상연결 접속재 9칸 (A·B·C상 × 3개소) — 재렌더 없이 표시만 갱신(입력 중 포커스 유지)
-      host.querySelectorAll('input[data-phc]').forEach(el=>{
-        const k=el.dataset.k, ph=el.dataset.phc, idx=Number(el.dataset.pci);
-        const item=(CUR.spec.steps.flatMap(x=>x.items)).find(i=>i.key===k);
-        const store=()=>{
-          const s=STATE[k]=STATE[k]||{};
-          s.phase=phaseObj(s);                        // 3×3 형태 보장
-          s.phase[ph][idx]=el.value;
-          if(!item) return;
-          const mn=phaseMin(s), auto=phaseAuto(item,s);
-          if(auto) s.jdg=auto;                        // 9칸 완성 시 자동 판정
-          const mEl=host.querySelector(`[data-phmin="${k}"]`);
-          if(mEl) mEl.textContent=(mn!==null?mn:'-');
-          const aEl=host.querySelector(`[data-phauto="${k}"]`);
-          if(aEl){ aEl.textContent=auto||'-'; aEl.className='autojdg '+(auto==='양호'?'aj-good':auto==='불량'?'aj-bad':'aj-none'); }
-          const sel=host.querySelector(`select[data-k="${k}"][data-f="phase-jdg"]`);
-          if(sel && auto) sel.value=auto;
-          updateStepCalc(sd);
-        };
-        el.addEventListener('input', store);
-        el.addEventListener('change', store);
-      });
       // 제조번호별 결과 (data-sn + data-fld)
       host.querySelectorAll('[data-sn][data-fld]').forEach(el=>{
         const k=el.dataset.k, sn=el.dataset.sn, fld=el.dataset.fld;
@@ -1737,10 +1715,21 @@
           else if(fld==='__val') s.res[sn].val=el.value;
           else { s.res[sn].fields=s.res[sn].fields||{}; s.res[sn].fields[fld]=el.value;
             if(fld.indexOf('gas_')===0){ const gv=gasLeakVal(s,sn); s.res[sn].val=(gv!==null?gv:''); }
-            if(fld.indexOf('pd_')===0){                       // 부분방전: 인가부분 중 최대값이 판정 기준
-              s.res[sn].val=pdMax(s,sn);
+            if(fld.indexOf('pc_')===0){                       // 상연결 접속재: 9개소 중 최소두께가 판정 기준
+              const mn=pcMin(s,sn);
+              s.res[sn].val = pcFilled(s,sn) ? mn : '';        // 9칸이 다 차야 판정값 확정
               const item=(CUR.spec.steps.flatMap(x=>x.items)).find(i=>i.key===k);
-              const mx=s.res[sn].val, aj=(mx!==''&&pdFilled(s,sn)&&item)?autoVal(item,Number(mx)):'';
+              const aj=item?pcAuto(item,s,sn):'';
+              const mEl=host.querySelector(`[data-pcmin="${k}|${sn}"]`);
+              if(mEl) mEl.textContent=(mn!==''?mn:'-');
+              const aEl=host.querySelector(`[data-pcauto="${k}|${sn}"]`);
+              if(aEl){ aEl.textContent=aj||'-'; aEl.className='autojdg '+(aj==='양호'?'aj-good':aj==='불량'?'aj-bad':'aj-none'); }
+            }
+            if(fld.indexOf('pd_')===0){                       // 부분방전: 인가부분 중 최대값이 판정 기준
+              const mx=pdMax(s,sn);
+              s.res[sn].val = pdFilled(s,sn) ? mx : '';        // 인가부분이 다 차야 판정값 확정
+              const item=(CUR.spec.steps.flatMap(x=>x.items)).find(i=>i.key===k);
+              const aj=(mx!==''&&pdFilled(s,sn)&&item)?autoVal(item,Number(mx)):'';
               const mEl=host.querySelector(`[data-pdmax="${k}|${sn}"]`);
               if(mEl) mEl.textContent=(mx!==''?mx:'-');
               const aEl=host.querySelector(`[data-pdauto="${k}|${sn}"]`);
@@ -1757,7 +1746,6 @@
       const st=STATE[it.key]||{};
       if(it.full) return (st.full||{}).jdg||'';
       if(it.cert){ const sm=(st.cert||{}).submit; return sm==='제출'||sm==='해당없음'?'양호':(sm==='미제출'?'불량':''); }
-      if(it.phaseConn) return st.jdg||phaseAuto(it,st)||'';
       const serials=st.serials||[]; if(!serials.length) return '';
       let bad=false, filled=0;
       serials.forEach(sn=>{ const r=(st.res||{})[sn]||{};
@@ -1937,7 +1925,10 @@
     // 자동판정 항목은 제조번호별 판정을 QIR에 채워 저장/출력에 반영
     function resForQIR(it,st){
       const res=JSON.parse(JSON.stringify(st.res||{}));
-      if(it.thr||it.range){ (st.serials||[]).forEach(sn=>{ const r=res[sn]; if(r&&r.val!==undefined&&r.val!=='') r.jdg=autoVal(it,Number(r.val)); }); }
+      if(it.thr||it.range){ (st.serials||[]).forEach(sn=>{ const r=res[sn];
+        // 상연결접속재(최소두께)·부분방전(최대값)은 9칸/인가부분 입력이 끝난 경우에만 자동판정
+        if(it.phaseConn){ if(pcFilled(st,sn)) r.jdg=autoVal(it,pcMin(st,sn)); return; }
+        if(r&&r.val!==undefined&&r.val!=='') r.jdg=autoVal(it,Number(r.val)); }); }
       return res;
     }
     // ===== QIR =====
@@ -1948,8 +1939,8 @@
           return { key:it.key, name:it.name, ref:it.ref, crit:it.crit, exempt:isExempt(it), na,
             kind: it.full?'full':it.cert?'cert':it.phaseConn?'phaseConn':it.pdPhase?'pdPhase':it.resistance?'resistance':(it.thr||it.range)?'measureAuto':it.measureManual?'measureManual':'jdg', certFiles: st.certFiles||[],
             shield: it.pdPhase?!!st.shield:undefined, noGapji: !!it.noGapji,
-            samp: na?'해당없음':(it.full?'전량':(it.phaseConn?'A·B·C상 각3개소':(it.cert?(it.cycle||'-'):(it.sampNote||sampCount(it)+'대')))),
-            full: st.full||null, cert: st.cert||null, phase: it.phaseConn?phaseObj(st):null, unit: it.unit||'',
+            samp: na?'해당없음':(it.full?'전량':(it.cert?(it.cycle||'-'):(it.sampNote||sampCount(it)+'대'))),
+            full: st.full||null, cert: st.cert||null, unit: it.unit||'',
             serials: na?[]:(st.serials||[]), res: na?{}:resForQIR(it,st), jdg: na?'':itemJudged(it) }; }) }; });
       return { schema:'kepco-qir-switchgear.v0.2', spec_id:CUR.spec.id, gsNo:CUR.spec.gsNo, material:CUR.spec.name,
         variant:CUR.variant, mode:CUR.mode, install:CUR.spec.install, circuits:circuits(), grade:CUR.grade, grade_source:CUR.gradeSource,
@@ -1990,8 +1981,6 @@
           if(it.full){ xml+=`        <Full jdg="${escXml(it.full.jdg)}"><BadSerials>${(it.full.badSerials||[]).map(b=>`<Bad>${escXml(b)}</Bad>`).join('')}</BadSerials></Full>\n`; }
           if(it.cert){ xml+=`        <Cert submit="${escXml(it.cert.submit)}" date="${escXml(it.cert.date)}"/>\n`; }
           if(it.shield!==undefined){ xml+=`        <Shield>${escXml(it.shield)}</Shield>\n`; }
-          if(it.phase){ xml+=`        <Phase unit="${escXml(it.unit)}">${['A','B','C'].map(p=>
-            `<Ph name="${p}">${(it.phase[p]||[]).map(v=>`<V>${escXml(v)}</V>`).join('')}</Ph>`).join('')}</Phase>\n`; }
           if(it.serials&&it.serials.length){ xml+=`        <Serials>${it.serials.map(s=>`<SN>${escXml(s)}</SN>`).join('')}</Serials>\n`; }
           if(it.res){ xml+=`        <Res>\n`; Object.entries(it.res).forEach(([sn,r])=>{
             xml+=`          <SNRes sn="${escXml(sn)}" val="${escXml(r.val)}" jdg="${escXml(r.jdg)}">\n`;
@@ -2021,13 +2010,9 @@
           if(fullEl){ full={ jdg:fullEl.getAttribute('jdg')||'', badSerials:Array.from(fullEl.querySelectorAll('BadSerials Bad')).map(b=>b.textContent.trim()) }; }
           const certEl=iEl.querySelector('Cert');
           if(certEl){ cert={ submit:certEl.getAttribute('submit')||'', date:certEl.getAttribute('date')||'' }; }
-          let phase=null, unit='';
+          const unit=getTxt(iEl,'Unit')||'';
           const shEl=iEl.querySelector('Shield');
           const shield = shEl ? (shEl.textContent.trim()==='true') : undefined;
-          const phEl=iEl.querySelector('Phase');
-          if(phEl){ unit=phEl.getAttribute('unit')||''; phase={};
-            ['A','B','C'].forEach(p=>{ const n=Array.from(phEl.querySelectorAll(`Ph[name="${p}"] V`)).map(v=>v.textContent.trim());
-              while(n.length<3) n.push(''); phase[p]=n.slice(0,3); }); }
           const serials=Array.from(iEl.querySelectorAll('Serials SN')).map(sn=>sn.textContent.trim());
           const res={};
           iEl.querySelectorAll('Res SNRes').forEach(snEl=>{
@@ -2035,7 +2020,7 @@
             snEl.querySelectorAll('Fields Field').forEach(fEl=>{ fields[fEl.getAttribute('name')]=fEl.textContent.trim(); });
             res[sn]={ val: (val!=='' && !isNaN(val)) ? Number(val) : val, jdg:rJdg, fields };
           });
-          items.push({ key, name, ref, crit, kind, samp, exempt, na, full, cert, phase, unit, shield, noGapji, serials, res, jdg });
+          items.push({ key, name, ref, crit, kind, samp, exempt, na, full, cert, unit, shield, noGapji, serials, res, jdg });
         });
         results[sKey]={ title:sTitle, overall:getTxt(sEl,'Overall'), remark:getTxt(sEl,'Remark'), items };
       });
@@ -2071,8 +2056,7 @@
           desc:s.fixed?s.desc:((q.photos[i]||{}).caption||''), fixed:s.fixed }));
       } else { ensurePhotos(); }
       Object.values(q.results||{}).forEach(g=>{ g.items.forEach(it=>{ STATE[it.key]={ serials:it.serials||[], res:it.res||{}, full:it.full||undefined, cert:it.cert||undefined,
-        phase:it.phase||undefined, jdg:(it.kind==='phaseConn'?it.jdg:undefined), certFiles:it.certFiles||undefined,
-        shield:(it.shield!==undefined?it.shield:undefined) }; }); });
+        certFiles:it.certFiles||undefined, shield:(it.shield!==undefined?it.shield:undefined) }; }); });
       activeStep=0;
     }
     // (메인 화면의 저장 파일(XML) 불러오기 UI는 제거됨 — xmlToQIR/loadQIRObj는 내부 로직에서 계속 사용)
@@ -2117,7 +2101,7 @@
     }
     function serialResult(q,sn){
       let any=false,bad=false;
-      flatItems(q).forEach(it=>{ if(it.kind==='cert'||it.kind==='phaseConn') return; const v=cellVal(it,sn);
+      flatItems(q).forEach(it=>{ if(it.kind==='cert') return; const v=cellVal(it,sn);
         if(v==='양호'){any=true;} if(v==='불량'){any=true;bad=true;} });
       return bad?'불량':(any?'양호':'-');
     }
@@ -2289,7 +2273,7 @@
     }
     function euljiHTML(q){
       const serials=(q.pool_list&&q.pool_list.length)?q.pool_list:[];
-      const items=flatItems(q).filter(it=>it.kind!=='cert' && it.kind!=='phaseConn' && !it.na && !it.noGapji); // 을지: 별첨(cert)·상연결접속재(항목단위)·자동형전용(해당없음)·제출서류 제외
+      const items=flatItems(q).filter(it=>it.kind!=='cert' && !it.na && !it.noGapji); // 을지: 별첨(cert)·자동형전용(해당없음)·제출서류 제외
       const PER_BLOCK=10, BLOCKS_PER_PAGE=2; // 블록당 10대, 페이지당 2블록(=20대)
       const blocks=[]; for(let i=0;i<serials.length;i+=PER_BLOCK) blocks.push(serials.slice(i,i+PER_BLOCK));
       if(!blocks.length) blocks.push([]);
@@ -2362,23 +2346,30 @@
           <table class="mx"><thead>${head}</thead><tbody>${body}${resRow}</tbody></table>
         </div>`;
     }
-    // 상연결 접속재 실측값 시트 (9칸 두께 + 최소값 + 판정)
+    // 상연결 접속재 실측값 시트 (제조번호별 9칸 두께 + 최소값 + 판정)
     function phaseConnHTML(it, q) {
-      const ph = it.phase || {};
-      const vals = ['A','B','C'].flatMap(p => (ph[p] || [])).filter(v => v !== '' && v !== undefined && isFinite(Number(v))).map(Number);
-      if (!vals.length) return '';
-      const mn = Math.min(...vals);
+      const serials = (it.serials || []).filter(sn => (it.res || {})[sn]);
+      if (!serials.length) return '';
       const u = it.unit || '';
-      const head = `<tr><th style="width:22%">상 \\ 측정개소</th><th>1개소</th><th>2개소</th><th>3개소</th></tr>`;
-      const body = ['A','B','C'].map(p => `<tr><td class="item">${p}상</td>${[0,1,2].map(i => {
-        const v = (ph[p] || [])[i];
-        return `<td>${(v === undefined || v === null || v === '') ? '-' : v}</td>`;
+      const head = `<tr><th style="width:16%">상 \\ 측정개소</th>${serials.map(sn =>
+        `<th colspan="3">${sn}</th>`).join('')}</tr>
+        <tr><th></th>${serials.map(() => `<th>1개소</th><th>2개소</th><th>3개소</th>`).join('')}</tr>`;
+      const body = ['A','B','C'].map(p => `<tr><td class="item">${p}상</td>${serials.map(sn => {
+        const f = ((it.res || {})[sn] || {}).fields || {};
+        return [1,2,3].map(i => {
+          const v = f['pc_' + p + i];
+          return `<td>${(v === undefined || v === null || v === '') ? '-' : v}</td>`;
+        }).join('');
       }).join('')}</tr>`).join('');
-      const resRow = `<tr class="res-row"><td class="item">최소두께 / 판정</td><td>${mn}${u}</td><td colspan="2">${jbP(it.jdg || '-')}</td></tr>`;
+      const resRow = `<tr class="res-row"><td class="item">최소두께 / 판정</td>${serials.map(sn => {
+        const r = (it.res || {})[sn] || {};
+        const mn = (r.val === undefined || r.val === '') ? '-' : (r.val + u);
+        return `<td colspan="2">${mn}</td><td>${jbP(r.jdg || '-')}</td>`;
+      }).join('')}</tr>`;
       return `<div class="pgbreak"></div>
         <div class="gapji-page" style="padding:10mm;background:#fff">
           <h1>${it.name}</h1>
-          <div style="font-size:10.5px;color:#555;margin-bottom:8px;text-align:center">${it.crit ? ('판정기준 : ' + it.crit) : ''}</div>
+          <div style="font-size:10.5px;color:#555;margin-bottom:8px;text-align:center">${it.crit ? ('판정기준 : ' + it.crit + (u ? ' (단위 ' + u + ')' : '')) : ''}</div>
           <table class="mx"><thead>${head}</thead><tbody>${body}${resRow}</tbody></table>
         </div>`;
     }
@@ -2654,7 +2645,7 @@
       // ====== 2. 을지 Sheet (제조번호 매트릭스) ======
       const itemsForEulji = [];
       Object.values(q.results || {}).forEach(grp => {
-        (grp.items || []).forEach(it => { if (!it.na && it.kind !== 'phaseConn' && !it.noGapji) itemsForEulji.push(it); });
+        (grp.items || []).forEach(it => { if (!it.na && !it.noGapji) itemsForEulji.push(it); });
       });
       const nCols = 1 + Math.max(pool.length, 1);
       const wsEulji = wb.addWorksheet('을지', {
@@ -2790,40 +2781,52 @@
         });
       });
 
-      // ====== 3-3. 상연결 접속재 두께 실측값 Sheet (A·B·C상 각 3개소) ======
+      // ====== 3-3. 상연결 접속재 두께 실측값 Sheet (제조번호별 A·B·C상 각 3개소) ======
       phaseConnItemsList(q).forEach(it => {
-        const ph = it.phase || {};
-        const vals = ['A', 'B', 'C'].flatMap(p => (ph[p] || [])).filter(v => v !== '' && v !== undefined && isFinite(Number(v))).map(Number);
-        if (!vals.length) return;
+        const serials = pool.filter(sn => it.res && it.res[sn]);
+        if (!serials.length) return;
         const ws = wb.addWorksheet(safeSheetName(it.name, usedSheetNames), {
           pageSetup: { orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: printMargins }
         });
-        ws.getColumn(1).width = 16;
-        [2, 3, 4].forEach(c => { ws.getColumn(c).width = 13; });
-        ws.mergeCells(1, 1, 1, 4);
+        ws.getColumn(1).width = 16; ws.getColumn(2).width = 12;
+        serials.forEach((_, i) => { ws.getColumn(i + 3).width = 12; });
+        ws.mergeCells(1, 1, 1, serials.length + 2);
         xlsStyle(ws.getCell(1, 1), { bold: true, size: 13, color: XLS_COLOR.title, border: false });
         ws.getCell(1, 1).value = it.name + (it.crit ? ' [' + it.crit + ']' : '');
         const hr = ws.getRow(2);
-        ['상 \\ 측정개소', '1개소', '2개소', '3개소'].forEach((t, i) => {
-          xlsStyle(hr.getCell(i + 1), { bold: true, bg: XLS_COLOR.headerBg }); hr.getCell(i + 1).value = t;
-        });
+        ['상', '측정개소'].forEach((t, i) => { xlsStyle(hr.getCell(i + 1), { bold: true, bg: XLS_COLOR.headerBg }); hr.getCell(i + 1).value = t; });
+        serials.forEach((sn, i) => { xlsStyle(hr.getCell(i + 3), { bold: true, bg: XLS_COLOR.headerBg }); hr.getCell(i + 3).value = sn; });
         let rr = 3;
         ['A', 'B', 'C'].forEach(p => {
-          const row = ws.getRow(rr);
-          xlsStyle(row.getCell(1), { bold: true, bg: XLS_COLOR.headerBg }); row.getCell(1).value = p + '상';
-          [0, 1, 2].forEach(i => {
-            const v = (ph[p] || [])[i];
-            xlsStyle(row.getCell(i + 2), { size: 9.5 });
-            row.getCell(i + 2).value = (v === undefined || v === null || v === '') ? '-' : Number(v);
+          [1, 2, 3].forEach(i => {
+            const row = ws.getRow(rr);
+            xlsStyle(row.getCell(1), { bold: true, bg: XLS_COLOR.headerBg }); row.getCell(1).value = p + '상';
+            xlsStyle(row.getCell(2), { size: 9.5 }); row.getCell(2).value = i + '개소';
+            serials.forEach((sn, si) => {
+              const v = ((it.res[sn] || {}).fields || {})['pc_' + p + i];
+              xlsStyle(row.getCell(si + 3), { size: 9.5 });
+              row.getCell(si + 3).value = (v === undefined || v === null || v === '') ? '-' : Number(v);
+            });
+            rr++;
           });
-          rr++;
         });
+        const minRow = ws.getRow(rr);
+        ws.mergeCells(rr, 1, rr, 2);
+        xlsStyle(minRow.getCell(1), { bold: true, bg: XLS_COLOR.resultBg }); minRow.getCell(1).value = '최소두께';
+        serials.forEach((sn, si) => {
+          const v = (it.res[sn] || {}).val;
+          xlsStyle(minRow.getCell(si + 3), { bold: true, bg: XLS_COLOR.resultBg });
+          minRow.getCell(si + 3).value = (v === undefined || v === '') ? '-' : Number(v);
+        });
+        rr++;
         const resRow = ws.getRow(rr);
-        xlsStyle(resRow.getCell(1), { bold: true, bg: XLS_COLOR.resultBg }); resRow.getCell(1).value = '최소두께 / 판정';
-        xlsStyle(resRow.getCell(2), { bold: true, bg: XLS_COLOR.resultBg }); resRow.getCell(2).value = Math.min(...vals);
-        ws.mergeCells(rr, 3, rr, 4);
-        xlsStyle(resRow.getCell(3), Object.assign({ bold: true, bg: XLS_COLOR.resultBg }, xlsJudgeStyle(it.jdg || '-')));
-        resRow.getCell(3).value = it.jdg || '-';
+        ws.mergeCells(rr, 1, rr, 2);
+        xlsStyle(resRow.getCell(1), { bold: true, bg: XLS_COLOR.resultBg }); resRow.getCell(1).value = '결    과';
+        serials.forEach((sn, si) => {
+          const v = (it.res[sn] || {}).jdg || '-';
+          xlsStyle(resRow.getCell(si + 3), Object.assign({ bold: true, bg: XLS_COLOR.resultBg }, xlsJudgeStyle(v)));
+          resRow.getCell(si + 3).value = v;
+        });
       });
 
       // ====== 4. 별첨(공인기관 성적서 대체) 항목별 Sheet (항목마다 분리) ======
