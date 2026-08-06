@@ -461,14 +461,6 @@
           <div class="row" style="justify-content:space-between; margin-bottom:8px">
             <h3 style="margin:0">품목 목록</h3><span class="badge" id="resultCount">0건</span></div>
           <div class="listbox" id="resultList"></div>
-          <div class="divider"></div>
-          <h3>저장 파일(XML) 불러오기</h3>
-          <div class="field"><input id="qirImport" type="file" accept=".xml,.qir,.json,.txt,application/xml,text/xml" /></div>
-          <div class="row">
-            <button class="btn secondary" id="btnEditLoaded" disabled>수정하기</button>
-            <button class="btn secondary" id="btnPrintLoaded" disabled>저장(PDF)</button>
-            <button class="btn secondary" id="btnPrintLoadedDetail" disabled>저장(XLSX)</button>
-          </div>
         </div>
         <div class="card">
           <h3>현황</h3>
@@ -546,7 +538,7 @@
           { key:'insul', title:'절연시험', items:[
             { key:'ac_wv', name:'상용주파 내전압시험', ref:'7.3.7.1', crit:'건조 60kV·1분(검수 주수생략)', full:true },
             { key:'imp_wv', name:'충격파 내전압시험', ref:'7.3.7.2', crit:'150kV(1.2×50㎲)', sampFn:S.note2_efi, exemptSA:true },
-            { key:'pd', name:'부분방전시험', ref:'7.3.9', crit:'20pC 이하', unit:'pC', thr:{v:20,dir:'le'}, sampFn:S.note2_efi },
+            { key:'pd', name:'부분방전시험', ref:'7.3.9', crit:'20pC 이하', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, sampFn:S.note2_efi },
             { key:'ctrl_ac', name:'제어회로 상용주파 내전압', ref:'7.3.20.1', crit:'2kV·1분', full:true },
             { key:'seal', name:'본체 밀봉시험', ref:'7.3.24', crit:'IP X8 1h→건조내전압', sampFn:S.per(50), exemptSA:true },
             { key:'ir', name:'절연저항 측정(제어회로)', ref:'7.3.12', crit:'측정', unit:'MΩ', measureManual:true, full:true },
@@ -584,7 +576,7 @@
           { key:'insul', title:'절연·가스시험', items:[
             { key:'ac_wv', name:'상용주파 내전압시험', ref:'7.2.2.1', crit:'48kV·1분(절연캡 접지)', full:true },
             { key:'imp_wv', name:'충격파 내전압시험', ref:'7.2.2.2', crit:'125/165kV', sampFn:S.note1_dry, exemptSA:true },
-            { key:'pd', name:'부분방전시험', ref:'7.2.2.3', crit:'20pC 이하', unit:'pC', thr:{v:20,dir:'le'}, sampFn:S.per(10) },
+            { key:'pd', name:'부분방전시험', ref:'7.2.2.3', crit:'20pC 이하', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, sampFn:S.per(10) },
             { key:'mr', name:'주회로 저항측정', ref:'7.2.3', crit:'단자쌍별 측정(µΩ, 무전압개폐 후)', resistance:'underground', sampFn:S.note1_dry },
             { key:'tight', name:'기밀시험', ref:'7.2.7', crit:'연누기율 0.5% 이하', unit:'%/년', thr:{v:0.5,dir:'le'}, gasLeak:true, sampFn:S.note4_dry },
             { key:'ir', name:'절연저항 측정(제어회로)', ref:'7.2.15', crit:'측정', unit:'MΩ', measureManual:true, sampFn:S.note1_dry },
@@ -632,7 +624,7 @@
           { key:'insul', title:'절연·부분방전시험', items:[
             { key:'ac_wv', name:'상용주파 내전압시험', ref:'7.2.6', crit:'48kV·1분(절연캡 접지)', full:true },
             { key:'imp_wv', name:'충격파 내전압시험', ref:'7.2.6', crit:'주회로 125kV(1.2×50㎲)', sampFn:S.per(20), exemptSA:true },
-            { key:'pd', name:'부분방전시험', ref:'7.2.12', crit:'20pC 이하', unit:'pC', thr:{v:20,dir:'le'}, sampFn:S.per(20) },
+            { key:'pd', name:'부분방전시험', ref:'7.2.12', crit:'20pC 이하', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, sampFn:S.per(20) },
             { key:'mr', name:'주회로 저항측정', ref:'7.2.2', crit:'단자쌍별 측정(µΩ, 전류前 1.2배 이하)', resistance:'underground', sampFn:S.per(20) },
             { key:'ir', name:'절연저항 측정(제어회로)', ref:'7.2.9', crit:'ES-5925-0001 5.6항', unit:'MΩ', measureManual:true, autoOnly:true, full:true },
           ]},
@@ -646,7 +638,7 @@
             { key:'av', name:'전압계측 정밀도 시험', ref:'7.2.22', crit:'±1%·±40분', autoOnly:true, sampFn:S.per(10), exemptSA:true },
             { key:'ai', name:'전류계측 정밀도 시험', ref:'7.2.23', crit:'1.0급·10P20', autoOnly:true, sampFn:S.per(10), exemptSA:true },
             { key:'paint', name:'도장시험', ref:'7.2.26', crit:'평균 60㎛ 이상', unit:'㎛', thr:{v:60,dir:'ge'}, sampFn:S.note15_dry },
-            { key:'conn', name:'상연결 접속재 시험', ref:'7.2.15', crit:'절연 최소두께 12mm↑(1상 3개소·주13)/기타 성적서(주16)', cert:true, cycle:'성적서/주13 실측' },
+            { key:'conn', name:'상연결 접속재 시험', ref:'7.2.15', crit:'절연층 최소두께 12㎜ 이상', phaseConn:true, unit:'mm', thr:{v:12,dir:'ge'} },
             { key:'bushing', name:'부싱 시험', ref:'7.2.24', crit:'검수 극간충격파(매20대)+내한성(분기1회)·주11 / 성적서(주8)', cert:true, cycle:'성적서/주11 검수' },
             { key:'connector', name:'접속재 시험', ref:'7.2.24', crit:'IEEE Std 386/성적서', cert:true, cycle:'성적서 대체' },
             { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.2.25', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
@@ -671,7 +663,7 @@
           { key:'insul', title:'절연·부분방전시험', items:[
             { key:'ac_wv', name:'상용주파 내전압시험', ref:'7.2.8', crit:'48kV·1분(절연캡 접지)', full:true },
             { key:'imp_wv', name:'충격파 내전압시험', ref:'7.2.8', crit:'주회로 125kV(1.2×50㎲)', sampFn:S.per(20), exemptSA:true },
-            { key:'pd', name:'부분방전시험', ref:'7.2.10', crit:'20pC 이하', unit:'pC', thr:{v:20,dir:'le'}, sampFn:S.per(20) },
+            { key:'pd', name:'부분방전시험', ref:'7.2.10', crit:'20pC 이하', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, sampFn:S.per(20) },
             { key:'mr', name:'주회로 저항측정', ref:'7.2.12', crit:'단자쌍별 측정(µΩ, 전류前 1.2배 이하)', resistance:'underground', sampFn:S.per(20) },
           ]},
           { key:'func', title:'동작·기능시험', items:[
@@ -708,7 +700,7 @@
           { key:'insul', title:'절연·부분방전시험', items:[
             { key:'ac_wv', name:'상용주파 내전압시험', ref:'7.3.6.1', crit:'건조 60kV·1분(검수 주수생략, DS 66kV)', full:true },
             { key:'imp_wv', name:'충격파 내전압시험', ref:'7.3.6.2', crit:'150kV(1.2×50㎲, DS 165kV)', sampFn:S.note2_efi, exemptSA:true },
-            { key:'pd', name:'부분방전시험', ref:'7.3.8', crit:'20pC 이하', unit:'pC', thr:{v:20,dir:'le'}, sampFn:S.per(20) },
+            { key:'pd', name:'부분방전시험', ref:'7.3.8', crit:'20pC 이하', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, sampFn:S.per(20) },
             { key:'mr', name:'주회로 저항측정', ref:'7.3.10', crit:'상별 측정(µΩ)', resistance:'overhead', sampFn:S.note2_efi },
             { key:'seal', name:'본체 밀봉시험', ref:'7.3.11', crit:'IP X8 1h→건조 60kV내전압', sampFn:S.per(50) },
             { key:'ir', name:'절연저항시험(제어회로)', ref:'7.3.17', crit:'ES-5925-0001', unit:'MΩ', measureManual:true, autoOnly:true, sampFn:S.per(50) },
@@ -744,7 +736,7 @@
           { key:'insul', title:'절연·가스시험', items:[
             { key:'ac_wv', name:'상용주파 내전압시험', ref:'7.2.2.1', crit:'48kV·1분(절연캡 접지)', full:true },
             { key:'imp_wv', name:'충격파 내전압시험', ref:'7.2.2.2', crit:'주회로 125·단로기극간 138kV(1.2×50㎲)', sampFn:S.note1_dry, exemptSA:true },
-            { key:'pd', name:'부분방전시험', ref:'7.2.2.3', crit:'20pC 이하(상간28.4/대지16.4kV)', unit:'pC', thr:{v:20,dir:'le'}, sampFn:S.per(10) },
+            { key:'pd', name:'부분방전시험', ref:'7.2.2.3', crit:'20pC 이하(상간28.4/대지16.4kV)', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, sampFn:S.per(10) },
             { key:'mr', name:'주회로 저항측정', ref:'7.2.3', crit:'단자쌍별 측정(µΩ, 무전압개폐 후 1.2배 이하)', resistance:'underground', sampFn:S.note1_dry },
             { key:'tight', name:'기밀시험', ref:'7.2.7', crit:'연누기율 0.5% 이하(72h)', unit:'%/년', thr:{v:0.5,dir:'le'}, sampFn:S.note4_dry },
             { key:'ir', name:'절연저항 측정(제어회로)', ref:'7.2.15', crit:'ES-5925-0001 5.6항', unit:'MΩ', measureManual:true, sampFn:S.note1_dry },
@@ -861,7 +853,7 @@
           ]},
           { key:'insul', title:'절연·저항시험', items:[
             { key:'ac_wv', name:'상용주파 내전압시험', ref:'7.3.2.1', crit:'건조 60kV·1분(검수 주수생략)', full:true },
-            { key:'pd', name:'부분방전시험', ref:'7.3.12', crit:'20pC 이하(상간28.4/대지16.4kV)', unit:'pC', thr:{v:20,dir:'le'}, sampFn:S.per(20) },
+            { key:'pd', name:'부분방전시험', ref:'7.3.12', crit:'20pC 이하(상간28.4/대지16.4kV)', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, sampFn:S.per(20) },
             { key:'mr', name:'주회로 저항측정', ref:'7.3.3', crit:'상별 측정(µΩ)', resistance:'overhead', sampFn:S.per(20) },
             { key:'ir', name:'절연저항 측정(제어회로)', ref:'7.3.15', crit:'ES-5925-0001 5.6항(제어회로)', unit:'MΩ', measureManual:true, full:true },
           ]},
@@ -889,6 +881,16 @@
         exemptKeys:['av','ai'],
       },
     ];
+
+    // 핵심부품 등록서 및 사용부품 확인서 — 전 품목 공통(마지막 시험 스텝 맨 아래)
+    // 시험항목이 아닌 제출서류이므로 갑지·을지에는 표시하지 않고(noGapji) 별첨 시트로만 출력
+    SPECS.forEach(sp=>{
+      const last=sp.steps[sp.steps.length-1];
+      if(!last.items.some(i=>i.key==='partsdoc')){
+        last.items.push({ key:'partsdoc', name:'핵심부품 등록서 및 사용부품 확인서', ref:'-', crit:'',
+          cert:true, cycle:'서류 확인', noGapji:true });
+      }
+    });
 
     // ===== 상태 =====
     let CUR=null, STATE={}, activeStep=0, selectedSpec=null, loadedQIR=null;
@@ -950,6 +952,23 @@
     function phaseMin(st){ const nums=phaseVals(st).filter(v=>v!=='' && isFinite(Number(v))).map(Number);
       return nums.length?Math.min(...nums):null; }
     function phaseAuto(it,st){ if(!phaseFilled(st)) return ''; return autoVal(it, phaseMin(st)); }
+    // ===== 부분방전시험(pdPhase) — 상간 3개 + 대지간 1개 인가부분별 측정 =====
+    // 규격 표2 주2) 하우징을 실드 처리한 경우 상간의 최대부분방전량 측정은 생략할 수 있음
+    const PD_ROWS=[ {k:'pd_a',lab:'Aa-BbCc',grp:'상 간'}, {k:'pd_b',lab:'Bb-AaCc',grp:'상 간'},
+                    {k:'pd_c',lab:'Cc-AaBb',grp:'상 간'}, {k:'pd_g',lab:'AaBbCc-F',grp:'대지간'} ];
+    function pdShieldable(){ return (CUR.spec||{}).install!=='가공'; }   // 지중·지상(패드)형만 실드 생략 가능
+    function pdShielded(st){ return !!(st||{}).shield; }
+    function pdRows(st){ return pdShielded(st)?PD_ROWS.filter(r=>r.grp==='대지간'):PD_ROWS; }
+    // 활성 인가부분 중 최대 측정값 → 기존 thr 자동판정(r.val)에 그대로 연결
+    function pdMax(st,sn){
+      const f=(((st.res||{})[sn])||{}).fields||{};
+      const nums=pdRows(st).map(r=>f[r.k]).filter(v=>v!==undefined&&String(v).trim()!==''&&isFinite(Number(v))).map(Number);
+      return nums.length?Math.max(...nums):'';
+    }
+    function pdFilled(st,sn){
+      const f=(((st.res||{})[sn])||{}).fields||{};
+      return pdRows(st).every(r=>{ const v=f[r.k]; return v!==undefined&&String(v).trim()!==''&&isFinite(Number(v)); });
+    }
     // 쉼표(,) 및 물결(~) 혼용 제조번호 파싱
     function parseSerials(str){
       if(!str||!str.trim()) return null;
@@ -1179,7 +1198,7 @@
       const testStart=2, testEnd=total-3; // test group indices
       if(activeStep===0){ host.innerHTML=renderBasic(); bindBasic(); }
       else if(activeStep===1){ host.innerHTML=renderSampling(); bindSampling(); }
-      else if(activeStep===total-2){ host.innerHTML=renderPhotos(); }
+      else if(activeStep===total-2){ host.innerHTML=renderPhotos(); bindPhotos(); }
       else if(activeStep===total-1){ host.innerHTML=renderFinal(); bindFinal(); }
       else { const sd=CUR.spec.steps[activeStep-2]; host.innerHTML=renderTestStep(sd); bindTestStep(sd); }
       host.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>{ activeStep=Number(b.dataset.nav); renderStep(); });
@@ -1486,6 +1505,29 @@
           }).join('')}</table>`;
         return defBox+table;
       }
+      // 부분방전시험 — 인가부분(상간 3 + 대지간 1)별 측정값
+      if(it.pdPhase){
+        const shielded=pdShielded(st); const rows=pdRows(st); const u=it.unit||'pC';
+        const shieldBox = pdShieldable()
+          ? `<label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;margin-bottom:6px;cursor:pointer">
+               <input type="checkbox" data-k="${it.key}" data-f="pd-shield" ${shielded?'checked':''}>
+               하우징 실드 처리 — 상간 측정 생략(대지간만 측정)
+             </label>` : '';
+        const tbl=serials.map(sn=>{
+          const r=(st.res||{})[sn]||{}; const f=r.fields||{};
+          const mx=pdMax(st,sn); const aj=(mx!==''&&pdFilled(st,sn))?autoVal(it,Number(mx)):'';
+          return `<div style="margin-bottom:8px"><div class="muted" style="font-size:11px;margin-bottom:3px">제조번호 <b>${sn}</b></div>
+            <table class="rgrid tbl"><tr><th style="min-width:64px">구분</th><th>인가부분</th><th>측정값(${u})</th></tr>
+              ${rows.map(rw=>`<tr><td>${rw.grp}</td><td>${rw.lab}</td>
+                <td><input data-k="${it.key}" data-sn="${sn}" data-fld="${rw.k}" value="${f[rw.k]||''}" style="width:84px"></td></tr>`).join('')}
+            </table>
+            <div class="row" style="gap:10px;margin-top:4px;align-items:center;flex-wrap:wrap">
+              <span class="muted" style="font-size:11px">최대 <b data-pdmax="${it.key}|${sn}" style="color:#0f172a">${mx!==''?mx:'-'}</b>${u}</span>
+              <span class="muted" style="font-size:11px">판정 <span data-pdauto="${it.key}|${sn}" class="autojdg ${aj==='양호'?'aj-good':aj==='불량'?'aj-bad':'aj-none'}">${aj||'-'}</span></span>
+            </div></div>`;
+        }).join('');
+        return shieldBox+tbl;
+      }
       // 주회로 저항
       if(it.resistance){
         const flds=resFields(it);
@@ -1650,6 +1692,15 @@
           el.addEventListener('change', updateGasDef);
         }
         else if(f==='phase-jdg'){ el.addEventListener('change',()=>{ STATE[k]=STATE[k]||{}; STATE[k].jdg=el.value; updateStepCalc(sd); }); }
+        else if(f==='pd-shield'){
+          el.addEventListener('change',()=>{
+            const s=STATE[k]=STATE[k]||{}; s.shield=el.checked;
+            const item=(CUR.spec.steps.flatMap(x=>x.items)).find(i=>i.key===k);
+            // 활성 인가부분이 바뀌므로 제조번호별 최대값(=판정 기준값) 재계산
+            (s.serials||[]).forEach(sn=>{ if(s.res&&s.res[sn]) s.res[sn].val=pdMax(s,sn); });
+            renderStep();
+          });
+        }
         else if(f==='v'){
           const updateV = ()=>{ STATE[k]=STATE[k]||{}; STATE[k].v=el.value; updateStepCalc(sd); };
           el.addEventListener('input', updateV);
@@ -1685,7 +1736,16 @@
           if(fld==='jdg') s.res[sn].jdg=el.value;
           else if(fld==='__val') s.res[sn].val=el.value;
           else { s.res[sn].fields=s.res[sn].fields||{}; s.res[sn].fields[fld]=el.value;
-            if(fld.indexOf('gas_')===0){ const gv=gasLeakVal(s,sn); s.res[sn].val=(gv!==null?gv:''); } }
+            if(fld.indexOf('gas_')===0){ const gv=gasLeakVal(s,sn); s.res[sn].val=(gv!==null?gv:''); }
+            if(fld.indexOf('pd_')===0){                       // 부분방전: 인가부분 중 최대값이 판정 기준
+              s.res[sn].val=pdMax(s,sn);
+              const item=(CUR.spec.steps.flatMap(x=>x.items)).find(i=>i.key===k);
+              const mx=s.res[sn].val, aj=(mx!==''&&pdFilled(s,sn)&&item)?autoVal(item,Number(mx)):'';
+              const mEl=host.querySelector(`[data-pdmax="${k}|${sn}"]`);
+              if(mEl) mEl.textContent=(mx!==''?mx:'-');
+              const aEl=host.querySelector(`[data-pdauto="${k}|${sn}"]`);
+              if(aEl){ aEl.textContent=aj||'-'; aEl.className='autojdg '+(aj==='양호'?'aj-good':aj==='불량'?'aj-bad':'aj-none'); }
+            } }
           updateStepCalc(sd);
         };
         if(el.tagName==='SELECT'){ el.addEventListener('change', store); }
@@ -1716,9 +1776,109 @@
     }
 
     // ===== 사진 =====
-    function renderPhotos(){ return `<div class="card"><h3>${activeStep+1}) 시험 사진</h3>
-      <p class="muted">시험 사진 첨부(초안 자리). 콘크리트 프로그램과 동일 방식으로 구현 예정.</p>
-      <input type="file" accept="image/*" multiple>${navRow()}</div>`; }
+    function escapeHtml(s){ return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    // ===== 시험 사진 (4장 고정 구성) =====
+    // 1번=무전압개폐시험(시험시작) 고정 / 2·3번=시험항목 선택 / 4번=봉인 체결(시험종료) 고정
+    const PHOTO_SLOTS=[
+      { fixed:true,  desc:'무전압개폐시험(시험시작)' },
+      { fixed:false, desc:'' },
+      { fixed:false, desc:'' },
+      { fixed:true,  desc:'봉인 체결(시험종료)' }
+    ];
+    function ensurePhotos(){
+      if(!Array.isArray(STATE.__photos) || STATE.__photos.length!==4){
+        const prev=Array.isArray(STATE.__photos)?STATE.__photos:[];
+        STATE.__photos=PHOTO_SLOTS.map((s,i)=>({
+          src:(prev[i]||{}).src||'',
+          desc:s.fixed?s.desc:((prev[i]||{}).desc||''),
+          fixed:s.fixed
+        }));
+      }
+      return STATE.__photos;
+    }
+    // 2·3번 사진 항목 선택지 — 현재 규격의 시험항목명(해당없음/면제 제외)
+    function photoDescOptions(){
+      const out=[];
+      (CUR.spec?CUR.spec.steps:[]).forEach(sd=>{ sd.items.forEach(it=>{ if(!isNA(it)&&!isExempt(it)) out.push(it.name); }); });
+      return [...new Set(out)];
+    }
+    // 사진 용량 축소(최대 1280px, JPEG 0.75) — 실패 시 원본 유지
+    function compressImage(file){
+      return new Promise(resolve=>{
+        const fr=new FileReader();
+        fr.onload=()=>{
+          const img=new Image();
+          img.onload=()=>{
+            try{
+              const MAX=1280; let {width:w,height:h}=img;
+              if(w>MAX||h>MAX){ const r=Math.min(MAX/w,MAX/h); w=Math.round(w*r); h=Math.round(h*r); }
+              const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+              cv.getContext('2d').drawImage(img,0,0,w,h);
+              resolve(cv.toDataURL('image/jpeg',0.75));
+            }catch(e){ resolve(fr.result); }
+          };
+          img.onerror=()=>resolve(fr.result);
+          img.src=fr.result;
+        };
+        fr.onerror=()=>resolve('');
+        fr.readAsDataURL(file);
+      });
+    }
+    function renderPhotos(){
+      const photos=ensurePhotos();
+      const opts=photoDescOptions();
+      const cells=photos.map((p,i)=>{
+        const n=i+1; const has=!!p.src;
+        const descBox = p.fixed
+          ? `<input class="photo-desc" value="${escapeHtml(p.desc)}" readonly title="고정 항목">`
+          : `<select class="photo-desc" data-ph="${i}" data-phf="desc">
+               <option value="">-- 시험항목 선택 --</option>
+               ${opts.map(o=>`<option value="${escapeHtml(o)}" ${p.desc===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}
+               <option value="__etc__" ${p.desc&&!opts.includes(p.desc)?'selected':''}>직접 입력…</option>
+             </select>
+             ${(p.desc&&!opts.includes(p.desc))?`<input class="photo-desc" data-ph="${i}" data-phf="descText" value="${escapeHtml(p.desc)}" placeholder="항목명 직접 입력">`:''}`;
+        return `<div class="photo-cell-wrap">
+          <div class="photo-cell" data-ph="${i}" data-phf="pick" title="클릭하여 사진 첨부">
+            ${has?`<img class="photo-img" src="${p.src}" style="display:block">
+                   <button class="btn-del-photo" data-ph="${i}" data-phf="del" style="display:block">×</button>`
+                 :`<span class="ph-span">＋ 사진 ${n} 첨부</span>`}
+          </div>
+          ${descBox}
+          <div style="text-align:center;padding:2px 0 5px">${p.fixed?'<span class="photo-fixed-tag">고정 항목</span>':'<span class="muted" style="font-size:10px">항목 선택</span>'}</div>
+          <input type="file" accept="image/*" data-ph="${i}" data-phf="file" style="display:none">
+        </div>`;
+      }).join('');
+      return `<div class="card"><h3>${activeStep+1}) 시험 사진</h3>
+        <p class="muted" style="font-size:12px">4장 구성 — ①무전압개폐시험(시험시작) ②③시험항목 선택 ④봉인 체결(시험종료). 사진 칸을 클릭해 첨부하세요.</p>
+        <div class="photo-grid">${cells}</div>${navRow()}</div>`;
+    }
+    function bindPhotos(){
+      const host=$('stepHost'); const photos=ensurePhotos();
+      host.querySelectorAll('[data-phf="pick"]').forEach(el=>{
+        el.onclick=()=>{ const i=el.dataset.ph; host.querySelector(`input[data-phf="file"][data-ph="${i}"]`)?.click(); };
+      });
+      host.querySelectorAll('input[data-phf="file"]').forEach(el=>{
+        el.onchange=async e=>{
+          const f=e.target.files&&e.target.files[0]; if(!f) return;
+          photos[Number(el.dataset.ph)].src=await compressImage(f);
+          renderStep();
+        };
+      });
+      host.querySelectorAll('[data-phf="del"]').forEach(el=>{
+        el.onclick=ev=>{ ev.stopPropagation(); photos[Number(el.dataset.ph)].src=''; renderStep(); };
+      });
+      host.querySelectorAll('select[data-phf="desc"]').forEach(el=>{
+        el.onchange=()=>{ const i=Number(el.dataset.ph);
+          photos[i].desc = (el.value==='__etc__') ? '' : el.value;
+          if(el.value==='__etc__') photos[i].desc='';
+          renderStep();
+          if(el.value==='__etc__') host.querySelector(`input[data-phf="descText"][data-ph="${i}"]`)?.focus();
+        };
+      });
+      host.querySelectorAll('input[data-phf="descText"]').forEach(el=>{
+        el.oninput=()=>{ photos[Number(el.dataset.ph)].desc=el.value; };
+      });
+    }
 
     // ===== 최종 =====
     function finalJudgement(){
@@ -1748,9 +1908,8 @@
           <div class="field"><label>종합 비고</label><input data-k="__final" data-f="remark" value="${(STATE.__final||{}).remark||''}"></div>
         </div><div class="divider"></div>
         <div class="row" style="justify-content:flex-end;gap:8px">
-          <button class="btn primary" id="btnDownloadPDF" style="background:#2563eb;color:#fff;min-width:110px">💾 PDF 저장</button>
-          <button class="btn primary" id="btnExportExcel" style="background:#10b981;color:#fff;min-width:120px">📊 XLSX 출력</button>
-          <button class="btn" id="btnSaveQIR">💾 저장(XML)</button>
+          <button class="btn primary" id="btnDownloadPDF" style="background:#2563eb;color:#fff;min-width:130px">📄 갑지 출력(PDF)</button>
+          <button class="btn primary" id="btnExportExcel" style="background:#10b981;color:#fff;min-width:150px">📊 전체내용 XLSX 출력</button>
         </div>${navRow()}</div>`;
     }
     function bindFinal(){
@@ -1760,8 +1919,7 @@
         STATE.__earlyTerminatedStepIndex = undefined;
         renderStep();
       });
-      $('btnSaveQIR').onclick=saveQIR;
-      if ($('btnDownloadPDF')) $('btnDownloadPDF').onclick=()=>downloadPDF(buildQIR(),'both');
+      if ($('btnDownloadPDF')) $('btnDownloadPDF').onclick=()=>downloadPDF(buildQIR(),'gapji');
       if ($('btnExportExcel')) $('btnExportExcel').onclick=()=>exportToExcel(buildQIR());
     }
 
@@ -1788,7 +1946,8 @@
       CUR.spec.steps.forEach(sd=>{ results[sd.key]={ title:sd.title, overall:stepOverall(sd), remark:(STATE['__remark_'+sd.key]||{}).v||'',
         items:orderedItems(sd).map(it=>{ const st=STATE[it.key]||{}; const na=isNA(it);
           return { key:it.key, name:it.name, ref:it.ref, crit:it.crit, exempt:isExempt(it), na,
-            kind: it.full?'full':it.cert?'cert':it.phaseConn?'phaseConn':it.resistance?'resistance':(it.thr||it.range)?'measureAuto':it.measureManual?'measureManual':'jdg', certFiles: st.certFiles||[],
+            kind: it.full?'full':it.cert?'cert':it.phaseConn?'phaseConn':it.pdPhase?'pdPhase':it.resistance?'resistance':(it.thr||it.range)?'measureAuto':it.measureManual?'measureManual':'jdg', certFiles: st.certFiles||[],
+            shield: it.pdPhase?!!st.shield:undefined, noGapji: !!it.noGapji,
             samp: na?'해당없음':(it.full?'전량':(it.phaseConn?'A·B·C상 각3개소':(it.cert?(it.cycle||'-'):(it.sampNote||sampCount(it)+'대')))),
             full: st.full||null, cert: st.cert||null, phase: it.phaseConn?phaseObj(st):null, unit: it.unit||'',
             serials: na?[]:(st.serials||[]), res: na?{}:resForQIR(it,st), jdg: na?'':itemJudged(it) }; }) }; });
@@ -1797,6 +1956,8 @@
         lot_no:b.lot||'', qty:b.qty||0, unit:'대', maker:b.maker||'', inspection_type:b.itype||'',
         serials_input:b.serialsInput||'', pool_list:pool(), test_dates:{start:b.sdate||'',end:b.edate||''},
         early_terminated: STATE.__earlyTerminated || false, early_terminated_step: STATE.__earlyTerminatedStepIndex || null,
+        // 4개 슬롯을 항상 그대로 저장 — 빈 칸을 걸러내면 불러올 때 슬롯 순서가 밀림
+        photos: ensurePhotos().map(p=>({ caption:p.desc||'', dataUrl:p.src||'', fixed:!!p.fixed })),
         attendants:{inspector:b.insp||'',tester:b.test||''}, results, final:{ judgement:finalJudgement(), remark:(STATE.__final||{}).remark||'' } };
     }
     // ===== XML 직렬화 & 파싱 =====
@@ -1817,14 +1978,18 @@
       xml+=`    <EarlyTerminated>${escXml(q.early_terminated)}</EarlyTerminated>\n`;
       xml+=`    <EarlyTerminatedStepIndex>${escXml(q.early_terminated_step)}</EarlyTerminatedStepIndex>\n`;
       xml+=`    <Attendants>\n      <Inspector>${escXml((q.attendants||{}).inspector)}</Inspector>\n      <Tester>${escXml((q.attendants||{}).tester)}</Tester>\n    </Attendants>\n  </Header>\n`;
+      xml+=`  <Photos>\n${(q.photos||[]).map(p=>
+        `    <Photo caption="${escXml(p.caption)}" fixed="${escXml(p.fixed)}">${escXml(p.dataUrl)}</Photo>\n`).join('')}  </Photos>\n`;
       xml+=`  <Final>\n    <Judgement>${escXml((q.final||{}).judgement)}</Judgement>\n    <Remark>${escXml((q.final||{}).remark)}</Remark>\n  </Final>\n  <Results>\n`;
       Object.entries(q.results||{}).forEach(([sKey,sObj])=>{
         xml+=`    <Step key="${escXml(sKey)}" title="${escXml(sObj.title)}">\n      <Overall>${escXml(sObj.overall)}</Overall>\n      <Remark>${escXml(sObj.remark)}</Remark>\n`;
         (sObj.items||[]).forEach(it=>{
           xml+=`      <Item key="${escXml(it.key)}" name="${escXml(it.name)}" ref="${escXml(it.ref)}">\n`;
           xml+=`        <Kind>${escXml(it.kind)}</Kind>\n        <Crit>${escXml(it.crit)}</Crit>\n        <Exempt>${escXml(it.exempt)}</Exempt>\n        <NA>${escXml(it.na)}</NA>\n        <Samp>${escXml(it.samp)}</Samp>\n        <Judgement>${escXml(it.jdg)}</Judgement>\n`;
+          if(it.noGapji){ xml+=`        <NoGapji>true</NoGapji>\n`; }
           if(it.full){ xml+=`        <Full jdg="${escXml(it.full.jdg)}"><BadSerials>${(it.full.badSerials||[]).map(b=>`<Bad>${escXml(b)}</Bad>`).join('')}</BadSerials></Full>\n`; }
           if(it.cert){ xml+=`        <Cert submit="${escXml(it.cert.submit)}" date="${escXml(it.cert.date)}"/>\n`; }
+          if(it.shield!==undefined){ xml+=`        <Shield>${escXml(it.shield)}</Shield>\n`; }
           if(it.phase){ xml+=`        <Phase unit="${escXml(it.unit)}">${['A','B','C'].map(p=>
             `<Ph name="${p}">${(it.phase[p]||[]).map(v=>`<V>${escXml(v)}</V>`).join('')}</Ph>`).join('')}</Phase>\n`; }
           if(it.serials&&it.serials.length){ xml+=`        <Serials>${it.serials.map(s=>`<SN>${escXml(s)}</SN>`).join('')}</Serials>\n`; }
@@ -1850,13 +2015,15 @@
         sEl.querySelectorAll('Item').forEach(iEl=>{
           const key=iEl.getAttribute('key'), name=iEl.getAttribute('name'), ref=iEl.getAttribute('ref');
           const kind=getTxt(iEl,'Kind'), crit=getTxt(iEl,'Crit'), exempt=getTxt(iEl,'Exempt')==='true', na=getTxt(iEl,'NA')==='true';
-          const samp=getTxt(iEl,'Samp'), jdg=getTxt(iEl,'Judgement');
+          const samp=getTxt(iEl,'Samp'), jdg=getTxt(iEl,'Judgement'), noGapji=getTxt(iEl,'NoGapji')==='true';
           let full=null, cert=null;
           const fullEl=iEl.querySelector('Full');
           if(fullEl){ full={ jdg:fullEl.getAttribute('jdg')||'', badSerials:Array.from(fullEl.querySelectorAll('BadSerials Bad')).map(b=>b.textContent.trim()) }; }
           const certEl=iEl.querySelector('Cert');
           if(certEl){ cert={ submit:certEl.getAttribute('submit')||'', date:certEl.getAttribute('date')||'' }; }
           let phase=null, unit='';
+          const shEl=iEl.querySelector('Shield');
+          const shield = shEl ? (shEl.textContent.trim()==='true') : undefined;
           const phEl=iEl.querySelector('Phase');
           if(phEl){ unit=phEl.getAttribute('unit')||''; phase={};
             ['A','B','C'].forEach(p=>{ const n=Array.from(phEl.querySelectorAll(`Ph[name="${p}"] V`)).map(v=>v.textContent.trim());
@@ -1868,7 +2035,7 @@
             snEl.querySelectorAll('Fields Field').forEach(fEl=>{ fields[fEl.getAttribute('name')]=fEl.textContent.trim(); });
             res[sn]={ val: (val!=='' && !isNaN(val)) ? Number(val) : val, jdg:rJdg, fields };
           });
-          items.push({ key, name, ref, crit, kind, samp, exempt, na, full, cert, phase, unit, serials, res, jdg });
+          items.push({ key, name, ref, crit, kind, samp, exempt, na, full, cert, phase, unit, shield, noGapji, serials, res, jdg });
         });
         results[sKey]={ title:sTitle, overall:getTxt(sEl,'Overall'), remark:getTxt(sEl,'Remark'), items };
       });
@@ -1880,6 +2047,8 @@
         maker:getTxt(header,'Maker'), inspection_type:getTxt(header,'InspectionType'), serials_input:getTxt(header,'SerialsInput'), pool_list:poolList,
         test_dates:{ start:testDates?.getAttribute('start')||'', end:testDates?.getAttribute('end')||'' },
         early_terminated:getTxt(header,'EarlyTerminated')==='true', early_terminated_step:getTxt(header,'EarlyTerminatedStepIndex')||null,
+        photos:Array.from(root.querySelectorAll('Photos Photo')).map(p=>({
+          caption:p.getAttribute('caption')||'', fixed:p.getAttribute('fixed')==='true', dataUrl:p.textContent.trim() })),
         attendants:{ inspector:getTxt(attendants,'Inspector'), tester:getTxt(attendants,'Tester') }, results,
         final:{ judgement:getTxt(final,'Judgement'), remark:getTxt(final,'Remark') }
       };
@@ -1896,20 +2065,17 @@
         __earlyTerminated: q.early_terminated || false,
         __earlyTerminatedStepIndex: q.early_terminated_step,
         __final:{ remark:q.final?.remark||'' } };
+      // 사진 복원 — 저장분이 있으면 슬롯 순서대로 채우고, 없으면 기본 4장 구성
+      if(Array.isArray(q.photos) && q.photos.length){
+        STATE.__photos=PHOTO_SLOTS.map((s,i)=>({ src:(q.photos[i]||{}).dataUrl||'',
+          desc:s.fixed?s.desc:((q.photos[i]||{}).caption||''), fixed:s.fixed }));
+      } else { ensurePhotos(); }
       Object.values(q.results||{}).forEach(g=>{ g.items.forEach(it=>{ STATE[it.key]={ serials:it.serials||[], res:it.res||{}, full:it.full||undefined, cert:it.cert||undefined,
-        phase:it.phase||undefined, jdg:(it.kind==='phaseConn'?it.jdg:undefined), certFiles:it.certFiles||undefined }; }); });
+        phase:it.phase||undefined, jdg:(it.kind==='phaseConn'?it.jdg:undefined), certFiles:it.certFiles||undefined,
+        shield:(it.shield!==undefined?it.shield:undefined) }; }); });
       activeStep=0;
     }
-    $('qirImport').addEventListener('change',e=>{ const f=e.target.files[0]; if(!f)return; const r=new FileReader();
-      r.onload=()=>{ try{
-        const content=r.result.trim();
-        if(content.startsWith('<')){ loadedQIR=xmlToQIR(content); } else { loadedQIR=JSON.parse(content); }
-        $('btnEditLoaded').disabled=false; $('btnPrintLoaded').disabled=false; $('btnPrintLoadedDetail').disabled=false;
-      } catch(err){ alert('성적서 데이터(XML/JSON) 파일을 읽을 수 없습니다.'); } }; r.readAsText(f); });
-    $('btnEditLoaded').onclick=()=>{ if(!loadedQIR)return; loadQIRObj(loadedQIR); $('screenMain').style.display='none'; $('screenDetail').style.display='block';
-      $('detailTitle').textContent=CUR.spec.name+' 성적서 작성'; renderStep(); updateSummary(); };
-    $('btnPrintLoaded').onclick=()=>{ if(loadedQIR) downloadPDF(loadedQIR,'both'); };
-    $('btnPrintLoadedDetail').onclick=()=>{ if(loadedQIR) exportToExcel(loadedQIR); };
+    // (메인 화면의 저장 파일(XML) 불러오기 UI는 제거됨 — xmlToQIR/loadQIRObj는 내부 로직에서 계속 사용)
 
     // ===== 출력 (갑지 / 을지) =====
     function flatItems(q){ const out=[]; Object.values(q.results).forEach(g=>g.items.forEach(it=>out.push(it))); return out; }
@@ -2094,7 +2260,7 @@
       return jbP(it.jdg);
     }
     function gapjiHTML(q){
-      const items=flatItems(q);
+      const items=flatItems(q).filter(it=>!it.noGapji);   // 제출서류(핵심부품 등록서 등)는 갑지 제외
       const half=Math.ceil(items.length/2);
       const L=items.slice(0,half), R=items.slice(half);
       const rows=[]; for(let i=0;i<half;i++){
@@ -2123,7 +2289,7 @@
     }
     function euljiHTML(q){
       const serials=(q.pool_list&&q.pool_list.length)?q.pool_list:[];
-      const items=flatItems(q).filter(it=>it.kind!=='cert' && it.kind!=='phaseConn' && !it.na); // 을지: 별첨(cert)·상연결접속재(항목단위)·자동형전용(해당없음) 제외
+      const items=flatItems(q).filter(it=>it.kind!=='cert' && it.kind!=='phaseConn' && !it.na && !it.noGapji); // 을지: 별첨(cert)·상연결접속재(항목단위)·자동형전용(해당없음)·제출서류 제외
       const PER_BLOCK=10, BLOCKS_PER_PAGE=2; // 블록당 10대, 페이지당 2블록(=20대)
       const blocks=[]; for(let i=0;i<serials.length;i+=PER_BLOCK) blocks.push(serials.slice(i,i+PER_BLOCK));
       if(!blocks.length) blocks.push([]);
@@ -2167,6 +2333,34 @@
         (grp.items || []).forEach(it => { if (it.kind === 'phaseConn' && !it.na) out.push(it); });
       });
       return out;
+    }
+    // 부분방전(인가부분별 측정) 항목 목록
+    function pdPhaseItemsList(q) {
+      const out = [];
+      Object.values(q.results || {}).forEach(grp => {
+        (grp.items || []).forEach(it => { if (it.kind === 'pdPhase' && !it.na) out.push(it); });
+      });
+      return out;
+    }
+    // 부분방전 실측값 시트 (제조번호 × 인가부분)
+    function pdPhaseHTML(it, q) {
+      const serials = (it.serials || []).filter(sn => (it.res || {})[sn]);
+      if (!serials.length) return '';
+      const rows = it.shield ? PD_ROWS.filter(r => r.grp === '대지간') : PD_ROWS;
+      const u = it.unit || 'pC';
+      const head = `<tr><th style="width:14%">구분</th><th style="width:20%">인가부분</th>${serials.map(sn => `<th>${sn}</th>`).join('')}</tr>`;
+      const body = rows.map(rw => `<tr><td>${rw.grp}</td><td class="item">${rw.lab}</td>${serials.map(sn => {
+        const v = (((it.res || {})[sn] || {}).fields || {})[rw.k];
+        return `<td>${(v === undefined || v === null || v === '') ? '-' : v}</td>`;
+      }).join('')}</tr>`).join('');
+      const resRow = `<tr class="res-row"><td class="item" colspan="2">결&nbsp;&nbsp;&nbsp;&nbsp;과</td>${serials.map(sn => `<td>${jbP(((it.res || {})[sn] || {}).jdg || '-')}</td>`).join('')}</tr>`;
+      return `<div class="pgbreak"></div>
+        <div class="gapji-page" style="padding:10mm;background:#fff">
+          <h1>${it.name}</h1>
+          <div style="font-size:10.5px;color:#555;margin-bottom:8px;text-align:center">
+            ${it.crit ? ('판정기준 : ' + it.crit + ' (단위 ' + u + ')') : ''}${it.shield ? ' · 하우징 실드 처리로 상간 측정 생략' : ''}</div>
+          <table class="mx"><thead>${head}</thead><tbody>${body}${resRow}</tbody></table>
+        </div>`;
     }
     // 상연결 접속재 실측값 시트 (9칸 두께 + 최소값 + 판정)
     function phaseConnHTML(it, q) {
@@ -2237,7 +2431,10 @@
       // 1) 주회로 저항 등 상세 실측값 시트/페이지 (항목별로 분리)
       resistanceItemsList(q).forEach(it => { out += resistanceHTML(it, q); });
 
-      // 1-2) 상연결 접속재 두께 실측값 시트 (A·B·C상 각 3개소)
+      // 1-2) 부분방전 인가부분별 실측값 시트
+      pdPhaseItemsList(q).forEach(it => { out += pdPhaseHTML(it, q); });
+
+      // 1-3) 상연결 접속재 두께 실측값 시트 (A·B·C상 각 3개소)
       phaseConnItemsList(q).forEach(it => { out += phaseConnHTML(it, q); });
 
       // 2) 별첨(공인기관 성적서 대체) 항목별 시트/페이지 (항목마다 분리, 항목명으로 표제)
@@ -2279,13 +2476,14 @@
       });
 
       // 3) 시험 사진대지
-      if (q.photos && q.photos.length > 0) {
+      const shotPhotos = (q.photos || []).filter(p => p && p.dataUrl);   // 빈 슬롯은 사진대지에서 제외
+      if (shotPhotos.length > 0) {
         out += `<div class="pgbreak"></div>
         <div class="gapji-page" style="padding:10mm;background:#fff">
           <h1>시 험 사 진 대 지</h1>
           ${headerTable(q)}
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:15px">`;
-        q.photos.forEach((p, idx) => {
+        shotPhotos.forEach((p, idx) => {
           out += `<div style="border:1px solid #cbd5e1;padding:8px;text-align:center;background:#fff;border-radius:4px">
             <div style="font-weight:bold;margin-bottom:6px;font-size:9.5pt;color:#1e293b">[사진 ${idx+1}] ${p.caption || '시험 진행 사진'}</div>
             <img src="${p.dataUrl}" style="max-width:100%;max-height:260px;object-fit:contain">
@@ -2408,6 +2606,7 @@
       const allItems = [];
       Object.values(q.results || {}).forEach(grp => {
         (grp.items || []).forEach(it => {
+          if (it.noGapji) return;                       // 제출서류는 갑지 시트 제외(별도 시트로 출력)
           let resVal;
           if (it.na) resVal = '해당없음';
           else if (it.exempt) resVal = '시험면제';
@@ -2455,7 +2654,7 @@
       // ====== 2. 을지 Sheet (제조번호 매트릭스) ======
       const itemsForEulji = [];
       Object.values(q.results || {}).forEach(grp => {
-        (grp.items || []).forEach(it => { if (!it.na && it.kind !== 'phaseConn') itemsForEulji.push(it); });
+        (grp.items || []).forEach(it => { if (!it.na && it.kind !== 'phaseConn' && !it.noGapji) itemsForEulji.push(it); });
       });
       const nCols = 1 + Math.max(pool.length, 1);
       const wsEulji = wb.addWorksheet('을지', {
@@ -2551,6 +2750,80 @@
           xlsStyle(resRow.getCell(i + 2), Object.assign({ bold: true, bg: XLS_COLOR.resultBg }, xlsJudgeStyle(v)));
           resRow.getCell(i + 2).value = v;
         });
+      });
+
+      // ====== 3-2. 부분방전 인가부분별 실측값 Sheet ======
+      pdPhaseItemsList(q).forEach(it => {
+        const serials = pool.filter(sn => it.res && it.res[sn]);
+        if (!serials.length) return;
+        const rows = it.shield ? PD_ROWS.filter(r => r.grp === '대지간') : PD_ROWS;
+        const ws = wb.addWorksheet(safeSheetName(it.name, usedSheetNames), {
+          pageSetup: { orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: printMargins }
+        });
+        ws.getColumn(1).width = 10; ws.getColumn(2).width = 16;
+        serials.forEach((_, i) => { ws.getColumn(i + 3).width = 11; });
+        ws.mergeCells(1, 1, 1, serials.length + 2);
+        xlsStyle(ws.getCell(1, 1), { bold: true, size: 13, color: XLS_COLOR.title, border: false });
+        ws.getCell(1, 1).value = it.name + (it.crit ? ' [' + it.crit + ']' : '') + (it.shield ? ' · 하우징 실드 처리(상간 측정 생략)' : '');
+        const hr = ws.getRow(2);
+        ['구분', '인가부분'].forEach((t, i) => { xlsStyle(hr.getCell(i + 1), { bold: true, bg: XLS_COLOR.headerBg }); hr.getCell(i + 1).value = t; });
+        serials.forEach((sn, i) => { xlsStyle(hr.getCell(i + 3), { bold: true, bg: XLS_COLOR.headerBg }); hr.getCell(i + 3).value = sn; });
+        let rr = 3;
+        rows.forEach(rw => {
+          const row = ws.getRow(rr);
+          xlsStyle(row.getCell(1), { size: 9.5 }); row.getCell(1).value = rw.grp;
+          xlsStyle(row.getCell(2), { align: 'left', size: 9.5 }); row.getCell(2).value = rw.lab;
+          serials.forEach((sn, i) => {
+            const v = ((it.res[sn] || {}).fields || {})[rw.k];
+            xlsStyle(row.getCell(i + 3), { size: 9.5 });
+            row.getCell(i + 3).value = (v === undefined || v === null || v === '') ? '-' : v;
+          });
+          rr++;
+        });
+        const resRow = ws.getRow(rr);
+        ws.mergeCells(rr, 1, rr, 2);
+        xlsStyle(resRow.getCell(1), { bold: true, bg: XLS_COLOR.resultBg }); resRow.getCell(1).value = '결    과';
+        serials.forEach((sn, i) => {
+          const v = (it.res[sn] || {}).jdg || '-';
+          xlsStyle(resRow.getCell(i + 3), Object.assign({ bold: true, bg: XLS_COLOR.resultBg }, xlsJudgeStyle(v)));
+          resRow.getCell(i + 3).value = v;
+        });
+      });
+
+      // ====== 3-3. 상연결 접속재 두께 실측값 Sheet (A·B·C상 각 3개소) ======
+      phaseConnItemsList(q).forEach(it => {
+        const ph = it.phase || {};
+        const vals = ['A', 'B', 'C'].flatMap(p => (ph[p] || [])).filter(v => v !== '' && v !== undefined && isFinite(Number(v))).map(Number);
+        if (!vals.length) return;
+        const ws = wb.addWorksheet(safeSheetName(it.name, usedSheetNames), {
+          pageSetup: { orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: printMargins }
+        });
+        ws.getColumn(1).width = 16;
+        [2, 3, 4].forEach(c => { ws.getColumn(c).width = 13; });
+        ws.mergeCells(1, 1, 1, 4);
+        xlsStyle(ws.getCell(1, 1), { bold: true, size: 13, color: XLS_COLOR.title, border: false });
+        ws.getCell(1, 1).value = it.name + (it.crit ? ' [' + it.crit + ']' : '');
+        const hr = ws.getRow(2);
+        ['상 \\ 측정개소', '1개소', '2개소', '3개소'].forEach((t, i) => {
+          xlsStyle(hr.getCell(i + 1), { bold: true, bg: XLS_COLOR.headerBg }); hr.getCell(i + 1).value = t;
+        });
+        let rr = 3;
+        ['A', 'B', 'C'].forEach(p => {
+          const row = ws.getRow(rr);
+          xlsStyle(row.getCell(1), { bold: true, bg: XLS_COLOR.headerBg }); row.getCell(1).value = p + '상';
+          [0, 1, 2].forEach(i => {
+            const v = (ph[p] || [])[i];
+            xlsStyle(row.getCell(i + 2), { size: 9.5 });
+            row.getCell(i + 2).value = (v === undefined || v === null || v === '') ? '-' : Number(v);
+          });
+          rr++;
+        });
+        const resRow = ws.getRow(rr);
+        xlsStyle(resRow.getCell(1), { bold: true, bg: XLS_COLOR.resultBg }); resRow.getCell(1).value = '최소두께 / 판정';
+        xlsStyle(resRow.getCell(2), { bold: true, bg: XLS_COLOR.resultBg }); resRow.getCell(2).value = Math.min(...vals);
+        ws.mergeCells(rr, 3, rr, 4);
+        xlsStyle(resRow.getCell(3), Object.assign({ bold: true, bg: XLS_COLOR.resultBg }, xlsJudgeStyle(it.jdg || '-')));
+        resRow.getCell(3).value = it.jdg || '-';
       });
 
       // ====== 4. 별첨(공인기관 성적서 대체) 항목별 Sheet (항목마다 분리) ======
