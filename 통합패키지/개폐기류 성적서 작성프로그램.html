@@ -541,7 +541,7 @@
             { key:'pd', name:'부분방전시험', ref:'7.3.9', crit:'20pC 이하', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, sampFn:S.note2_efi },
             { key:'ctrl_ac', name:'제어회로 상용주파 내전압', ref:'7.3.20.1', crit:'2kV·1분', full:true },
             { key:'seal', name:'본체 밀봉시험', ref:'7.3.24', crit:'IP X8 1h→건조내전압', sampFn:S.per(50), exemptSA:true },
-            { key:'ir', name:'절연저항 측정(제어회로)', ref:'7.3.12', crit:'측정', unit:'MΩ', measureManual:true, full:true },
+            { key:'ir', name:'절연저항 측정(제어회로)', ref:'7.3.12', crit:'측정', full:true },
           ]},
           { key:'func', title:'동작·기능시험', items:[
             { key:'novolt', name:'무전압 개폐시험', ref:'7.3.6', crit:'10회 이상없음', full:true },
@@ -579,7 +579,7 @@
             { key:'pd', name:'부분방전시험', ref:'7.2.2.3', crit:'20pC 이하', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, sampFn:S.per(10) },
             { key:'mr', name:'주회로 저항측정', ref:'7.2.3', crit:'단자쌍별 측정(µΩ, 무전압개폐 후)', resistance:'underground', sampFn:S.note1_dry },
             { key:'tight', name:'기밀시험', ref:'7.2.7', crit:'연누기율 0.5% 이하', unit:'%/년', thr:{v:0.5,dir:'le'}, gasLeak:true, sampFn:S.note4_dry },
-            { key:'ir', name:'절연저항 측정(제어회로)', ref:'7.2.15', crit:'측정', unit:'MΩ', measureManual:true, sampFn:S.note1_dry },
+            { key:'ir', name:'절연저항 측정(제어회로)', ref:'7.2.15', crit:'측정', sampFn:S.note1_dry },
             { key:'press', name:'압력시험', ref:'7.2.17', crit:'IEC 62271-200 7.103', sampFn:S.note7_dry },
             { key:'gaspurity', name:'가스순도시험', ref:'7.2.32', crit:'5.8.2 불순물 기준', cert:true, cycle:'성적서 대체' },
             { key:'presslock', name:'압력저하표시·잠금시험', ref:'7.2.33', crit:'6.5.1항', sampFn:S.note7_dry },
@@ -626,7 +626,7 @@
             { key:'imp_wv', name:'충격파 내전압시험', ref:'7.2.6', crit:'주회로 125kV(1.2×50㎲)', sampFn:S.per(20), exemptSA:true },
             { key:'pd', name:'부분방전시험', ref:'7.2.12', crit:'20pC 이하', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, sampFn:S.per(20) },
             { key:'mr', name:'주회로 저항측정', ref:'7.2.2', crit:'단자쌍별 측정(µΩ, 전류前 1.2배 이하)', resistance:'underground', sampFn:S.per(20) },
-            { key:'ir', name:'절연저항 측정(제어회로)', ref:'7.2.9', crit:'ES-5925-0001 5.6항', unit:'MΩ', measureManual:true, autoOnly:true, full:true },
+            { key:'ir', name:'절연저항 측정(제어회로)', ref:'7.2.9', crit:'ES-5925-0001 5.6항', autoOnly:true, full:true },
           ]},
           { key:'func', title:'동작·기능시험', items:[
             { key:'novolt', name:'무전압 개폐시험', ref:'7.2.8', crit:'검수 10회 이상없음', full:true },
@@ -703,7 +703,7 @@
             { key:'pd', name:'부분방전시험', ref:'7.3.8', crit:'20pC 이하', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, sampFn:S.per(20) },
             { key:'mr', name:'주회로 저항측정', ref:'7.3.10', crit:'상별 측정(µΩ)', resistance:'overhead', sampFn:S.note2_efi },
             { key:'seal', name:'본체 밀봉시험', ref:'7.3.11', crit:'IP X8 1h→건조 60kV내전압', sampFn:S.per(50) },
-            { key:'ir', name:'절연저항시험(제어회로)', ref:'7.3.17', crit:'ES-5925-0001', unit:'MΩ', measureManual:true, autoOnly:true, sampFn:S.per(50) },
+            { key:'ir', name:'절연저항시험(제어회로)', ref:'7.3.17', crit:'ES-5925-0001', autoOnly:true, sampFn:S.per(50) },
           ]},
           { key:'func', title:'동작·기능시험', items:[
             { key:'novolt', name:'무전압 개폐시험', ref:'7.3.5', crit:'검수 10회(VI성능확인 제외)', full:true },
@@ -739,7 +739,7 @@
             { key:'pd', name:'부분방전시험', ref:'7.2.2.3', crit:'20pC 이하(상간28.4/대지16.4kV)', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, sampFn:S.per(10) },
             { key:'mr', name:'주회로 저항측정', ref:'7.2.3', crit:'단자쌍별 측정(µΩ, 무전압개폐 후 1.2배 이하)', resistance:'underground', sampFn:S.note1_dry },
             { key:'tight', name:'기밀시험', ref:'7.2.7', crit:'연누기율 0.5% 이하(72h)', unit:'%/년', thr:{v:0.5,dir:'le'}, sampFn:S.note4_dry },
-            { key:'ir', name:'절연저항 측정(제어회로)', ref:'7.2.15', crit:'ES-5925-0001 5.6항', unit:'MΩ', measureManual:true, sampFn:S.note1_dry },
+            { key:'ir', name:'절연저항 측정(제어회로)', ref:'7.2.15', crit:'ES-5925-0001 5.6항', sampFn:S.note1_dry },
             { key:'press', name:'압력시험', ref:'7.2.17', crit:'정격압력 1.3배(IEC 62271-200 8.103)', sampFn:S.note7_dry },
             { key:'gaspurity', name:'가스순도시험', ref:'7.2.32', crit:'5.8.2 불순물 기준(CO/CO2/THC<1ppm)', cert:true, cycle:'성적서 대체' },
             { key:'presslock', name:'압력저하표시·잠금시험', ref:'7.2.33', crit:'6.5.1항(분당 0.01MPa)', sampFn:S.note7_dry },
@@ -779,7 +779,7 @@
             { key:'ac_wv', name:'상용주파 내전압시험', ref:'IEC 62271-111 6.2', crit:'건조 60kV·1분(검수 건조만)', full:true },
             { key:'pd', name:'부분방전시험', ref:'IEC 62271-111 6.106', crit:'20pC 이하(상간28.4/대지16.4kV)', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, sampFn:S.per(20) },
             { key:'mr', name:'주회로 저항측정', ref:'IEC 62271-111 6.4', crit:'상별 측정(µΩ)', resistance:'overhead', sampFn:S.per(20) },
-            { key:'ir', name:'절연저항 측정(제어회로)', ref:'ES-5925-0001 6.6항(원문)/5.6항', crit:'제어회로만 적용(주5 발취)', unit:'MΩ', measureManual:true, sampFn:S.per(50) },
+            { key:'ir', name:'절연저항 측정(제어회로)', ref:'ES-5925-0001 6.6항(원문)/5.6항', crit:'제어회로만 적용(주5 발취)', sampFn:S.per(50) },
           ]},
           { key:'func', title:'동작·특성시험', items:[
             { key:'mintrip', name:'최소동작전류시험', ref:'IEC 62271-111 6.105', crit:'검수 1상·최소/중간/최대', unit:'A', measureManual:true, sampFn:S.per(20) },
@@ -817,7 +817,7 @@
             { key:'ac_wv', name:'상용주파 내전압시험', ref:'7.3.2', crit:'건조 60kV·1분(검수 주수생략)', full:true },
             // 부분방전시험(7.3.14)은 GS-5925-0155 표7상 인정시험 전용이므로 검수 항목에서 제외
             { key:'mr', name:'주회로 저항측정', ref:'7.3.3', crit:'상별 측정(µΩ)', resistance:'overhead', sampFn:S.per(20) },
-            { key:'ir', name:'절연저항 측정(제어회로)', ref:'7.3.20', crit:'ES-5925-0001 5.6항(제어회로)', unit:'MΩ', measureManual:true, full:true },
+            { key:'ir', name:'절연저항 측정(제어회로)', ref:'7.3.20', crit:'ES-5925-0001 5.6항(제어회로)', full:true },
           ]},
           { key:'func', title:'동작·특성시험', items:[
             { key:'mintrip', name:'최소동작전류시험', ref:'7.3.13', crit:'검수 1상·최소/중간/최대', unit:'A', measureManual:true, sampFn:S.per(20) },
@@ -857,7 +857,7 @@
             { key:'ac_wv', name:'상용주파 내전압시험', ref:'7.3.2.1', crit:'건조 60kV·1분(검수 주수생략)', full:true },
             { key:'pd', name:'부분방전시험', ref:'7.3.12', crit:'20pC 이하(상간28.4/대지16.4kV)', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, sampFn:S.per(20) },
             { key:'mr', name:'주회로 저항측정', ref:'7.3.3', crit:'상별 측정(µΩ)', resistance:'overhead', sampFn:S.per(20) },
-            { key:'ir', name:'절연저항 측정(제어회로)', ref:'7.3.15', crit:'ES-5925-0001 5.6항(제어회로)', unit:'MΩ', measureManual:true, full:true },
+            { key:'ir', name:'절연저항 측정(제어회로)', ref:'7.3.15', crit:'ES-5925-0001 5.6항(제어회로)', full:true },
           ]},
           { key:'func', title:'동작·특성시험', items:[
             { key:'mintrip', name:'최소동작전류시험', ref:'7.3.11', crit:'검수 1상·최소/중간/최대', unit:'A', measureManual:true, sampFn:S.per(20) },
@@ -890,7 +890,7 @@
       const last=sp.steps[sp.steps.length-1];
       if(!last.items.some(i=>i.key==='partsdoc')){
         last.items.push({ key:'partsdoc', name:'핵심부품 등록서 및 사용부품 확인서', ref:'-', crit:'',
-          cert:true, cycle:'서류 확인', noGapji:true });
+          cert:true, docOnly:true, cycle:'필수 제출', noGapji:true });
       }
     });
 
@@ -1459,16 +1459,24 @@
           </div>`;
         }).join('');
 
+        // 제출서류(docOnly) — 제출여부·일자 없이 파일 첨부만. 첨부해야 '양호'로 판정됨(필수 제출)
+        const headRow = it.docOnly
+          ? `<div class="row" style="gap:8px;align-items:center;flex-wrap:wrap">
+               <span class="badge">필수 제출</span>
+               <input type="file" accept="image/*,.pdf,application/pdf" multiple id="file_input_${it.key}" data-k="${it.key}" data-f="cert-file-input" style="display:none">
+               <button class="btn mini secondary" data-k="${it.key}" data-f="cert-file-btn">📁 파일/PDF 업로드</button>
+             </div>`
+          : `<div class="row" style="gap:8px;align-items:center;flex-wrap:wrap">
+               ${selBox(it.key,'cert-submit',['','제출','미제출','해당없음'],submit)}
+               <input type="date" data-k="${it.key}" data-f="cert-date" value="${date}" style="width:150px">
+               <span class="muted" style="font-size:11px">${it.cycle||''}</span>
+               <input type="file" accept="image/*,.pdf,application/pdf" multiple id="file_input_${it.key}" data-k="${it.key}" data-f="cert-file-input" style="display:none">
+               <button class="btn mini secondary" data-k="${it.key}" data-f="cert-file-btn">📁 파일/PDF 업로드</button>
+             </div>`;
         return `<div style="display:flex;flex-direction:column;gap:6px">
-          <div class="row" style="gap:8px;align-items:center;flex-wrap:wrap">
-            ${selBox(it.key,'cert-submit',['','제출','미제출','해당없음'],submit)}
-            <input type="date" data-k="${it.key}" data-f="cert-date" value="${date}" style="width:150px">
-            <span class="muted" style="font-size:11px">${it.cycle||''}</span>
-            <input type="file" accept="image/*,.pdf,application/pdf" multiple id="file_input_${it.key}" data-k="${it.key}" data-f="cert-file-input" style="display:none">
-            <button class="btn mini secondary" data-k="${it.key}" data-f="cert-file-btn">📁 파일/PDF 업로드</button>
-          </div>
+          ${headRow}
           <div class="cert-files-wrap" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
-            ${chipsHtml || '<span class="muted" style="font-size:11px">첨부된 성적서/이미지 없음</span>'}
+            ${chipsHtml || `<span class="muted" style="font-size:11px">${it.docOnly?'파일을 첨부해야 제출 완료됩니다':'첨부된 성적서/이미지 없음'}</span>`}
           </div>
         </div>`;
       }
@@ -1569,7 +1577,21 @@
     function selBox(key,f,opts,val){ return `<select data-k="${key}" data-f="${f}" style="width:120px">`+opts.map(o=>`<option value="${o}" ${val===o?'selected':''}>${o||'-'}</option>`).join('')+`</select>`; }
     function selBox2(key,sn,f,opts,val){ return `<select data-k="${key}" data-sn="${sn}" data-fld="${f}" style="width:100px">`+opts.map(o=>`<option value="${o}" ${val===o?'selected':''}>${o||'-'}</option>`).join('')+`</select>`; }
 
+    // 양호/불량 select로 판정하는 항목은 기본값을 '양호'로 채운다.
+    // (측정값으로 자동판정하는 thr/range·부분방전·상연결접속재·기밀시험, 서류 제출 항목은 제외)
+    function ensureDefaults(sd){
+      visibleItems(sd).forEach(it=>{
+        if(isNA(it)||isExempt(it)||it.cert) return;
+        if(it.thr||it.range||it.gasLeak||it.pdPhase||it.phaseConn) return;   // 값 → 자동판정
+        if(it.full){ const st=STATE[it.key]=STATE[it.key]||{}; st.full=st.full||{};
+          if(!st.full.jdg) st.full.jdg='양호'; return; }
+        const st=STATE[it.key]; if(!st||!Array.isArray(st.serials)) return;
+        st.res=st.res||{};
+        st.serials.forEach(sn=>{ const r=st.res[sn]=st.res[sn]||{}; if(!r.jdg) r.jdg='양호'; });
+      });
+    }
     function renderTestStep(sd){
+      ensureDefaults(sd);
       const items=orderedItems(sd);
       const rows=items.map(it=>{
         const exempt=isExempt(it); const na=isNA(it);
@@ -1747,7 +1769,9 @@
     function itemJudged(it){
       const st=STATE[it.key]||{};
       if(it.full) return (st.full||{}).jdg||'';
-      if(it.cert){ const sm=(st.cert||{}).submit; return sm==='제출'||sm==='해당없음'?'양호':(sm==='미제출'?'불량':''); }
+      if(it.cert){
+        if(it.docOnly) return ((st.certFiles||[]).length>0)?'양호':'';   // 필수 제출 — 파일 첨부로 판정
+        const sm=(st.cert||{}).submit; return sm==='제출'||sm==='해당없음'?'양호':(sm==='미제출'?'불량':''); }
       const serials=st.serials||[]; if(!serials.length) return '';
       let bad=false, filled=0;
       serials.forEach(sn=>{ const r=(st.res||{})[sn]||{};
@@ -1789,7 +1813,9 @@
     // 2·3번 사진 항목 선택지 — 현재 규격의 시험항목명(해당없음/면제 제외)
     function photoDescOptions(){
       const out=[];
-      (CUR.spec?CUR.spec.steps:[]).forEach(sd=>{ sd.items.forEach(it=>{ if(!isNA(it)&&!isExempt(it)) out.push(it.name); }); });
+      // 시험항목만 — 제출서류(핵심부품 등록서 등)는 사진 항목 선택지에서 제외
+      (CUR.spec?CUR.spec.steps:[]).forEach(sd=>{ sd.items.forEach(it=>{
+        if(!isNA(it)&&!isExempt(it)&&!it.docOnly&&!it.noGapji) out.push(it.name); }); });
       return [...new Set(out)];
     }
     // 사진 용량 축소(최대 1280px, JPEG 0.75) — 실패 시 원본 유지
@@ -1944,7 +1970,7 @@
             kind: it.full?'full':it.cert?'cert':it.phaseConn?'phaseConn':it.pdPhase?'pdPhase':it.resistance?'resistance':(it.thr||it.range)?'measureAuto':it.measureManual?'measureManual':'jdg', certFiles: st.certFiles||[],
             shield: it.pdPhase?!!st.shield:undefined, noGapji: !!it.noGapji,
             samp: na?'해당없음':(it.full?'전량':(it.cert?(it.cycle||'-'):(it.sampNote||sampCount(it)+'대'))),
-            full: st.full||null, cert: st.cert||null, unit: it.unit||'',
+            full: st.full||null, cert: it.docOnly?null:(st.cert||null), docOnly: !!it.docOnly, unit: it.unit||'',
             serials: na?[]:(st.serials||[]), res: na?{}:resForQIR(it,st), jdg: na?'':itemJudged(it) }; }) }; });
       return { schema:'kepco-qir-switchgear.v0.2', spec_id:CUR.spec.id, gsNo:CUR.spec.gsNo, material:CUR.spec.name,
         variant:CUR.variant, mode:CUR.mode, install:CUR.spec.install, circuits:circuits(), grade:CUR.grade, grade_source:CUR.gradeSource,
@@ -1982,8 +2008,14 @@
           xml+=`      <Item key="${escXml(it.key)}" name="${escXml(it.name)}" ref="${escXml(it.ref)}">\n`;
           xml+=`        <Kind>${escXml(it.kind)}</Kind>\n        <Crit>${escXml(it.crit)}</Crit>\n        <Exempt>${escXml(it.exempt)}</Exempt>\n        <NA>${escXml(it.na)}</NA>\n        <Samp>${escXml(it.samp)}</Samp>\n        <Judgement>${escXml(it.jdg)}</Judgement>\n`;
           if(it.noGapji){ xml+=`        <NoGapji>true</NoGapji>\n`; }
+          if(it.docOnly){ xml+=`        <DocOnly>true</DocOnly>\n`; }
           if(it.full){ xml+=`        <Full jdg="${escXml(it.full.jdg)}"><BadSerials>${(it.full.badSerials||[]).map(b=>`<Bad>${escXml(b)}</Bad>`).join('')}</BadSerials></Full>\n`; }
           if(it.cert){ xml+=`        <Cert submit="${escXml(it.cert.submit)}" date="${escXml(it.cert.date)}"/>\n`; }
+          // 첨부파일(성적서·제출서류)도 저장해야 불러왔을 때 첨부가 유지되고 필수 제출 판정이 살아남음
+          if(it.certFiles&&it.certFiles.length){
+            xml+=`        <CertFiles>\n${it.certFiles.map(f=>
+              `          <File name="${escXml(f.name)}" type="${escXml(f.type)}">${escXml(f.dataUrl)}</File>\n`).join('')}        </CertFiles>\n`;
+          }
           if(it.shield!==undefined){ xml+=`        <Shield>${escXml(it.shield)}</Shield>\n`; }
           if(it.serials&&it.serials.length){ xml+=`        <Serials>${it.serials.map(s=>`<SN>${escXml(s)}</SN>`).join('')}</Serials>\n`; }
           if(it.res){ xml+=`        <Res>\n`; Object.entries(it.res).forEach(([sn,r])=>{
@@ -2008,12 +2040,15 @@
         sEl.querySelectorAll('Item').forEach(iEl=>{
           const key=iEl.getAttribute('key'), name=iEl.getAttribute('name'), ref=iEl.getAttribute('ref');
           const kind=getTxt(iEl,'Kind'), crit=getTxt(iEl,'Crit'), exempt=getTxt(iEl,'Exempt')==='true', na=getTxt(iEl,'NA')==='true';
-          const samp=getTxt(iEl,'Samp'), jdg=getTxt(iEl,'Judgement'), noGapji=getTxt(iEl,'NoGapji')==='true';
+          const samp=getTxt(iEl,'Samp'), jdg=getTxt(iEl,'Judgement'), noGapji=getTxt(iEl,'NoGapji')==='true', docOnly=getTxt(iEl,'DocOnly')==='true';
           let full=null, cert=null;
           const fullEl=iEl.querySelector('Full');
           if(fullEl){ full={ jdg:fullEl.getAttribute('jdg')||'', badSerials:Array.from(fullEl.querySelectorAll('BadSerials Bad')).map(b=>b.textContent.trim()) }; }
           const certEl=iEl.querySelector('Cert');
           if(certEl){ cert={ submit:certEl.getAttribute('submit')||'', date:certEl.getAttribute('date')||'' }; }
+          const certFiles=Array.from(iEl.querySelectorAll('CertFiles File')).map((f,ix)=>({
+            id:'file_r'+ix+'_'+Math.random().toString(36).slice(2,6),
+            name:f.getAttribute('name')||'', type:f.getAttribute('type')||'', dataUrl:f.textContent.trim() }));
           const unit=getTxt(iEl,'Unit')||'';
           const shEl=iEl.querySelector('Shield');
           const shield = shEl ? (shEl.textContent.trim()==='true') : undefined;
@@ -2024,7 +2059,7 @@
             snEl.querySelectorAll('Fields Field').forEach(fEl=>{ fields[fEl.getAttribute('name')]=fEl.textContent.trim(); });
             res[sn]={ val: (val!=='' && !isNaN(val)) ? Number(val) : val, jdg:rJdg, fields };
           });
-          items.push({ key, name, ref, crit, kind, samp, exempt, na, full, cert, unit, shield, noGapji, serials, res, jdg });
+          items.push({ key, name, ref, crit, kind, samp, exempt, na, full, cert, certFiles, unit, shield, noGapji, docOnly, serials, res, jdg });
         });
         results[sKey]={ title:sTitle, overall:getTxt(sEl,'Overall'), remark:getTxt(sEl,'Remark'), items };
       });
@@ -2469,9 +2504,10 @@
           <div class="gapji-page" style="padding:10mm;background:#fff">
             <h1>${it.name}</h1>
             <div style="border:1px solid #000;padding:8px 12px;margin-top:10px;margin-bottom:12px;font-size:9.5pt;background:#f8fafc;display:flex;justify-content:space-between;align-items:center">
-              <span><b>판정기준:</b> ${it.crit || '-'}</span>
-              <span><b>제출여부:</b> ${(it.cert||{}).submit || '미제출'}</span>
-              <span><b>제출일자:</b> ${(it.cert||{}).date || '-'}</span>
+              ${it.docOnly ? '<span><b>구분:</b> 필수 제출서류</span>'
+                           : `<span><b>판정기준:</b> ${it.crit || '-'}</span>
+                              <span><b>제출여부:</b> ${(it.cert||{}).submit || '미제출'}</span>
+                              <span><b>제출일자:</b> ${(it.cert||{}).date || '-'}</span>`}
             </div>
             <div style="text-align:center;margin-top:40px;color:#888">첨부된 파일이 없습니다.</div>
           </div>`;
@@ -2482,8 +2518,9 @@
           <div class="gapji-page" style="padding:10mm;background:#fff">
             <h1>${it.name}${files.length > 1 ? ` (${fi + 1}/${files.length})` : ''}</h1>
             <div style="border:1px solid #000;padding:8px 12px;margin-top:10px;margin-bottom:12px;font-size:9.5pt;background:#f8fafc;display:flex;justify-content:space-between;align-items:center">
-              <span><b>판정기준:</b> ${it.crit || '-'}</span>
-              <span><b>제출일자:</b> ${(it.cert||{}).date || '-'}</span>
+              ${it.docOnly ? '<span><b>구분:</b> 필수 제출서류</span>'
+                           : `<span><b>판정기준:</b> ${it.crit || '-'}</span>
+                              <span><b>제출일자:</b> ${(it.cert||{}).date || '-'}</span>`}
               <span><b>파일명:</b> ${file.name}</span>
             </div>
             <div style="text-align:center;margin-top:10px">`;
@@ -2870,12 +2907,13 @@
         ws.mergeCells(1, 1, 1, 3);
         xlsStyle(ws.getCell(1, 1), { bold: true, size: 13, color: XLS_COLOR.title, border: false });
         ws.getCell(1, 1).value = it.name + (it.crit ? ' [' + it.crit + ']' : '');
-        const metaLines = [
-          ['판정기준', it.crit || '-'],
-          ['제출여부', (it.cert || {}).submit || '미제출'],
-          ['제출일자', (it.cert || {}).date || '-'],
-          ['발취/주기', it.samp || it.cycle || '-']
-        ];
+        const metaLines = it.docOnly
+          ? [ ['구분', '필수 제출서류'],
+              ['첨부파일 수', String(files.length) + '건'] ]
+          : [ ['판정기준', it.crit || '-'],
+              ['제출여부', (it.cert || {}).submit || '미제출'],
+              ['제출일자', (it.cert || {}).date || '-'],
+              ['발취/주기', it.samp || it.cycle || '-'] ];
         let rr = 2;
         metaLines.forEach(([k, v]) => {
           ws.mergeCells(rr, 2, rr, 3);
