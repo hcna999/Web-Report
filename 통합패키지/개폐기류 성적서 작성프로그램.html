@@ -815,7 +815,7 @@
           ]},
           { key:'insul', title:'절연·저항시험', items:[
             { key:'ac_wv', name:'상용주파 내전압시험', ref:'7.3.2', crit:'건조 60kV·1분(검수 주수생략)', full:true },
-            { key:'pd', name:'부분방전시험', ref:'7.3.14', crit:'20pC 이하(상간28.4/대지16.4kV)', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, sampFn:S.per(20) },
+            // 부분방전시험(7.3.14)은 GS-5925-0155 표7상 인정시험 전용이므로 검수 항목에서 제외
             { key:'mr', name:'주회로 저항측정', ref:'7.3.3', crit:'상별 측정(µΩ)', resistance:'overhead', sampFn:S.per(20) },
             { key:'ir', name:'절연저항 측정(제어회로)', ref:'7.3.20', crit:'ES-5925-0001 5.6항(제어회로)', unit:'MΩ', measureManual:true, full:true },
           ]},
