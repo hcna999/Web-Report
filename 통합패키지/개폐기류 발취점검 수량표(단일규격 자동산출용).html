@@ -438,9 +438,8 @@
         "type": "spec"
       },
       "PREC": {
-        "rule": "1대/50대",
-        "fnKey": "per_50",
-        "type": "spec"
+        "rule": "-",
+        "type": "na"
       },
       "EFI": {
         "rule": "50대 이하 1대, 51대 이상 3대",
@@ -568,6 +567,14 @@
         "rule": "20대 이하 2대, 초과 20대마다 1대",
         "fnKey": "note1_dry",
         "type": "spec"
+      },
+      "DREC": {
+        "rule": "전량",
+        "type": "full"
+      },
+      "PREC": {
+        "rule": "전량",
+        "type": "full"
       },
       "EFI": {
         "rule": "1대/50대",
@@ -884,8 +891,14 @@
         "type": "spec"
       },
       "DREC": {
-        "rule": "전량",
-        "type": "full"
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "spec"
+      },
+      "PREC": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "spec"
       },
       "EFI": {
         "rule": "50대 이하 1대, 51대 이상 3대",
@@ -893,8 +906,9 @@
         "type": "spec"
       },
       "REC": {
-        "rule": "-",
-        "type": "na"
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "spec"
       }
     }
   },

@@ -777,6 +777,7 @@
           ]},
           { key:'insul', title:'절연·저항시험', items:[
             { key:'ac_wv', name:'상용주파 내전압시험', ref:'IEC 62271-111 6.2', crit:'건조 60kV·1분(검수 건조만)', full:true },
+            { key:'pd', name:'부분방전시험', ref:'IEC 62271-111 6.106', crit:'20pC 이하(상간28.4/대지16.4kV)', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, sampFn:S.per(20) },
             { key:'mr', name:'주회로 저항측정', ref:'IEC 62271-111 6.4', crit:'상별 측정(µΩ)', resistance:'overhead', sampFn:S.per(20) },
             { key:'ir', name:'절연저항 측정(제어회로)', ref:'ES-5925-0001 6.6항(원문)/5.6항', crit:'제어회로만 적용(주5 발취)', unit:'MΩ', measureManual:true, sampFn:S.per(50) },
           ]},
@@ -814,6 +815,7 @@
           ]},
           { key:'insul', title:'절연·저항시험', items:[
             { key:'ac_wv', name:'상용주파 내전압시험', ref:'7.3.2', crit:'건조 60kV·1분(검수 주수생략)', full:true },
+            { key:'pd', name:'부분방전시험', ref:'7.3.14', crit:'20pC 이하(상간28.4/대지16.4kV)', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, sampFn:S.per(20) },
             { key:'mr', name:'주회로 저항측정', ref:'7.3.3', crit:'상별 측정(µΩ)', resistance:'overhead', sampFn:S.per(20) },
             { key:'ir', name:'절연저항 측정(제어회로)', ref:'7.3.20', crit:'ES-5925-0001 5.6항(제어회로)', unit:'MΩ', measureManual:true, full:true },
           ]},
@@ -1898,6 +1900,7 @@
         <div class="row" style="justify-content:flex-end;gap:8px">
           <button class="btn primary" id="btnDownloadPDF" style="background:#2563eb;color:#fff;min-width:130px">📄 갑지 출력(PDF)</button>
           <button class="btn primary" id="btnExportExcel" style="background:#10b981;color:#fff;min-width:150px">📊 전체내용 XLSX 출력</button>
+          <button class="btn" id="btnSaveQIR" style="min-width:110px">💾 저장(XML)</button>
         </div>${navRow()}</div>`;
     }
     function bindFinal(){
@@ -1907,6 +1910,7 @@
         STATE.__earlyTerminatedStepIndex = undefined;
         renderStep();
       });
+      if ($('btnSaveQIR')) $('btnSaveQIR').onclick=saveQIR;
       if ($('btnDownloadPDF')) $('btnDownloadPDF').onclick=()=>downloadPDF(buildQIR(),'gapji');
       if ($('btnExportExcel')) $('btnExportExcel').onclick=()=>exportToExcel(buildQIR());
     }
@@ -2039,9 +2043,35 @@
       };
     }
 
-    function saveQIR(){ const q=buildQIR(); const xmlStr=qirToXML(q); const blob=new Blob([xmlStr],{type:'application/xml;charset=utf-8'});
-      const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-      a.download=`${q.inspection_type||'검사'}_${q.maker||''}_${(q.test_dates.start||'').replace(/-/g,'')}_${q.lot_no||''}_${q.spec_id}.xml`; a.click(); }
+    // ===== 저장(XML) =====
+    // 저장 파일명 규칙 — 로컬 저장·클라우드 업로드가 같은 이름을 쓰도록 한 곳에서 생성
+    function qirFileName(q){
+      return `${q.inspection_type||'검사'}_${q.maker||''}_${(q.test_dates.start||'').replace(/-/g,'')}_${q.lot_no||''}_${q.spec_id}.xml`;
+    }
+    // 저장 대상(파일명 + XML + Blob)을 만들어 준다. 로컬 저장과 원격 전송이 이 결과를 공유한다.
+    function buildQIRFile(q){
+      const xmlStr=qirToXML(q||buildQIR());
+      return { name:qirFileName(q||buildQIR()), xml:xmlStr,
+               blob:new Blob([xmlStr],{type:'application/xml;charset=utf-8'}) };
+    }
+    // 클라우드 업로드 훅 — 저장소가 정해지면 window.QIR_UPLOADER에 async (file)=>{} 를 지정하면
+    // 저장 시 자동으로 함께 전송된다. (예: 구글드라이브/사내 서버 업로드 함수)
+    //   window.QIR_UPLOADER = async ({name, xml, blob}) => { ... };
+    window.QIR_UPLOADER = window.QIR_UPLOADER || null;
+    async function uploadQIR(file){
+      if(typeof window.QIR_UPLOADER!=='function') return { skipped:true };
+      try{ await window.QIR_UPLOADER(file); return { ok:true }; }
+      catch(e){ console.warn('QIR 자동 전송 실패(로컬 저장은 정상):', e); return { ok:false, error:e }; }
+    }
+    async function saveQIR(){
+      const q=buildQIR();
+      const file=buildQIRFile(q);
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(file.blob); a.download=file.name; a.click();
+      setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+      const r=await uploadQIR(file);                     // 업로더가 등록된 경우에만 전송
+      if(r && r.ok) console.info('QIR 자동 전송 완료:', file.name);
+    }
     function loadQIRObj(q){
       const spec=SPECS.find(s=>s.id===q.spec_id); if(!spec){ alert('알 수 없는 규격입니다.'); return; }
       CUR={ spec, variant:q.variant, mode:q.mode, grade:q.grade||'B', gradeSource:q.grade_source||'-' };
