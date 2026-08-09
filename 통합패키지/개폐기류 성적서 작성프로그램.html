@@ -1941,6 +1941,52 @@
       if(inc) return '작성중';
       return '합격';
     }
+    // ===== 서명 (검사자·시험자) =====
+    function signPadHTML(role,label,name){
+      const cur=(STATE.__sign||{})[role]||'';
+      return `<div class="field">
+        <label>${label}${name?' · '+escapeHtml(name):''}</label>
+        <div style="position:relative;border:1px dashed var(--line);border-radius:8px;background:#fff;height:110px">
+          <canvas data-sign="${role}" style="width:100%;height:100%;touch-action:none;cursor:crosshair"></canvas>
+          ${cur?`<img data-signimg="${role}" src="${cur}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none">`:''}
+        </div>
+        <div class="row" style="gap:6px;margin-top:4px">
+          <button class="btn mini secondary" data-signclear="${role}">지우기</button>
+          <span class="muted" style="font-size:11px" data-signstate="${role}">${cur?'서명 완료':'미서명'}</span>
+        </div>
+      </div>`;
+    }
+    function bindSignPads(){
+      const host=$('stepHost');
+      host.querySelectorAll('canvas[data-sign]').forEach(cv=>{
+        const role=cv.dataset.sign;
+        // 캔버스 실제 해상도를 표시 크기에 맞춰 잡아야 선이 흐려지지 않음
+        const rect=cv.getBoundingClientRect();
+        cv.width=Math.max(1,Math.round(rect.width)); cv.height=Math.max(1,Math.round(rect.height));
+        const ctx=cv.getContext('2d');
+        ctx.lineWidth=2; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.strokeStyle='#111';
+        // 기존 서명이 있으면 캔버스에 복원해 이어 그릴 수 있게 함
+        const prev=(STATE.__sign||{})[role];
+        if(prev){ const img=new Image(); img.onload=()=>ctx.drawImage(img,0,0,cv.width,cv.height); img.src=prev; }
+        let drawing=false, dirty=false;
+        const pos=e=>{ const r=cv.getBoundingClientRect(); return { x:e.clientX-r.left, y:e.clientY-r.top }; };
+        const start=e=>{ drawing=true; const p=pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); cv.setPointerCapture?.(e.pointerId); e.preventDefault(); };
+        const move=e=>{ if(!drawing) return; const p=pos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); dirty=true; e.preventDefault(); };
+        const end=()=>{ if(!drawing) return; drawing=false;
+          if(dirty){ STATE.__sign=STATE.__sign||{}; STATE.__sign[role]=cv.toDataURL('image/png');
+            const s=host.querySelector(`[data-signstate="${role}"]`); if(s) s.textContent='서명 완료';
+            const ov=host.querySelector(`img[data-signimg="${role}"]`); if(ov) ov.remove(); } };
+        cv.addEventListener('pointerdown',start);
+        cv.addEventListener('pointermove',move);
+        cv.addEventListener('pointerup',end);
+        cv.addEventListener('pointerleave',end);
+      });
+      host.querySelectorAll('[data-signclear]').forEach(b=>{
+        b.onclick=()=>{ const role=b.dataset.signclear;
+          STATE.__sign=STATE.__sign||{}; STATE.__sign[role]='';
+          renderStep(); };
+      });
+    }
     function renderFinal(){
       const fj=finalJudgement(); const cls=(fj==='합격')?'j-good':'j-bad';
       const earlyNotice = (STATE.__earlyTerminated || fj.indexOf('불합격') !== -1) ?
@@ -1955,7 +2001,12 @@
         <div class="split2" style="margin-top:12px">
           <div class="field"><label>최종 종합판정(자동)</label><input class="${cls}" value="${fj}" readonly></div>
           <div class="field"><label>종합 비고</label><input data-k="__final" data-f="remark" value="${(STATE.__final||{}).remark||''}"></div>
-        </div><div class="divider"></div>
+        </div>
+        <div class="divider"></div>
+        <h4 style="margin:0 0 6px">서명</h4>
+        <p class="muted" style="font-size:12px;margin:0 0 8px">아래 칸에 마우스(또는 터치)로 서명하면 성적서의 (서명) 자리에 표시됩니다.</p>
+        <div class="split2">${signPadHTML('tester','시 험 자',(STATE.__base||{}).test)}${signPadHTML('inspector','시험입회자',(STATE.__base||{}).insp)}</div>
+        <div class="divider"></div>
         <div class="row" style="justify-content:flex-end;gap:8px">
           <button class="btn primary" id="btnDownloadPDF" style="background:#2563eb;color:#fff;min-width:130px">📄 갑지 출력(PDF)</button>
           <button class="btn primary" id="btnExportExcel" style="background:#10b981;color:#fff;min-width:150px">📊 전체내용 XLSX 출력</button>
@@ -1963,6 +2014,7 @@
         </div>${navRow()}</div>`;
     }
     function bindFinal(){
+      bindSignPads();
       $('stepHost').querySelector('[data-k="__final"]')?.addEventListener('input',e=>{ STATE.__final={remark:e.target.value}; });
       $('btnResetEarlyTerm')?.addEventListener('click', ()=>{
         STATE.__earlyTerminated = false;
@@ -2012,7 +2064,9 @@
         early_terminated: STATE.__earlyTerminated || false, early_terminated_step: STATE.__earlyTerminatedStepIndex || null,
         // 4개 슬롯을 항상 그대로 저장 — 빈 칸을 걸러내면 불러올 때 슬롯 순서가 밀림
         photos: ensurePhotos().map(p=>({ caption:p.desc||'', dataUrl:p.src||'', fixed:!!p.fixed })),
-        attendants:{inspector:b.insp||'',tester:b.test||''}, results, final:{ judgement:finalJudgement(), remark:(STATE.__final||{}).remark||'' } };
+        attendants:{inspector:b.insp||'',tester:b.test||''},
+        signatures:{ inspector:(STATE.__sign||{}).inspector||'', tester:(STATE.__sign||{}).tester||'' },
+        results, final:{ judgement:finalJudgement(), remark:(STATE.__final||{}).remark||'' } };
     }
     // ===== XML 직렬화 & 파싱 =====
     function escXml(str){
@@ -2031,7 +2085,8 @@
       xml+=`    <TestDates start="${escXml((q.test_dates||{}).start)}" end="${escXml((q.test_dates||{}).end)}"/>\n`;
       xml+=`    <EarlyTerminated>${escXml(q.early_terminated)}</EarlyTerminated>\n`;
       xml+=`    <EarlyTerminatedStepIndex>${escXml(q.early_terminated_step)}</EarlyTerminatedStepIndex>\n`;
-      xml+=`    <Attendants>\n      <Inspector>${escXml((q.attendants||{}).inspector)}</Inspector>\n      <Tester>${escXml((q.attendants||{}).tester)}</Tester>\n    </Attendants>\n  </Header>\n`;
+      xml+=`    <Attendants>\n      <Inspector>${escXml((q.attendants||{}).inspector)}</Inspector>\n      <Tester>${escXml((q.attendants||{}).tester)}</Tester>\n    </Attendants>\n`;
+      xml+=`    <Signatures>\n      <Inspector>${escXml((q.signatures||{}).inspector)}</Inspector>\n      <Tester>${escXml((q.signatures||{}).tester)}</Tester>\n    </Signatures>\n  </Header>\n`;
       xml+=`  <Photos>\n${(q.photos||[]).map(p=>
         `    <Photo caption="${escXml(p.caption)}" fixed="${escXml(p.fixed)}">${escXml(p.dataUrl)}</Photo>\n`).join('')}  </Photos>\n`;
       xml+=`  <Final>\n    <Judgement>${escXml((q.final||{}).judgement)}</Judgement>\n    <Remark>${escXml((q.final||{}).remark)}</Remark>\n  </Final>\n  <Results>\n`;
@@ -2106,7 +2161,10 @@
         early_terminated:getTxt(header,'EarlyTerminated')==='true', early_terminated_step:getTxt(header,'EarlyTerminatedStepIndex')||null,
         photos:Array.from(root.querySelectorAll('Photos Photo')).map(p=>({
           caption:p.getAttribute('caption')||'', fixed:p.getAttribute('fixed')==='true', dataUrl:p.textContent.trim() })),
-        attendants:{ inspector:getTxt(attendants,'Inspector'), tester:getTxt(attendants,'Tester') }, results,
+        attendants:{ inspector:getTxt(attendants,'Inspector'), tester:getTxt(attendants,'Tester') },
+        signatures:(function(){ const s=header.querySelector('Signatures');
+          return { inspector:s?getTxt(s,'Inspector'):'', tester:s?getTxt(s,'Tester'):'' }; })(),
+        results,
         final:{ judgement:getTxt(final,'Judgement'), remark:getTxt(final,'Remark') }
       };
     }
@@ -2147,7 +2205,8 @@
         sdate:q.test_dates?.start, edate:q.test_dates?.end, insp:q.attendants?.inspector, test:q.attendants?.tester, itype:q.inspection_type },
         __earlyTerminated: q.early_terminated || false,
         __earlyTerminatedStepIndex: q.early_terminated_step,
-        __final:{ remark:q.final?.remark||'' } };
+        __final:{ remark:q.final?.remark||'' },
+        __sign:{ inspector:q.signatures?.inspector||'', tester:q.signatures?.tester||'' } };
       // 사진 복원 — 저장분이 있으면 슬롯 순서대로 채우고, 없으면 기본 4장 구성
       if(Array.isArray(q.photos) && q.photos.length){
         STATE.__photos=PHOTO_SLOTS.map((s,i)=>({ src:(q.photos[i]||{}).dataUrl||'',
@@ -2170,7 +2229,7 @@
     function cellVal(it,sn){
       if(it.na) return '해당없음';
       if(it.exempt) return '면제';
-      const parentStep = CUR.spec.steps.find(sd => sd.items && sd.items.some(i => i.key === it.key));
+      const parentStep = (CUR && CUR.spec) ? CUR.spec.steps.find(sd => sd.items && sd.items.some(i => i.key === it.key)) : null;
       if (parentStep && isStepSkipped(parentStep)) {
         return '시험중단';
       }
@@ -2301,8 +2360,8 @@
         <tr><td class="l" colspan="4">${q.inspection_type==='면제검사'?'검사요청번호':'검사로트번호'} : ${q.lot_no||'-'}</td></tr>
         <tr><td class="l">품    명</td><td>: ${q.material}</td><td class="l">제 작 회 사</td><td>: ${q.maker||'-'}</td></tr>
         <tr><td class="l">규    격</td><td>: ${q.variant}</td><td class="l">시험년월일</td><td>: ${dr||'-'}</td></tr>
-        <tr><td class="l">수    량</td><td>: ${q.qty} 대</td><td class="l">시  험  자</td><td>: ${q.attendants.tester||''} (서명)</td></tr>
-        <tr><td class="l">제조번호</td><td>: ${range}</td><td class="l">시험입회자</td><td>: ${q.attendants.inspector||''} (서명)</td></tr>
+        <tr><td class="l">수    량</td><td>: ${q.qty} 대</td><td class="l">시  험  자</td><td>: ${signCell(q.attendants.tester, (q.signatures||{}).tester)}</td></tr>
+        <tr><td class="l">제조번호</td><td>: ${range}</td><td class="l">시험입회자</td><td>: ${signCell(q.attendants.inspector, (q.signatures||{}).inspector)}</td></tr>
       </table>`;
     }
     function serialRange(pool){
@@ -2310,10 +2369,20 @@
       if(pool.length===1) return pool[0];
       return pool[0]+' ~ '+pool[pool.length-1];
     }
+    // (서명) 자리에 서명 이미지를 겹쳐 표시. 서명이 없으면 (서명) 글자만 남는다.
+    function signCell(name, signSrc){
+      const base = `${name||'-'}&nbsp;&nbsp;`;
+      if(!signSrc) return base+'(서명)';
+      return base+`<span style="position:relative;display:inline-block;min-width:46px;text-align:center">
+        <span style="color:#bbb">(서명)</span>
+        <img src="${signSrc}" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-55%);height:22px;max-width:74px;object-fit:contain">
+      </span>`;
+    }
     function gapjiHeaderTable(q){
       const td=(q.test_dates||{});
       const dateStr = td.start && td.end ? (td.start===td.end ? td.start : td.start+' ~ '+td.end) : (td.start||td.end||'-');
       const pool = q.pool_list||[];
+      const sg = q.signatures||{};
       return `<table class="hdr">
         <tr><td class="lbl">검사로트번호</td><td class="val" colspan="3">${q.lot_no||'-'}</td></tr>
         <tr>
@@ -2326,11 +2395,11 @@
         </tr>
         <tr>
           <td class="lbl">수&nbsp;&nbsp;&nbsp;&nbsp;량</td><td class="val">${q.qty||0} 대</td>
-          <td class="lbl2">시&nbsp;&nbsp;험&nbsp;&nbsp;자</td><td class="val2">${(q.attendants||{}).tester||'-'}&nbsp;&nbsp;(서명)</td>
+          <td class="lbl2">시&nbsp;&nbsp;험&nbsp;&nbsp;자</td><td class="val2">${signCell((q.attendants||{}).tester, sg.tester)}</td>
         </tr>
         <tr>
           <td class="lbl">제조번호</td><td class="val">${serialRange(pool)}</td>
-          <td class="lbl2">시험입회자</td><td class="val2">${(q.attendants||{}).inspector||'-'}&nbsp;&nbsp;(서명)</td>
+          <td class="lbl2">시험입회자</td><td class="val2">${signCell((q.attendants||{}).inspector, sg.inspector)}</td>
         </tr>
       </table>`;
     }
@@ -2368,7 +2437,12 @@
           </tr>
           <tr>
             <td style="text-align:left;font-size:10.5px;color:#555">${(q.final||{}).remark||''}</td>
-            <td colspan="2" style="text-align:center;font-weight:bold">한국전력공사</td>
+            <td colspan="2" style="text-align:center;font-weight:bold;white-space:nowrap">
+              <span style="display:inline-flex;align-items:center;justify-content:center;gap:6px">
+                ${kepcoLogoDataURL()?`<img src="${kepcoLogoDataURL()}" style="height:16px;object-fit:contain;vertical-align:middle">`:''}
+                <span>한국전력공사</span>
+              </span>
+            </td>
           </tr>
         </table></div>`;
     }
@@ -2669,6 +2743,30 @@
       return {};
     }
 
+    // dataURL 이미지를 시트에 삽입. 이미지가 아니면(PDF 등) false 반환.
+    function xlsAddImage(wb, ws, dataUrl, anchor) {
+      const m = /^data:image\/(png|jpe?g|gif|bmp|webp);base64,([\s\S]+)$/i.exec(String(dataUrl || '').trim());
+      if (!m) return false;
+      const raw = m[1].toLowerCase();
+      const extension = raw === 'jpg' ? 'jpeg' : raw;
+      try {
+        const id = wb.addImage({ base64: m[2], extension });
+        ws.addImage(id, anchor);
+        return true;
+      } catch (e) { console.warn('엑셀 이미지 삽입 실패:', e); return false; }
+    }
+    // 첨부파일 1건을 캡션 + 이미지 블록으로 삽입
+    function xlsAddImageBlock(wb, ws, file, idx, startRow) {
+      if (!file || !/^data:image\//i.test(String(file.dataUrl || ''))) return false;
+      const cap = ws.getRow(startRow);
+      ws.mergeCells(startRow, 1, startRow, 3);
+      xlsStyle(cap.getCell(1), { align: 'left', bold: true, size: 9.5, bg: XLS_COLOR.headerBg });
+      cap.getCell(1).value = `[첨부 ${idx + 1}] ${file.name || ''}`;
+      cap.height = 18;
+      for (let r = startRow + 1; r <= startRow + 12; r++) ws.getRow(r).height = 20;
+      return xlsAddImage(wb, ws, file.dataUrl, { tl: { col: 0, row: startRow }, ext: { width: 460, height: 320 } });
+    }
+
     async function exportToExcel(q) {
       if (typeof ExcelJS === 'undefined') {
         alert('ExcelJS 라이브러리가 로드되지 않았습니다. 인터넷 연결을 확인하거나 CDN 링크를 확인하세요.');
@@ -2815,10 +2913,10 @@
           xlsStyle(row.getCell(1), { align: 'left', size: 9, bg: zebra }); row.getCell(1).value = it.name + (it.crit ? ' [' + it.crit + ']' : '');
           pool.forEach((sn, i) => {
             const rv = (it.res || {})[sn];
-            let v;
-            if (!rv) v = '-';
-            else if (rv.val !== undefined && rv.val !== null && rv.val !== '') v = rv.val;
-            else v = rv.jdg || '-';
+            // 측정값이 있으면 값을, 없으면 판정을 표기.
+            // 전수(full) 항목은 res가 비어 있으므로 반드시 cellVal로 판정을 가져와야 한다(HTML 을지와 동일 기준).
+            const v = (rv && rv.val !== undefined && rv.val !== null && rv.val !== '')
+              ? rv.val : cellVal(it, sn);
             xlsStyle(row.getCell(i + 2), Object.assign({ size: 9.5, bg: zebra }, xlsJudgeStyle(v)));
             row.getCell(i + 2).value = v;
           });
@@ -3034,30 +3132,52 @@
           rr++;
         });
         rr++;
-        ws.mergeCells(rr, 1, rr, 3);
-        xlsStyle(ws.getCell(rr, 1), { align: 'left', size: 9, color: XLS_COLOR.gray, border: false });
-        ws.getCell(rr, 1).value = '※ 첨부 이미지/PDF 원본은 PDF 출력물에서 확인할 수 있습니다.';
+        // 이미지 첨부는 시트에 실제로 삽입, PDF는 엑셀에 삽입할 수 없어 안내만 남긴다
+        let pdfCount = 0;
+        files.forEach((f, idx) => {
+          if (!xlsAddImageBlock(wb, ws, f, idx, rr)) { pdfCount++; return; }
+          rr += 13;                                   // 이미지 블록(캡션 1행 + 이미지 12행)
+        });
+        if (pdfCount) {
+          ws.mergeCells(rr, 1, rr, 3);
+          xlsStyle(ws.getCell(rr, 1), { align: 'left', size: 9, color: XLS_COLOR.gray, border: false });
+          ws.getCell(rr, 1).value = `※ PDF 첨부 ${pdfCount}건은 엑셀에 삽입할 수 없어 PDF 출력물에서 확인할 수 있습니다.`;
+        }
       });
 
-      // ====== 5. 시험 사진대지 Sheet ======
+      // ====== 5. 시험 사진대지 Sheet (실제 이미지 삽입, 2장씩 배치) ======
       {
         const ws = wb.addWorksheet(safeSheetName('사진대지', usedSheetNames), { pageSetup: { orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: printMargins } });
-        ws.getColumn(1).width = 8; ws.getColumn(2).width = 36; ws.getColumn(3).width = 20;
-        const hdr = ws.getRow(1);
-        ['연번', '캡션', '비고'].forEach((t, i) => { xlsStyle(hdr.getCell(i + 1), { bold: true, bg: XLS_COLOR.headerBg }); hdr.getCell(i + 1).value = t; });
-        const photos = q.photos || [];
-        const photoRows = photos.length ? photos.map((p, idx) => [idx + 1, p.caption || '시험 진행 사진', '']) : [['-', '첨부된 사진 없음', '']];
+        ws.getColumn(1).width = 44; ws.getColumn(2).width = 44;
+        ws.mergeCells(1, 1, 1, 2);
+        xlsStyle(ws.getCell(1, 1), { bold: true, size: 13, color: XLS_COLOR.title, border: false });
+        ws.getCell(1, 1).value = '시 험 사 진 대 지';
+        const shots = (q.photos || []).filter(p => p && p.dataUrl);
         let rr = 2;
-        photoRows.forEach(pr => {
-          const row = ws.getRow(rr);
-          [1, 2, 3].forEach(ci => xlsStyle(row.getCell(ci), { align: ci === 2 ? 'left' : 'center' }));
-          row.getCell(1).value = pr[0]; row.getCell(2).value = pr[1]; row.getCell(3).value = pr[2];
-          rr++;
-        });
-        rr++;
-        ws.mergeCells(rr, 1, rr, 3);
-        xlsStyle(ws.getCell(rr, 1), { align: 'left', size: 9, color: XLS_COLOR.gray, border: false });
-        ws.getCell(rr, 1).value = '※ 실제 사진 이미지는 PDF 출력물의 "시험사진대지" 페이지에서 확인할 수 있습니다.';
+        if (!shots.length) {
+          ws.mergeCells(rr, 1, rr, 2);
+          xlsStyle(ws.getCell(rr, 1), { align: 'left', size: 9, color: XLS_COLOR.gray, border: false });
+          ws.getCell(rr, 1).value = '첨부된 사진이 없습니다.';
+        } else {
+          for (let i = 0; i < shots.length; i += 2) {
+            const pair = shots.slice(i, i + 2);
+            const capRow = ws.getRow(rr);
+            pair.forEach((p, ci) => {
+              xlsStyle(capRow.getCell(ci + 1), { bold: true, bg: XLS_COLOR.headerBg, size: 9.5 });
+              capRow.getCell(ci + 1).value = `[사진 ${i + ci + 1}] ${p.caption || '시험 진행 사진'}`;
+            });
+            if (pair.length === 1) xlsStyle(capRow.getCell(2), { bg: XLS_COLOR.headerBg });
+            capRow.height = 18;
+            rr++;
+            const imgRow = ws.getRow(rr);
+            imgRow.height = 150;                       // 약 200px
+            [1, 2].forEach(ci => xlsStyle(imgRow.getCell(ci), {}));
+            pair.forEach((p, ci) => {
+              xlsAddImage(wb, ws, p.dataUrl, { tl: { col: ci, row: rr - 1 }, ext: { width: 300, height: 198 } });
+            });
+            rr++;
+          }
+        }
       }
 
       // ====== 6. 시료 리스트 Sheet ======
@@ -3095,19 +3215,28 @@
       const title = `개폐기류_시험성적서_${q.lot_no || '최종'}`;
       
       if (typeof html2pdf !== 'undefined') {
+        // A4(210mm) - 좌우 여백(8mm×2) = 194mm 가 실제 인쇄 폭.
+        // 컨테이너를 딱 이 폭으로 만들어 1:1로 배치해야 축소·잘림 없이 한 장에 들어간다.
+        const MARGIN_MM = 8;
+        const PRINT_W_MM = 210 - MARGIN_MM * 2;
+        const PRINT_W_PX = Math.round(PRINT_W_MM / 25.4 * 96);
         const container = document.createElement('div');
         container.className = 'print-shell-export';
-        container.style.cssText = 'width:210mm; padding:10mm; background:#fff; color:#000; font-family:"Malgun Gothic", sans-serif;';
+        // 문서 흐름 안에 두어야 html2canvas가 높이를 제대로 잡는다(absolute로 띄우면 높이가 0이 됨).
+        container.style.cssText = `width:${PRINT_W_PX}px; padding:0;`
+          + ' box-sizing:border-box; background:#fff; color:#000; font-family:"Malgun Gothic", sans-serif;';
         // reportShell()과 동일한 스타일(표 테두리·색상·레이아웃)을 적용해야 실제 저장 PDF도 화면/인쇄본과 동일하게 예쁘게 나옴
         // ('.print-shell-export'로 스코핑하여 편집 화면 UI에는 영향이 가지 않도록 함)
         container.innerHTML = reportStyles('.print-shell-export') + inner;
         document.body.appendChild(container);
 
         const opt = {
-          margin: [8, 8, 8, 8],
+          margin: [MARGIN_MM, MARGIN_MM, MARGIN_MM, MARGIN_MM],
           filename: `${title}.pdf`,
           image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true, logging: false },
+          // windowWidth를 인쇄 폭으로 고정 — 창이 좁으면 html2canvas가 창 너비로 잘라버림
+          html2canvas: { scale: 2, useCORS: true, logging: false,
+                         windowWidth: PRINT_W_PX, scrollX: 0, scrollY: 0 },
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
           pagebreak: { mode: ['css', 'legacy'] }
         };
