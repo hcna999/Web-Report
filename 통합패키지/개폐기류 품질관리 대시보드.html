@@ -456,7 +456,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
               <h4>개폐기류 위험점수 (Risk Score) 산식 규칙</h4>
               <ul>
                 <li><strong>최종판정 불합격</strong>: +40점 / 미완료(작성중): +10점</li>
-                <li><strong>품질등급</strong>: D등급 +25점 / C등급 +15점 (발취수량 2배 관리강화 대상)</li>
+                <li><strong>품질등급</strong>: D등급 +25점 / C등급 +15점 (발취수량 D 3배·C 2배 관리강화 대상)</li>
                 <li><strong>시험항목 불량</strong>: 불량 판정 항목 1건당 +8점 (최대 32점)</li>
                 <li><strong>상연결 접속재 최소두께</strong>: 12mm 미만 미달 +30점 / 14mm 미만 여유부족 +15점</li>
                 <li><strong>기밀/가스누설 불량</strong>: +10점</li>
@@ -944,7 +944,7 @@ function applyRisk(l) {
   const add = (pts, reason) => { score += pts; reasons.push({ pts, reason }); };
   if (l.is_fail) add(40, "최종판정 불합격");
   else if (l.is_incomplete) add(10, "최종판정 미완료(작성중)");
-  if (l.grade === "D") add(25, "품질등급 D(발취 2배, 관리 강화 대상)");
+  if (l.grade === "D") add(25, "품질등급 D(발취 3배, 관리 강화 대상)");
   else if (l.grade === "C") add(15, "품질등급 C(발취 2배)");
   if (l.bad_item_count > 0) add(Math.min(32, l.bad_item_count * 8), `불량 판정 시험항목 ${l.bad_item_count}건`);
   if (Number.isFinite(l.conn_min)) {
@@ -1221,7 +1221,7 @@ function makeInsights(data) {
   const materialStats = topStats(data, "material").sort((a, b) => b.failRate - a.failRate)[0];
   if (materialStats && materialStats.failRate > overallFail) out.push(`${materialStats.name} 품목은 전체 평균 대비 불합격률이 높아 별도 관리가 필요합니다.`);
   const gradeCD = data.filter(l => l.grade === "C" || l.grade === "D").length;
-  if (gradeCD) out.push(`품질등급 C·D 로트는 ${fmt(gradeCD)}건으로 발취수량이 2배 강화 적용된 대상입니다.`);
+  if (gradeCD) out.push(`품질등급 C·D 로트는 ${fmt(gradeCD)}건으로 발취수량이 강화(D 3배·C 2배) 적용된 대상입니다.`);
   const connBad = data.filter(l => Number.isFinite(l.conn_min) && l.conn_min < 14).length;
   if (connBad) out.push(`상연결 접속재 최소두께가 14mm 미만(기준 12mm 대비 여유 2mm 미만 포함)인 로트는 ${fmt(connBad)}건입니다.`);
   return out;
