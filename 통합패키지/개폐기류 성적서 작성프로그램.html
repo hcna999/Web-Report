@@ -500,7 +500,8 @@
     const MAKERS = [{"name":"(주)디투엔지니어링"},{"name":"(주)비츠로일렉트릭","g":{"DREC":"A"}},{"name":"(주)에스얜에스","g":{"EPOXY":"D"}},{"name":"(주)엘파워텍"},{"name":"(주)엠에스그리드"},{"name":"(주)이앤엠테크"},{"name":"(주)이엔에스일렉트릭"},{"name":"(주)이페스"},{"name":"(주)이플전기"},{"name":"(주)케이피 일렉트릭"},{"name":"(주)테크프로","g":{"EPOXY":"D"}},{"name":"경동중전기(주)"},{"name":"구주기술(주)"},{"name":"구주진광 주식회사"},{"name":"동방전기공업 주식회사"},{"name":"동우일렉트릭 주식회사","g":{"POLE":"A"}},{"name":"보국전기공업(주)"},{"name":"보성파워텍(주)"},{"name":"부흥시스템 주식회사"},{"name":"샤든코리아 (주)"},{"name":"서창전기통신(주)","g":{"EPOXY":"S"}},{"name":"선도전기(주)"},{"name":"선일전기공업(주)"},{"name":"신성산전(주)","g":{"REC":"S"}},{"name":"신우전기제조(주)"},{"name":"쌍용전기 주식회사","g":{"EPOXY":"A"}},{"name":"유호전기공업(주)"},{"name":"이엔테크 주식회사"},{"name":"인텍전기전자 주식회사","g":{"REC":"A","DREC":"A","PREC":"A","EPOXY":"A","EFI":"A"}},{"name":"일진홀딩스(주)","g":{"DREC":"A","EFI":"C"}},{"name":"주식회사 광명전기","g":{"REC":"C","DREC":"C","EPOXY":"D","EFI":"A"}},{"name":"주식회사 델코코(Delcoco Co.Ltd)","g":{"EPOXY":"D"}},{"name":"주식회사 동양이이씨","g":{"EPOXY":"A","EFI":"S"}},{"name":"주식회사 두레콤"},{"name":"주식회사 디티알"},{"name":"주식회사 서전기전"},{"name":"주식회사 스위코진광","g":{"DREC":"D"}},{"name":"주식회사 알텍시스템"},{"name":"주식회사 에스지이엠"},{"name":"주식회사 이피이"},{"name":"주식회사 정인시스템"},{"name":"주식회사파워맥스"},{"name":"중앙산업(주)"},{"name":"중원 주식회사","g":{"REC":"S","EFI":"S"}},{"name":"피앤에이파워시스템 주식회사","g":{"EPOXY":"D"}},{"name":"피에스텍(주)","g":{"POLE":"A"}}];
 
     // ===== 등급 규칙 (업무절차서 부록9) =====
-    const GRADE_MULT = { S:0.5, A:0.5, B:1, C:2, D:2 };
+    // 품질등급제 변경 반영: C등급 2배, D등급 3배
+    const GRADE_MULT = { S:0.5, A:0.5, B:1, C:2, D:3 };
     // 품목(spec.id)별 업체 등급 조회 — 미등록/미평가 시 B
     function makerGrade(name, specId){ const m=MAKERS.find(x=>x.name===name); return (m&&m.g&&m.g[specId])||'B'; }
     function makerHasGrade(name, specId){ const m=MAKERS.find(x=>x.name===name); return !!(m&&m.g&&m.g[specId]); }
@@ -1325,7 +1326,7 @@
       let msg;
       if(CUR.grade==='S'||CUR.grade==='A'){ const names=CUR.spec.exemptKeys.map(k=>findItemName(k)).filter(Boolean).join(', ');
         msg=`<b>완화(Incentive)</b> — 발취수량 <b>×0.5배</b>, 면제항목: <span class="tag-exempt">${names}</span>${CUR.grade==='S'?' · 처내시험 반기1회 · 납품 최대 50% 시험면제':''}`; }
-      else if(CUR.grade==='C'||CUR.grade==='D'){ msg=`<b>강화(Penalty)</b> — 발취수량 <b>×2배</b> · 처내시험 분기2회`; }
+      else if(CUR.grade==='C'||CUR.grade==='D'){ msg=`<b>강화(Penalty)</b> — 발취수량 <b>×${GRADE_MULT[CUR.grade]}배</b> · 처내시험 분기2회`; }
       else { msg=`<b>기준(Normal)</b> — 검수 전항목 · 발취수량 구매규격기준 · 처내시험 분기1회`; }
       box.innerHTML=`등급 ${CUR.grade}(${GRADE_LABEL[CUR.grade]}): ${msg}`;
     }

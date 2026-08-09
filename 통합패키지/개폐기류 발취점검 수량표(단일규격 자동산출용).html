@@ -152,7 +152,7 @@
           <option value="A">A등급 (0.5배)</option>
           <option value="B" selected>B등급 (Normal - 1.0배)</option>
           <option value="C">C등급 (2.0배)</option>
-          <option value="D">D등급 (2.0배)</option>
+          <option value="D">D등급 (3.0배)</option>
         </select>
       </div>
 
@@ -193,7 +193,8 @@
 </div>
 
 <script>
-  const GRADE_MULT = { S:0.5, A:0.5, B:1.0, C:2.0, D:2.0 };
+  // 품질등급제 변경 반영: C등급 2배, D등급 3배
+  const GRADE_MULT = { S:0.5, A:0.5, B:1.0, C:2.0, D:3.0 };
   const S_FNS = {
     note2_efi:  (q) => q <= 50 ? 1 : 3,
     note1_dry:  (q) => q <= 20 ? 2 : 2 + Math.ceil((q - 20) / 20),
