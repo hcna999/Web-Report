@@ -2743,6 +2743,62 @@
       return {};
     }
 
+    // ===== PDF → 이미지 변환 (엑셀·이미지 출력용) =====
+    // pdf.js를 필요할 때만 내려받는다. 오프라인이면 실패하고, 호출부에서 파일명 안내로 대체된다.
+    let _pdfjsPromise = null;
+    function loadPdfJs() {
+      if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+      if (_pdfjsPromise) return _pdfjsPromise;
+      _pdfjsPromise = new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+        s.onload = () => {
+          try { window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+            'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; } catch (e) {}
+          resolve(window.pdfjsLib);
+        };
+        s.onerror = () => reject(new Error('pdf.js 로드 실패'));
+        document.head.appendChild(s);
+      });
+      return _pdfjsPromise;
+    }
+    function dataUrlToUint8(dataUrl) {
+      const b64 = String(dataUrl || '').split(',')[1] || '';
+      const bin = atob(b64); const arr = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+      return arr;
+    }
+    // 탭이 백그라운드면 pdf.js 렌더가 끝나지 않을 수 있어(브라우저가 렌더링을 멈춤)
+    // 전체 내보내기가 멈추지 않도록 페이지마다 시간 제한을 둔다.
+    function withTimeout(promise, ms, label) {
+      let t;
+      return Promise.race([
+        promise.finally(() => clearTimeout(t)),
+        new Promise((_, rj) => { t = setTimeout(() => rj(new Error((label || '작업') + ' 시간 초과')), ms); })
+      ]);
+    }
+    // PDF 각 페이지를 PNG dataURL로 변환 (기본 최대 5페이지)
+    async function pdfToImages(dataUrl, maxPages = 5) {
+      const lib = await withTimeout(loadPdfJs(), 15000, 'pdf.js 로드');
+      const pdf = await withTimeout(lib.getDocument({ data: dataUrlToUint8(dataUrl) }).promise, 15000, 'PDF 열기');
+      const out = [];
+      const n = Math.min(pdf.numPages, maxPages);
+      for (let p = 1; p <= n; p++) {
+        const page = await pdf.getPage(p);
+        const vp = page.getViewport({ scale: 1.6 });
+        const cv = document.createElement('canvas');
+        cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
+        const task = page.render({ canvasContext: cv.getContext('2d'), viewport: vp });
+        try {
+          await withTimeout(task.promise, 20000, `PDF ${p}페이지 렌더`);
+        } catch (e) {
+          try { task.cancel(); } catch (e2) {}
+          throw e;                     // 호출부에서 '변환 실패' 안내로 처리
+        }
+        out.push({ dataUrl: cv.toDataURL('image/png'), page: p, total: pdf.numPages });
+      }
+      return out;
+    }
     // dataURL 이미지를 시트에 삽입. 이미지가 아니면(PDF 등) false 반환.
     function xlsAddImage(wb, ws, dataUrl, anchor) {
       const m = /^data:image\/(png|jpe?g|gif|bmp|webp);base64,([\s\S]+)$/i.exec(String(dataUrl || '').trim());
@@ -3098,7 +3154,7 @@
       });
 
       // ====== 4. 별첨(공인기관 성적서 대체) 항목별 Sheet (항목마다 분리) ======
-      certItemsList(q).forEach(it => {
+      for (const it of certItemsList(q)) {
         const files = it.certFiles || [];
         const ws = wb.addWorksheet(safeSheetName(it.name, usedSheetNames), { pageSetup: { orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: printMargins } });
         ws.getColumn(1).width = 10; ws.getColumn(2).width = 40; ws.getColumn(3).width = 16;
@@ -3132,18 +3188,33 @@
           rr++;
         });
         rr++;
-        // 이미지 첨부는 시트에 실제로 삽입, PDF는 엑셀에 삽입할 수 없어 안내만 남긴다
-        let pdfCount = 0;
-        files.forEach((f, idx) => {
-          if (!xlsAddImageBlock(wb, ws, f, idx, rr)) { pdfCount++; return; }
-          rr += 13;                                   // 이미지 블록(캡션 1행 + 이미지 12행)
-        });
-        if (pdfCount) {
+        // 이미지 첨부는 그대로, PDF 첨부는 pdf.js로 페이지를 이미지로 변환해 삽입한다.
+        let failed = 0;
+        for (let idx = 0; idx < files.length; idx++) {
+          const f = files[idx];
+          if (/^data:image\//i.test(String(f.dataUrl || ''))) {
+            if (xlsAddImageBlock(wb, ws, f, idx, rr)) rr += 13; else failed++;
+            continue;
+          }
+          if (/pdf/i.test(f.type || '') || /\.pdf$/i.test(f.name || '')) {
+            try {
+              const pages = await pdfToImages(f.dataUrl);          // PDF → PNG 페이지들
+              if (!pages.length) { failed++; continue; }
+              pages.forEach(pg => {
+                const label = { name: `${f.name || 'PDF'} (${pg.page}/${pg.total})`, dataUrl: pg.dataUrl };
+                if (xlsAddImageBlock(wb, ws, label, idx, rr)) rr += 17; else failed++;
+              });
+            } catch (e) { console.warn('PDF 이미지 변환 실패:', f.name, e); failed++; }
+            continue;
+          }
+          failed++;
+        }
+        if (failed) {
           ws.mergeCells(rr, 1, rr, 3);
           xlsStyle(ws.getCell(rr, 1), { align: 'left', size: 9, color: XLS_COLOR.gray, border: false });
-          ws.getCell(rr, 1).value = `※ PDF 첨부 ${pdfCount}건은 엑셀에 삽입할 수 없어 PDF 출력물에서 확인할 수 있습니다.`;
+          ws.getCell(rr, 1).value = `※ 첨부 ${failed}건은 이미지로 변환하지 못했습니다(형식 미지원 또는 오프라인). 원본은 첨부파일 목록을 참고하세요.`;
         }
-      });
+      }
 
       // ====== 5. 시험 사진대지 Sheet (실제 이미지 삽입, 2장씩 배치) ======
       {
@@ -3222,7 +3293,7 @@
         const PRINT_W_PX = Math.round(PRINT_W_MM / 25.4 * 96);
         const container = document.createElement('div');
         container.className = 'print-shell-export';
-        // 문서 흐름 안에 두어야 html2canvas가 높이를 제대로 잡는다(absolute로 띄우면 높이가 0이 됨).
+        // 문서 흐름 안에 두어야 html2canvas가 높이를 제대로 잡는다(absolute·iframe은 높이가 0이거나 어긋남).
         container.style.cssText = `width:${PRINT_W_PX}px; padding:0;`
           + ' box-sizing:border-box; background:#fff; color:#000; font-family:"Malgun Gothic", sans-serif;';
         // reportShell()과 동일한 스타일(표 테두리·색상·레이아웃)을 적용해야 실제 저장 PDF도 화면/인쇄본과 동일하게 예쁘게 나옴
@@ -3230,13 +3301,20 @@
         container.innerHTML = reportStyles('.print-shell-export') + inner;
         document.body.appendChild(container);
 
+        // 페이지가 스크롤된 상태에서 캡처하면 위쪽 내용이 잘리므로 최상단으로 올린 뒤 캡처하고 원위치로 복귀
+        const prevScroll = { x: window.scrollX, y: window.scrollY };
+        window.scrollTo(0, 0);
+        const cleanup = () => {
+          try { document.body.removeChild(container); } catch (e) {}
+          window.scrollTo(prevScroll.x, prevScroll.y);
+        };
+
         const opt = {
           margin: [MARGIN_MM, MARGIN_MM, MARGIN_MM, MARGIN_MM],
           filename: `${title}.pdf`,
           image: { type: 'jpeg', quality: 0.98 },
-          // windowWidth를 인쇄 폭으로 고정 — 창이 좁으면 html2canvas가 창 너비로 잘라버림
-          html2canvas: { scale: 2, useCORS: true, logging: false,
-                         windowWidth: PRINT_W_PX, scrollX: 0, scrollY: 0 },
+          // windowWidth/scrollX 등을 강제하면 창이 넓을 때 내용이 좌측으로 몰려 잘린다 → 기본값 사용
+          html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
           pagebreak: { mode: ['css', 'legacy'] }
         };
@@ -3259,10 +3337,10 @@
             console.warn('워터마크/페이지번호 스탬프 실패(본문은 정상 저장됨):', e);
           }
         }).save().then(() => {
-          document.body.removeChild(container);
+          cleanup();
         }).catch(err => {
           console.error("html2pdf error:", err);
-          document.body.removeChild(container);
+          cleanup();
           printReport(q, kind);
         });
       } else {
