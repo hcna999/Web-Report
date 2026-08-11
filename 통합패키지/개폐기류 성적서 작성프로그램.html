@@ -2737,6 +2737,23 @@
       if (opts.border !== false) cell.border = XLS_BORDER_ALL;
       if (opts.bg) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: opts.bg } };
     }
+    // 셀 내용이 열 너비를 넘어 줄바꿈될 때 글자가 잘리지 않도록 행 높이를 계산해서 지정한다.
+    // cells: [{text, width}] — width는 해당 열의 엑셀 너비(문자 단위)
+    // 엑셀 열 너비 1 ≈ 숫자 '0' 한 글자. 한글·전각은 약 2배 폭으로 계산한다.
+    function xlsAutoHeight(row, cells, opts = {}) {
+      const size = opts.size || 10.5;
+      const lineH = Math.ceil(size * 1.55);            // 한 줄에 필요한 높이(pt)
+      let lines = 1;
+      (cells || []).forEach(c => {
+        const t = String(c.text === undefined || c.text === null ? '' : c.text);
+        const w = Math.max(4, Number(c.width) || 10);
+        if (!t) return;
+        let units = 0;
+        for (const ch of t) units += (ch.charCodeAt(0) > 0x2000 ? 2 : 1);
+        lines = Math.max(lines, Math.ceil(units / w));
+      });
+      row.height = Math.max(opts.min || 18, lines * lineH + 4);
+    }
     // 판정값(양호/불량 등)에 따른 강조색 - PDF의 jbP()와 동일 기준
     function xlsJudgeStyle(v) {
       if (v === '불량' || v === '불합격' || v === '불합격(중도종료)') return { color: XLS_COLOR.bad, bold: true };
@@ -2842,7 +2859,9 @@
       const wsGapji = wb.addWorksheet('갑지', {
         pageSetup: { orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: printMargins }
       });
-      wsGapji.columns = [{ width: 32 }, { width: 15 }, { width: 32 }, { width: 15 }];
+      // 시험항목명이 길어 잘리는 일이 잦아 항목 열을 넓히고 결과 열을 줄임
+      const GAPJI_W = [38, 13, 38, 13];
+      wsGapji.columns = GAPJI_W.map(w => ({ width: w }));
 
       wsGapji.mergeCells('A1:D1');
       const gTitle = wsGapji.getCell('A1');
@@ -2868,7 +2887,11 @@
           xlsStyle(rr.getCell(3), { bold: true, bg: XLS_COLOR.labelBg }); rr.getCell(3).value = row[2];
           xlsStyle(rr.getCell(4), { align: 'left' }); rr.getCell(4).value = row[3];
         }
-        rr.height = 20;
+        // 품명·규격은 길어서 잘리기 쉬움 (1행은 B:D 병합이라 폭을 합산)
+        xlsAutoHeight(rr, idx === 0
+          ? [{ text: row[1], width: GAPJI_W[1] + GAPJI_W[2] + GAPJI_W[3] }]
+          : [{ text: row[1], width: GAPJI_W[1] }, { text: row[3], width: GAPJI_W[3] }],
+          { min: 20 });
         r++;
       });
 
@@ -2905,7 +2928,10 @@
         xlsStyle(row.getCell(2), Object.assign({ size: 9.5 }, xlsJudgeStyle(l[1]))); row.getCell(2).value = l[1];
         xlsStyle(row.getCell(3), { align: 'left', size: 9.5 }); row.getCell(3).value = rItem[0];
         xlsStyle(row.getCell(4), Object.assign({ size: 9.5 }, xlsJudgeStyle(rItem[1]))); row.getCell(4).value = rItem[1];
-        row.height = 26;
+        xlsAutoHeight(row, [
+          { text: l[0], width: GAPJI_W[0] }, { text: l[1], width: GAPJI_W[1] },
+          { text: rItem[0], width: GAPJI_W[2] }, { text: rItem[1], width: GAPJI_W[3] }
+        ], { size: 9.5, min: 22 });
         r++;
       }
 
@@ -2978,7 +3004,9 @@
             row.getCell(i + 2).value = v;
           });
         }
-        row.height = 20;
+        // 시험항목명이 길면 여러 줄로 접히므로 행 높이를 내용에 맞춘다
+        xlsAutoHeight(row, [{ text: it.name + (it.crit ? ' [' + it.crit + ']' : ''), width: 30 }],
+          { size: 9, min: 20 });
         er++;
       });
 
@@ -3175,6 +3203,7 @@
           const row = ws.getRow(rr);
           xlsStyle(row.getCell(1), { bold: true, bg: XLS_COLOR.labelBg }); row.getCell(1).value = k;
           xlsStyle(row.getCell(2), { align: 'left' }); row.getCell(2).value = v;
+          xlsAutoHeight(row, [{ text: v, width: 40 + 16 }], { min: 20 });   // B:C 병합 폭
           rr++;
         });
         rr++;
@@ -3295,7 +3324,8 @@
         const container = document.createElement('div');
         container.className = 'print-shell-export';
         // 문서 흐름 안에 두어야 html2canvas가 높이를 제대로 잡는다(absolute·iframe은 높이가 0이거나 어긋남).
-        container.style.cssText = `width:${PRINT_W_PX}px; padding:0;`
+        // 아래쪽 여유(6px)를 두지 않으면 마지막 표의 테두리 선이 캡처 경계에 걸려 잘린다
+        container.style.cssText = `width:${PRINT_W_PX}px; padding:0 0 6px 0;`
           + ' box-sizing:border-box; background:#fff; color:#000; font-family:"Malgun Gothic", sans-serif;';
         // reportShell()과 동일한 스타일(표 테두리·색상·레이아웃)을 적용해야 실제 저장 PDF도 화면/인쇄본과 동일하게 예쁘게 나옴
         // ('.print-shell-export'로 스코핑하여 편집 화면 UI에는 영향이 가지 않도록 함)
