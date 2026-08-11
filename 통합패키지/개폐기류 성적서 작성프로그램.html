@@ -546,7 +546,8 @@
           ]},
           { key:'func', title:'동작·기능시험', items:[
             { key:'novolt', name:'무전압 개폐시험', ref:'7.3.6', crit:'10회 이상없음', full:true },
-            { key:'trip', name:'최소Trip 전류 및 T-C시험', ref:'7.3.13', crit:'150/300/600/1000%', unit:'A', measureManual:true, sampFn:S.per(50) },
+            { key:'mintrip', name:'최소 Trip 전류시험', ref:'7.3.13', crit:'정정치 ±10%(90% 부동작 확인)', unit:'A', minTrip:true, noOp:true, sampFn:S.per(50) },
+            { key:'tc', name:'T-C 특성시험', ref:'7.3.13', crit:'150/300/600/1000%', unit:'ms', tcTest:true, tcTol:'efi', sampFn:S.per(50) },
             { key:'opfunc', name:'동작기능시험', ref:'7.3.14', crit:'6항(자동형 6.1)', sampFn:S.per(50) },
             { key:'opchk', name:'조작확인시험', ref:'7.3.15', crit:'이상없음', sampFn:S.per(50) },
             { key:'sys', name:'시스템연결 동작시험', ref:'7.3.28', crit:'H/W 포인트', autoOnly:true, sampFn:S.per(50) },
@@ -669,8 +670,8 @@
           ]},
           { key:'func', title:'동작·기능시험', items:[
             { key:'novolt', name:'무전압 개폐시험', ref:'7.2.6', crit:'검수 10회 이상없음', full:true },
-            { key:'trip', name:'최소동작전류 시험', ref:'7.2.19', crit:'3상중1상 최소/중간/최대', unit:'A', measureManual:true, sampFn:S.per(20) },
-            { key:'tc', name:'T-C 특성시험', ref:'7.2.20', crit:'150/300/500/1000%', unit:'s', measureManual:true, sampFn:S.per(20) },
+            { key:'mintrip', name:'최소동작전류 시험', ref:'7.2.19', crit:'정정치 ±10%(3상중1상)', unit:'A', minTrip:true, sampFn:S.per(20) },
+            { key:'tc', name:'T-C 특성시험', ref:'7.2.20', crit:'150/300/500/1000%', unit:'ms', tcTest:true, tcTol:'rc', tcPcts:[150,300,500,1000], sampFn:S.per(20) },
             { key:'ctrl_ac', name:'제어회로 상용주파 내전압', ref:'7.2.21.1', crit:'IEC 62271-111 6.10항', sampFn:S.per(20) },
             { key:'sys', name:'시스템 연결동작 시험', ref:'7.2.22', crit:'6.6항(무전압개폐 3회)', full:true },
           ]},
@@ -783,9 +784,9 @@
             { key:'ir', name:'절연저항 측정(제어회로)', ref:'ES-5925-0001 6.6항(원문)/5.6항', crit:'제어회로만 적용(주5 발취)', sampFn:S.per(50) },
           ]},
           { key:'func', title:'동작·특성시험', items:[
-            { key:'mintrip', name:'최소동작전류시험', ref:'IEC 62271-111 6.105', crit:'검수 1상·최소/중간/최대', unit:'A', measureManual:true, sampFn:S.per(20) },
-            { key:'tc', name:'T-C 특성시험', ref:'IEC 62271-111 6.108', crit:'단락 3상중1상+지락 150/300/500/1000%', unit:'s', measureManual:true, sampFn:S.per(20) },
-            { key:'seqtest', name:'Sequence Test', ref:'6.1.1항', crit:'정정 동작전류(최소) 1000%', sampFn:S.per(20) },
+            { key:'mintrip', name:'최소동작전류시험', ref:'IEC 62271-111 6.105', crit:'정정치 ±10%(검수 1상)', unit:'A', minTrip:true, sampFn:S.per(20) },
+            { key:'tc', name:'T-C 특성시험', ref:'IEC 62271-111 6.108', crit:'단락·지락 150/300/600/1000%', unit:'ms', tcTest:true, tcTol:'rc', sampFn:S.per(20) },
+            { key:'seqtest', name:'Sequence Test', ref:'6.1.1항', crit:'정정 동작전류 1000%·2F 2D', unit:'ms', seqTest:true, tcTol:'rc', sampFn:S.per(20) },
             { key:'novolt', name:'무전압 개폐시험', ref:'IEC 62271-111 6.109', crit:'검수 10회 연속 이상없음', full:true },
           ]},
           { key:'ctrl', title:'제어·계측시험', items:[
@@ -821,9 +822,9 @@
             { key:'ir', name:'절연저항 측정(제어회로)', ref:'7.3.20', crit:'ES-5925-0001 5.6항(제어회로)', full:true },
           ]},
           { key:'func', title:'동작·특성시험', items:[
-            { key:'mintrip', name:'최소동작전류시험', ref:'7.3.13', crit:'검수 1상·최소/중간/최대', unit:'A', measureManual:true, sampFn:S.per(20) },
-            { key:'tc', name:'T-C 특성시험', ref:'7.3.16', crit:'단락·지락 3상중1상 150/300/600/1000%', unit:'s', measureManual:true, sampFn:S.per(20) },
-            { key:'seqtest', name:'Sequence Test', ref:'7.3.28', crit:'정정 동작전류(최소) 1000%', sampFn:S.per(20) },
+            { key:'mintrip', name:'최소동작전류시험', ref:'7.3.13', crit:'정정치 ±10%(검수 1상)', unit:'A', minTrip:true, sampFn:S.per(20) },
+            { key:'tc', name:'T-C 특성시험', ref:'7.3.16', crit:'단락·지락 150/300/600/1000%', unit:'ms', tcTest:true, tcTol:'rc', sampFn:S.per(20) },
+            { key:'seqtest', name:'Sequence Test', ref:'7.3.28', crit:'정정 동작전류 1000%·2F 2D', unit:'ms', seqTest:true, tcTol:'rc', sampFn:S.per(20) },
             { key:'novolt', name:'무전압 개폐시험', ref:'7.3.17', crit:'검수 10회 연속 이상없음', full:true },
             { key:'pulse_novolt', name:'펄스무전압 개폐시험', ref:'7.3.27.2', crit:'O-Pulse(A,B,C)·검수 3회(주8)', measureManual:true, sampFn:S.per(20) },
             { key:'pulse_mintrip', name:'펄스최소동작전류시험', ref:'7.3.27.4', crit:'315°·2ms 80%부동작/120%동작(FI확인, 검수 1회)', unit:'A', measureManual:true, sampFn:S.per(20) },
@@ -861,9 +862,9 @@
             { key:'ir', name:'절연저항 측정(제어회로)', ref:'7.3.15', crit:'ES-5925-0001 5.6항(제어회로)', full:true },
           ]},
           { key:'func', title:'동작·특성시험', items:[
-            { key:'mintrip', name:'최소동작전류시험', ref:'7.3.11', crit:'검수 1상·최소/중간/최대', unit:'A', measureManual:true, sampFn:S.per(20) },
-            { key:'tc', name:'T-C 특성시험', ref:'7.3.13', crit:'단락·지락 3상중1상 150/300/600/1000%', unit:'s', measureManual:true, sampFn:S.per(20) },
-            { key:'seqtest', name:'Sequence Test', ref:'7.3.22', crit:'정정 동작전류(최소) 1000%', sampFn:S.per(20) },
+            { key:'mintrip', name:'최소동작전류시험', ref:'7.3.11', crit:'정정치 ±10%(검수 1상)', unit:'A', minTrip:true, sampFn:S.per(20) },
+            { key:'tc', name:'T-C 특성시험', ref:'7.3.13', crit:'단락·지락 150/300/600/1000%', unit:'ms', tcTest:true, tcTol:'rc', sampFn:S.per(20) },
+            { key:'seqtest', name:'Sequence Test', ref:'7.3.22', crit:'정정 동작전류 1000%·2F 2D', unit:'ms', seqTest:true, tcTol:'rc', sampFn:S.per(20) },
             { key:'novolt', name:'무전압 개폐시험', ref:'7.3.14', crit:'검수 10회 연속 이상없음', full:true },
           ]},
           { key:'ctrl', title:'제어·계측시험', items:[
@@ -955,13 +956,40 @@
     function pcFilled(st,sn){ return pcNums(st,sn).length===9; }
     function pcMin(st,sn){ const n=pcNums(st,sn); return n.length?Math.min(...n):''; }
     function pcAuto(it,st,sn){ return pcFilled(st,sn)?autoVal(it,pcMin(st,sn)):''; }
-    // ===== 부분방전시험(pdPhase) — 상간 3개 + 대지간 1개 인가부분별 측정 =====
+    // ===== 부분방전시험(pdPhase) — 인가부분별 측정 =====
     // 규격 표2 주2) 하우징을 실드 처리한 경우 상간의 최대부분방전량 측정은 생략할 수 있음
-    const PD_ROWS=[ {k:'pd_a',lab:'Aa-BbCc',grp:'상 간'}, {k:'pd_b',lab:'Bb-AaCc',grp:'상 간'},
-                    {k:'pd_c',lab:'Cc-AaBb',grp:'상 간'}, {k:'pd_g',lab:'AaBbCc-F',grp:'대지간'} ];
+    // 가공형(R/C·EFI): 상간 3 + 대지간 1 = 4점
+    const PD_ROWS_OVERHEAD=[ {k:'pd_a',lab:'Aa-BbCc',grp:'상 간'}, {k:'pd_b',lab:'Bb-AaCc',grp:'상 간'},
+                             {k:'pd_c',lab:'Cc-AaBb',grp:'상 간'}, {k:'pd_g',lab:'AaBbCc-F',grp:'대지간'} ];
+    // 지중·지상형: 전체 대지간 1 + 회로별 대지간(3상×회로수) + 상간 3
+    //   예) 4회로 = 1 + 12 + 3 = 16점
+    const PHASE3=['A','B','C'];
+    function pdRowsUnderground(nCircuit){
+      const n=Math.max(1, Number(nCircuit)||4);
+      const rows=[{ k:'pd_g', lab:'ABC (S1~S'+n+' CLOSE) - F', grp:'대지간' }];
+      for(let i=1;i<=n;i++){
+        const others=[]; for(let j=1;j<=n;j++) if(j!==i) others.push('S'+j);
+        PHASE3.forEach(p=>rows.push({ k:`pd_c${i}${p}`, lab:`${p}${i} (S${i} Close, ${others.join(',')} Open) - F`, grp:'대지간' }));
+      }
+      PHASE3.forEach(p=>{ const o=PHASE3.filter(x=>x!==p).join(',');
+        rows.push({ k:'pd_p'+p, lab:`${p} (${o} 접지)`, grp:'상 간' }); });
+      return rows;
+    }
     function pdShieldable(){ return (CUR.spec||{}).install!=='가공'; }   // 지중·지상(패드)형만 실드 생략 가능
+    // 저장된 성적서(q)에서도 재현할 수 있도록 회로수를 인자로 받는다
+    function pdAllRows(nCircuit){
+      return pdShieldable() ? pdRowsUnderground(nCircuit!==undefined?nCircuit:circuits()) : PD_ROWS_OVERHEAD;
+    }
     function pdShielded(st){ return !!(st||{}).shield; }
-    function pdRows(st){ return pdShielded(st)?PD_ROWS.filter(r=>r.grp==='대지간'):PD_ROWS; }
+    function pdRows(st,nCircuit){
+      const all=pdAllRows(nCircuit);
+      return pdShielded(st)?all.filter(r=>r.grp==='대지간'):all;
+    }
+    // 저장된 성적서(q)로 출력할 때는 CUR가 아닌 q의 설치형태·회로수로 인가부분을 복원한다
+    function pdRowsForQIR(q,it){
+      const all=((q||{}).install!=='가공') ? pdRowsUnderground((q||{}).circuits) : PD_ROWS_OVERHEAD;
+      return it && it.shield ? all.filter(r=>r.grp==='대지간') : all;
+    }
     // 활성 인가부분 중 최대 측정값 → 기존 thr 자동판정(r.val)에 그대로 연결
     function pdMax(st,sn){
       const f=(((st.res||{})[sn])||{}).fields||{};
@@ -971,6 +999,87 @@
     function pdFilled(st,sn){
       const f=(((st.res||{})[sn])||{}).fields||{};
       return pdRows(st).every(r=>{ const v=f[r.k]; return v!==undefined&&String(v).trim()!==''&&isFinite(Number(v)); });
+    }
+    // ===== 최소동작전류시험(minTrip) — 정정치·허용범위·측정치 =====
+    // 정정치를 입력하면 허용범위(±10%)를 자동 계산하고 측정치와 비교해 판정한다.
+    // EFI는 정정치 90%에서 부동작 확인란(noOp)이 추가된다.
+    const MT_GROUPS=[ {k:'sc',title:'가. 단락 요소',ph:'BΦ'}, {k:'gf',title:'나. 지락 요소',ph:'NΦ'} ];
+    const MT_ROWS=[1,2,3];
+    function mtKey(g,i,t){ return `mt_${g}_${t}${i}`; }            // t: s=정정치, m=측정치, n=부동작
+    function mtRange(set){
+      const v=Number(set);
+      if(!isFinite(v)||String(set).trim()==='') return null;
+      return { lo:Math.round(v*0.9*10)/10, hi:Math.round(v*1.1*10)/10 };
+    }
+    function mtRowJdg(f,g,i){
+      const r=mtRange(f[mtKey(g,i,'s')]); const m=f[mtKey(g,i,'m')];
+      if(!r||m===undefined||String(m).trim()===''||!isFinite(Number(m))) return '';
+      const v=Number(m);
+      return (v>=r.lo && v<=r.hi)?'양호':'불량';
+    }
+    function mtFields(st,sn){ return (((st.res||{})[sn])||{}).fields||{}; }
+    // 입력된 행만 판정하고, 한 행도 없으면 미판정
+    function mtAuto(st,sn){
+      const f=mtFields(st,sn); let any=false,bad=false;
+      MT_GROUPS.forEach(g=>MT_ROWS.forEach(i=>{
+        const j=mtRowJdg(f,g.k,i); if(j){ any=true; if(j==='불량') bad=true; } }));
+      return any?(bad?'불량':'양호'):'';
+    }
+    // ===== T-C 특성시험(tcTest) — 동작기준치(T-C곡선값)·허용범위·측정치 =====
+    // 동작기준치는 제조사 T-C 곡선값이라 계산할 수 없어 검사자가 입력하고,
+    // 허용범위는 규격 각주의 규칙으로 자동 산출한다.
+    //   EFI : 동작기준치 100ms 이상 ±10%, 100ms 미만 ±10ms
+    //   R/C : ±5% 와 ±20ms 중 큰 쪽
+    const TC_PCTS_DEFAULT=[150,300,600,1000];
+    const TC_ARCING_MS=8;                                   // 각주: Arcing time 8ms (기준치에서 제외)
+    function tcKey(g,t,i){ return i===undefined?`tc_${g}_${t}`:`tc_${g}_${t}${i}`; }
+    function tcRange(base, rule){
+      const v=Number(base);
+      if(!isFinite(v)||String(base).trim()==='') return null;
+      let tol;
+      if(rule==='efi') tol = (v>=100) ? v*0.10 : 10;
+      else             tol = Math.max(v*0.05, 20);           // R/C 기본
+      return { lo:Math.round((v-tol)*10)/10, hi:Math.round((v+tol)*10)/10 };
+    }
+    function tcRowJdg(f,g,i,rule){
+      const r=tcRange(f[tcKey(g,'b',i)], rule); const m=f[tcKey(g,'m',i)];
+      if(!r||m===undefined||String(m).trim()===''||!isFinite(Number(m))) return '';
+      const v=Number(m);
+      return (v>=r.lo && v<=r.hi)?'양호':'불량';
+    }
+    function tcFields(st,sn){ return (((st.res||{})[sn])||{}).fields||{}; }
+    function tcPcts(it){ return (it&&Array.isArray(it.tcPcts)&&it.tcPcts.length)?it.tcPcts:TC_PCTS_DEFAULT; }
+    function tcAuto(it,st,sn){
+      const f=tcFields(st,sn); const rule=(it||{}).tcTol||'rc'; let any=false,bad=false;
+      MT_GROUPS.forEach(g=>tcPcts(it).forEach((_,i)=>{
+        const j=tcRowJdg(f,g.k,i+1,rule); if(j){ any=true; if(j==='불량') bad=true; } }));
+      return any?(bad?'불량':'양호'):'';
+    }
+    // ===== Sequence Test(seqTest) — 회차별 동작시간 + 재폐로·복귀시간 =====
+    // 1·2회는 고속(N1/N2)곡선, 3·4회는 저속(N3/N4)곡선 기준치로 판정한다. 허용범위는 T-C와 동일 규칙.
+    const SQ_SHOTS=[1,2,3,4];
+    const SQ_TIMES=[ {k:'r1',lab:'*1 재폐로 시간'}, {k:'r2',lab:'*2 재폐로 시간'},
+                     {k:'r3',lab:'*3 재폐로 시간'}, {k:'rt',lab:'복귀시간'} ];
+    function sqKey(g,t,i){ return i===undefined?`sq_${g}_${t}`:`sq_${g}_${t}${i}`; }
+    function sqFields(st,sn){ return (((st.res||{})[sn])||{}).fields||{}; }
+    function sqBaseFor(f,g,shot){ return f[sqKey(g, shot<=2?'bf':'bs')]; }   // 1·2회=고속, 3·4회=저속
+    function sqShotJdg(f,g,shot,rule){
+      const r=tcRange(sqBaseFor(f,g,shot), rule||'rc'); const m=f[sqKey(g,'m',shot)];
+      if(!r||m===undefined||String(m).trim()===''||!isFinite(Number(m))) return '';
+      const v=Number(m); return (v>=r.lo && v<=r.hi)?'양호':'불량';
+    }
+    function sqTimeJdg(f,key,which,rule){
+      const r=tcRange(f[`sq_t_${key}_b`], rule||'rc'); const m=f[`sq_t_${key}_${which}`];
+      if(!r||m===undefined||String(m).trim()===''||!isFinite(Number(m))) return '';
+      const v=Number(m); return (v>=r.lo && v<=r.hi)?'양호':'불량';
+    }
+    function sqAuto(it,st,sn){
+      const f=sqFields(st,sn); const rule=(it||{}).tcTol||'rc'; let any=false,bad=false;
+      MT_GROUPS.forEach(g=>SQ_SHOTS.forEach(s=>{
+        const j=sqShotJdg(f,g.k,s,rule); if(j){ any=true; if(j==='불량') bad=true; } }));
+      SQ_TIMES.forEach(t=>['bp','np'].forEach(w=>{
+        const j=sqTimeJdg(f,t.k,w,rule); if(j){ any=true; if(j==='불량') bad=true; } }));
+      return any?(bad?'불량':'양호'):'';
     }
     // ===== 취부금구 도금시험(plating) — 부위별 도막두께 평균치 입력 =====
     // 취부금구 70㎛ 이상 / 볼트·너트 50㎛ 이상. 현장에서 측정 평균치를 직접 기입.
@@ -1529,6 +1638,109 @@
           }).join('')}</table>`;
         return defBox+table;
       }
+      // 최소동작전류시험 — 정정치 입력 → 허용범위(±10%) 자동 계산 → 측정치와 비교
+      if(it.minTrip){
+        const u=it.unit||'A';
+        return serials.map(sn=>{
+          const f=mtFields(st,sn); const aj=mtAuto(st,sn);
+          const grp=MT_GROUPS.map(g=>`
+            <div style="margin:6px 0 2px;font-size:11px;font-weight:700">${g.title} <span class="muted">(${g.ph})</span></div>
+            <table class="rgrid tbl"><tr><th>정정치(${u})</th>${it.noOp?`<th>정정치 90%<br>부동작 확인</th>`:''}<th>허용범위(${u})</th><th>측정치(${u})</th><th>판정</th></tr>
+              ${MT_ROWS.map(i=>{
+                const r=mtRange(f[mtKey(g.k,i,'s')]); const j=mtRowJdg(f,g.k,i);
+                return `<tr>
+                  <td><input data-k="${it.key}" data-sn="${sn}" data-fld="${mtKey(g.k,i,'s')}" value="${f[mtKey(g.k,i,'s')]||''}" style="width:76px"></td>
+                  ${it.noOp?`<td>${selBox2(it.key,sn,mtKey(g.k,i,'n'),['','부동작','동작'],f[mtKey(g.k,i,'n')]||'')}</td>`:''}
+                  <td data-mtrange="${it.key}|${sn}|${g.k}|${i}" class="muted">${r?`${r.lo} ~ ${r.hi}`:'-'}</td>
+                  <td><input data-k="${it.key}" data-sn="${sn}" data-fld="${mtKey(g.k,i,'m')}" value="${f[mtKey(g.k,i,'m')]||''}" style="width:76px"></td>
+                  <td data-mtjdg="${it.key}|${sn}|${g.k}|${i}"><span class="autojdg ${j==='양호'?'aj-good':j==='불량'?'aj-bad':'aj-none'}">${j||'-'}</span></td>
+                </tr>`; }).join('')}
+            </table>`).join('');
+          return `<div style="margin-bottom:10px;overflow-x:auto"><div class="muted" style="font-size:11px">제조번호 <b>${sn}</b></div>
+            ${grp}
+            <div class="row" style="gap:10px;margin-top:4px;align-items:center">
+              <span class="muted" style="font-size:11px">종합 <span data-mtauto="${it.key}|${sn}" class="autojdg ${aj==='양호'?'aj-good':aj==='불량'?'aj-bad':'aj-none'}">${aj||'-'}</span></span>
+            </div></div>`;
+        }).join('');
+      }
+      // Sequence Test — 회차별 동작시간 + 재폐로·복귀시간
+      if(it.seqTest){
+        const rule=it.tcTol||'rc';
+        return serials.map(sn=>{
+          const f=sqFields(st,sn); const aj=sqAuto(it,st,sn);
+          const grp=MT_GROUPS.map(g=>{
+            const set=f[sqKey(g.k,'set')];
+            const applied=(isFinite(Number(set))&&String(set).trim()!=='')?Math.round(Number(set)*10*10)/10:'';
+            return `
+            <div style="margin:6px 0 2px;font-size:11px;font-weight:700">${g.title} <span class="muted">(${g.ph})</span>
+              &nbsp;정정치(A) <input data-k="${it.key}" data-sn="${sn}" data-fld="${sqKey(g.k,'set')}" value="${set||''}" style="width:66px">
+              &nbsp;<span class="muted">인가치 1000% : <b data-sqapp="${it.key}|${sn}|${g.k}">${applied!==''?applied:'-'}</b> A · SEQUENCE 2F 2D</span></div>
+            <table class="rgrid tbl"><tr><th>기준치(ms)<br><span class="muted" style="font-weight:400">1·2회(고속)</span></th><th>기준치(ms)<br><span class="muted" style="font-weight:400">3·4회(저속)</span></th>
+              ${SQ_SHOTS.map(s=>`<th>${s}회 측정(ms)</th>`).join('')}</tr>
+              <tr>
+                <td><input data-k="${it.key}" data-sn="${sn}" data-fld="${sqKey(g.k,'bf')}" value="${f[sqKey(g.k,'bf')]||''}" style="width:84px"></td>
+                <td><input data-k="${it.key}" data-sn="${sn}" data-fld="${sqKey(g.k,'bs')}" value="${f[sqKey(g.k,'bs')]||''}" style="width:84px"></td>
+                ${SQ_SHOTS.map(s=>`<td><input data-k="${it.key}" data-sn="${sn}" data-fld="${sqKey(g.k,'m',s)}" value="${f[sqKey(g.k,'m',s)]||''}" style="width:80px"></td>`).join('')}
+              </tr>
+              <tr><td class="muted" colspan="2" data-sqrange="${it.key}|${sn}|${g.k}">-</td>
+                ${SQ_SHOTS.map(s=>{ const j=sqShotJdg(f,g.k,s,rule);
+                  return `<td data-sqjdg="${it.key}|${sn}|${g.k}|${s}"><span class="autojdg ${j==='양호'?'aj-good':j==='불량'?'aj-bad':'aj-none'}">${j||'-'}</span></td>`;}).join('')}
+              </tr>
+            </table>`;}).join('');
+          const times=`
+            <div style="margin:6px 0 2px;font-size:11px;font-weight:700">다. 재폐로 및 복귀시간</div>
+            <table class="rgrid tbl"><tr><th>구분</th><th>기준치(ms)</th><th>허용범위</th><th>측정 BΦ</th><th>판정</th><th>측정 NΦ</th><th>판정</th></tr>
+              ${SQ_TIMES.map(t=>{ const rg=tcRange(f[`sq_t_${t.k}_b`],rule);
+                const jb=sqTimeJdg(f,t.k,'bp',rule), jn=sqTimeJdg(f,t.k,'np',rule);
+                return `<tr><td>${t.lab}</td>
+                  <td><input data-k="${it.key}" data-sn="${sn}" data-fld="sq_t_${t.k}_b" value="${f[`sq_t_${t.k}_b`]||''}" style="width:84px"></td>
+                  <td class="muted" data-sqtrange="${it.key}|${sn}|${t.k}">${rg?`${rg.lo} ~ ${rg.hi}`:'-'}</td>
+                  <td><input data-k="${it.key}" data-sn="${sn}" data-fld="sq_t_${t.k}_bp" value="${f[`sq_t_${t.k}_bp`]||''}" style="width:76px"></td>
+                  <td data-sqtjdg="${it.key}|${sn}|${t.k}|bp"><span class="autojdg ${jb==='양호'?'aj-good':jb==='불량'?'aj-bad':'aj-none'}">${jb||'-'}</span></td>
+                  <td><input data-k="${it.key}" data-sn="${sn}" data-fld="sq_t_${t.k}_np" value="${f[`sq_t_${t.k}_np`]||''}" style="width:76px"></td>
+                  <td data-sqtjdg="${it.key}|${sn}|${t.k}|np"><span class="autojdg ${jn==='양호'?'aj-good':jn==='불량'?'aj-bad':'aj-none'}">${jn||'-'}</span></td>
+                </tr>`;}).join('')}
+            </table>`;
+          return `<div style="margin-bottom:10px;overflow-x:auto"><div class="muted" style="font-size:11px">제조번호 <b>${sn}</b></div>
+            ${grp}${times}
+            <div class="muted" style="font-size:11px;margin-top:3px">허용범위 : ±5% 와 ±20ms 중 큰 쪽 (Arcing time ${TC_ARCING_MS}ms 제외)
+              &nbsp;·&nbsp;종합 <span data-sqauto="${it.key}|${sn}" class="autojdg ${aj==='양호'?'aj-good':aj==='불량'?'aj-bad':'aj-none'}">${aj||'-'}</span></div>
+          </div>`;
+        }).join('');
+      }
+      // T-C 특성시험 — 정정치·동작기준치 입력 → 인가치·허용범위 자동 → 측정치 비교
+      if(it.tcTest){
+        const rule=it.tcTol||'rc'; const pcts=tcPcts(it);
+        return serials.map(sn=>{
+          const f=tcFields(st,sn); const aj=tcAuto(it,st,sn);
+          const grp=MT_GROUPS.map(g=>{
+            const set=f[tcKey(g.k,'set')];
+            return `
+            <div style="margin:6px 0 2px;font-size:11px;font-weight:700">${g.title} <span class="muted">(${g.ph})</span>
+              &nbsp;정정치(A) <input data-k="${it.key}" data-sn="${sn}" data-fld="${tcKey(g.k,'set')}" value="${set||''}" style="width:70px"></div>
+            <table class="rgrid tbl"><tr><th>인가치(%)</th><th>인가치(A)</th><th>동작기준치(ms)<br><span class="muted" style="font-weight:400">T-C 곡선값</span></th><th>허용범위(ms)</th><th>Arcing 제외(ms)</th><th>측정치(ms)</th><th>판정</th></tr>
+              ${pcts.map((p,idx)=>{ const i=idx+1;
+                const applied=(isFinite(Number(set))&&String(set).trim()!=='')?Math.round(Number(set)*p/100*10)/10:'';
+                const b=f[tcKey(g.k,'b',i)]; const rg=tcRange(b,rule); const j=tcRowJdg(f,g.k,i,rule);
+                const ex=(isFinite(Number(b))&&String(b).trim()!=='')?Math.round((Number(b)-TC_ARCING_MS)*10)/10:'';
+                return `<tr>
+                  <td>${p}%</td>
+                  <td data-tcapp="${it.key}|${sn}|${g.k}|${i}" class="muted">${applied!==''?applied:'-'}</td>
+                  <td><input data-k="${it.key}" data-sn="${sn}" data-fld="${tcKey(g.k,'b',i)}" value="${b||''}" style="width:88px"></td>
+                  <td data-tcrange="${it.key}|${sn}|${g.k}|${i}" class="muted">${rg?`${rg.lo} ~ ${rg.hi}`:'-'}</td>
+                  <td data-tcex="${it.key}|${sn}|${g.k}|${i}" class="muted">${ex!==''?ex:'-'}</td>
+                  <td><input data-k="${it.key}" data-sn="${sn}" data-fld="${tcKey(g.k,'m',i)}" value="${f[tcKey(g.k,'m',i)]||''}" style="width:88px"></td>
+                  <td data-tcjdg="${it.key}|${sn}|${g.k}|${i}"><span class="autojdg ${j==='양호'?'aj-good':j==='불량'?'aj-bad':'aj-none'}">${j||'-'}</span></td>
+                </tr>`; }).join('')}
+            </table>`;}).join('');
+          return `<div style="margin-bottom:10px;overflow-x:auto"><div class="muted" style="font-size:11px">제조번호 <b>${sn}</b></div>
+            ${grp}
+            <div class="muted" style="font-size:11px;margin-top:3px">
+              허용범위 : ${rule==='efi'?'동작기준치 100ms 이상 ±10%, 미만 ±10ms':'±5% 와 ±20ms 중 큰 쪽'} · Arcing time ${TC_ARCING_MS}ms 제외
+              &nbsp;·&nbsp;종합 <span data-tcauto="${it.key}|${sn}" class="autojdg ${aj==='양호'?'aj-good':aj==='불량'?'aj-bad':'aj-none'}">${aj||'-'}</span>
+            </div></div>`;
+        }).join('');
+      }
       // 취부금구 도금시험 — 부위별 도막두께 평균치(현장 계산값) 입력 → 기준 대비 자동판정
       if(it.plating){
         const u=it.unit||'㎛';
@@ -1544,7 +1756,7 @@
             </div></div>`;
         }).join('');
       }
-      // 부분방전시험 — 인가부분(상간 3 + 대지간 1)별 측정값
+      // 부분방전시험 — 인가부분별 측정값 (가공형 4점 / 지중·지상형은 회로수에 따라 확장)
       if(it.pdPhase){
         const shielded=pdShielded(st); const rows=pdRows(st); const u=it.unit||'pC';
         const shieldBox = pdShieldable()
@@ -1556,8 +1768,8 @@
           const r=(st.res||{})[sn]||{}; const f=r.fields||{};
           const mx=pdMax(st,sn); const aj=(mx!==''&&pdFilled(st,sn))?autoVal(it,Number(mx)):'';
           return `<div style="margin-bottom:8px"><div class="muted" style="font-size:11px;margin-bottom:3px">제조번호 <b>${sn}</b></div>
-            <table class="rgrid tbl"><tr><th style="min-width:64px">구분</th><th>인가부분</th><th>측정값(${u})</th></tr>
-              ${rows.map(rw=>`<tr><td>${rw.grp}</td><td>${rw.lab}</td>
+            <table class="rgrid tbl"><tr><th style="min-width:56px">구분</th><th style="min-width:180px">인가부분</th><th>측정값(${u})</th></tr>
+              ${rows.map(rw=>`<tr><td>${rw.grp}</td><td style="text-align:left;white-space:nowrap">${rw.lab}</td>
                 <td><input data-k="${it.key}" data-sn="${sn}" data-fld="${rw.k}" value="${f[rw.k]||''}" style="width:84px"></td></tr>`).join('')}
             </table>
             <div class="row" style="gap:10px;margin-top:4px;align-items:center;flex-wrap:wrap">
@@ -1610,7 +1822,7 @@
     function ensureDefaults(sd){
       visibleItems(sd).forEach(it=>{
         if(isNA(it)||isExempt(it)||it.cert) return;
-        if(it.thr||it.range||it.gasLeak||it.pdPhase||it.phaseConn||it.plating) return;   // 값 → 자동판정
+        if(it.thr||it.range||it.gasLeak||it.pdPhase||it.phaseConn||it.plating||it.minTrip||it.tcTest||it.seqTest) return;   // 값 → 자동판정
         if(it.full){ const st=STATE[it.key]=STATE[it.key]||{}; st.full=st.full||{};
           if(!st.full.jdg) st.full.jdg='양호'; return; }
         const st=STATE[it.key]; if(!st||!Array.isArray(st.serials)) return;
@@ -1767,6 +1979,71 @@
           else if(fld==='__val') s.res[sn].val=el.value;
           else { s.res[sn].fields=s.res[sn].fields||{}; s.res[sn].fields[fld]=el.value;
             if(fld.indexOf('gas_')===0){ const gv=gasLeakVal(s,sn); s.res[sn].val=(gv!==null?gv:''); }
+            if(fld.indexOf('sq_')===0){                       // Sequence: 회차별·재폐로 시간 허용범위 재계산
+              const item=(CUR.spec.steps.flatMap(x=>x.items)).find(i=>i.key===k);
+              const rule=(item||{}).tcTol||'rc'; const ff=sqFields(s,sn);
+              MT_GROUPS.forEach(g=>{
+                const set=ff[sqKey(g.k,'set')];
+                const apEl=host.querySelector(`[data-sqapp="${k}|${sn}|${g.k}"]`);
+                if(apEl){ const v=(isFinite(Number(set))&&String(set).trim()!=='')?Math.round(Number(set)*10*10)/10:''; apEl.textContent=v!==''?v:'-'; }
+                const rf=tcRange(ff[sqKey(g.k,'bf')],rule), rs=tcRange(ff[sqKey(g.k,'bs')],rule);
+                const rEl=host.querySelector(`[data-sqrange="${k}|${sn}|${g.k}"]`);
+                if(rEl) rEl.textContent=`허용범위 1·2회 ${rf?rf.lo+'~'+rf.hi:'-'} / 3·4회 ${rs?rs.lo+'~'+rs.hi:'-'}`;
+                SQ_SHOTS.forEach(sh=>{ const jEl=host.querySelector(`[data-sqjdg="${k}|${sn}|${g.k}|${sh}"] .autojdg`);
+                  if(jEl){ const j=sqShotJdg(ff,g.k,sh,rule); jEl.textContent=j||'-';
+                    jEl.className='autojdg '+(j==='양호'?'aj-good':j==='불량'?'aj-bad':'aj-none'); } });
+              });
+              SQ_TIMES.forEach(t=>{
+                const rg=tcRange(ff[`sq_t_${t.k}_b`],rule);
+                const rEl=host.querySelector(`[data-sqtrange="${k}|${sn}|${t.k}"]`);
+                if(rEl) rEl.textContent=rg?`${rg.lo} ~ ${rg.hi}`:'-';
+                ['bp','np'].forEach(w=>{ const jEl=host.querySelector(`[data-sqtjdg="${k}|${sn}|${t.k}|${w}"] .autojdg`);
+                  if(jEl){ const j=sqTimeJdg(ff,t.k,w,rule); jEl.textContent=j||'-';
+                    jEl.className='autojdg '+(j==='양호'?'aj-good':j==='불량'?'aj-bad':'aj-none'); } });
+              });
+              const aj=sqAuto(item,s,sn);
+              s.res[sn].jdg=aj;
+              const sEl=host.querySelector(`[data-sqauto="${k}|${sn}"]`);
+              if(sEl){ sEl.textContent=aj||'-'; sEl.className='autojdg '+(aj==='양호'?'aj-good':aj==='불량'?'aj-bad':'aj-none'); }
+            }
+            if(fld.indexOf('tc_')===0){                       // T-C 특성: 동작기준치 기준 허용범위·인가치 재계산
+              const item=(CUR.spec.steps.flatMap(x=>x.items)).find(i=>i.key===k);
+              const rule=(item||{}).tcTol||'rc'; const ff=tcFields(s,sn);
+              MT_GROUPS.forEach(g=>{
+                const set=ff[tcKey(g.k,'set')];
+                tcPcts(item).forEach((p,idx)=>{ const i=idx+1;
+                  const aEl=host.querySelector(`[data-tcapp="${k}|${sn}|${g.k}|${i}"]`);
+                  if(aEl){ const v=(isFinite(Number(set))&&String(set).trim()!=='')?Math.round(Number(set)*p/100*10)/10:''; aEl.textContent=v!==''?v:'-'; }
+                  const b=ff[tcKey(g.k,'b',i)]; const rg=tcRange(b,rule);
+                  const rEl=host.querySelector(`[data-tcrange="${k}|${sn}|${g.k}|${i}"]`);
+                  if(rEl) rEl.textContent=rg?`${rg.lo} ~ ${rg.hi}`:'-';
+                  const xEl=host.querySelector(`[data-tcex="${k}|${sn}|${g.k}|${i}"]`);
+                  if(xEl){ const ex=(isFinite(Number(b))&&String(b).trim()!=='')?Math.round((Number(b)-TC_ARCING_MS)*10)/10:''; xEl.textContent=ex!==''?ex:'-'; }
+                  const jEl=host.querySelector(`[data-tcjdg="${k}|${sn}|${g.k}|${i}"] .autojdg`);
+                  if(jEl){ const j=tcRowJdg(ff,g.k,i,rule); jEl.textContent=j||'-';
+                    jEl.className='autojdg '+(j==='양호'?'aj-good':j==='불량'?'aj-bad':'aj-none'); }
+                });
+              });
+              const aj=tcAuto(item,s,sn);
+              s.res[sn].jdg=aj;
+              const tEl=host.querySelector(`[data-tcauto="${k}|${sn}"]`);
+              if(tEl){ tEl.textContent=aj||'-'; tEl.className='autojdg '+(aj==='양호'?'aj-good':aj==='불량'?'aj-bad':'aj-none'); }
+            }
+            if(fld.indexOf('mt_')===0){                       // 최소동작전류: 정정치 ±10% 대비 측정치
+              const item=(CUR.spec.steps.flatMap(x=>x.items)).find(i=>i.key===k);
+              const ff=mtFields(s,sn);
+              MT_GROUPS.forEach(g=>MT_ROWS.forEach(i=>{
+                const rEl=host.querySelector(`[data-mtrange="${k}|${sn}|${g.k}|${i}"]`);
+                if(rEl){ const rg=mtRange(ff[mtKey(g.k,i,'s')]); rEl.textContent=rg?`${rg.lo} ~ ${rg.hi}`:'-'; }
+                const jEl=host.querySelector(`[data-mtjdg="${k}|${sn}|${g.k}|${i}"] .autojdg`);
+                if(jEl){ const j=mtRowJdg(ff,g.k,i); jEl.textContent=j||'-';
+                  jEl.className='autojdg '+(j==='양호'?'aj-good':j==='불량'?'aj-bad':'aj-none'); }
+              }));
+              const aj=mtAuto(s,sn);
+              s.res[sn].jdg=aj;                               // 항목 판정은 종합값으로
+              const aEl=host.querySelector(`[data-mtauto="${k}|${sn}"]`);
+              if(aEl){ aEl.textContent=aj||'-'; aEl.className='autojdg '+(aj==='양호'?'aj-good':aj==='불량'?'aj-bad':'aj-none'); }
+            }
             if(fld.indexOf('plt_')===0){                      // 취부금구 도금: 부위별 기준을 모두 만족해야 양호
               const aj=pltAuto(s,sn);
               s.res[sn].jdg=aj;                                // 두 부위가 다 채워졌을 때만 판정 확정
@@ -2053,7 +2330,9 @@
       CUR.spec.steps.forEach(sd=>{ results[sd.key]={ title:sd.title, overall:stepOverall(sd), remark:(STATE['__remark_'+sd.key]||{}).v||'',
         items:orderedItems(sd).map(it=>{ const st=STATE[it.key]||{}; const na=isNA(it);
           return { key:it.key, name:it.name, ref:it.ref, crit:it.crit, exempt:isExempt(it), na,
-            kind: it.full?'full':it.cert?'cert':it.phaseConn?'phaseConn':it.pdPhase?'pdPhase':it.plating?'plating':it.resistance?'resistance':(it.thr||it.range)?'measureAuto':it.measureManual?'measureManual':'jdg', certFiles: st.certFiles||[],
+            kind: it.full?'full':it.cert?'cert':it.phaseConn?'phaseConn':it.pdPhase?'pdPhase':it.plating?'plating':it.minTrip?'minTrip':it.tcTest?'tcTest':it.seqTest?'seqTest':it.resistance?'resistance':(it.thr||it.range)?'measureAuto':it.measureManual?'measureManual':'jdg', certFiles: st.certFiles||[],
+            noOp: it.minTrip?!!it.noOp:undefined,
+            tcTol: (it.tcTest||it.seqTest)?(it.tcTol||'rc'):undefined, tcPcts: it.tcTest?tcPcts(it):undefined,
             shield: it.pdPhase?!!st.shield:undefined, noGapji: !!it.noGapji,
             samp: na?'해당없음':(it.full?'전량':(it.cert?(it.cycle||'-'):(it.sampNote||sampCount(it)+'대'))),
             full: st.full||null, cert: it.docOnly?null:(st.cert||null), docOnly: !!it.docOnly, unit: it.unit||'',
@@ -2520,6 +2799,81 @@
           <table class="mx"><thead>${head}</thead><tbody>${body}${resRow}</tbody></table>
         </div>`;
     }
+    // ===== 최소동작전류·T-C·Sequence 상세표 (별첨/엑셀 공통) =====
+    // 항목을 [구분, 세부항목, 제조번호별 값] 행 목록으로 펼친다.
+    function paramItemsList(q) {
+      const out = [];
+      Object.values(q.results || {}).forEach(grp => {
+        (grp.items || []).forEach(it => {
+          if (['minTrip', 'tcTest', 'seqTest'].includes(it.kind) && !it.na) out.push(it);
+        });
+      });
+      return out;
+    }
+    function paramRows(it) {
+      const rule = it.tcTol || 'rc';
+      const F = sn => (((it.res || {})[sn]) || {}).fields || {};
+      const rows = [];
+      const push = (grp, lab, fn) => rows.push({ grp, lab, get: fn });
+      if (it.kind === 'minTrip') {
+        MT_GROUPS.forEach(g => MT_ROWS.forEach(i => {
+          push(g.title, `${i}단 정정치(A)`, sn => F(sn)[mtKey(g.k, i, 's')]);
+          if (it.noOp) push(g.title, `${i}단 90% 부동작`, sn => F(sn)[mtKey(g.k, i, 'n')]);
+          push(g.title, `${i}단 허용범위(A)`, sn => { const r = mtRange(F(sn)[mtKey(g.k, i, 's')]); return r ? `${r.lo} ~ ${r.hi}` : ''; });
+          push(g.title, `${i}단 측정치(A)`, sn => F(sn)[mtKey(g.k, i, 'm')]);
+          push(g.title, `${i}단 판정`, sn => mtRowJdg(F(sn), g.k, i));
+        }));
+      } else if (it.kind === 'tcTest') {
+        const pcts = (Array.isArray(it.tcPcts) && it.tcPcts.length) ? it.tcPcts : TC_PCTS_DEFAULT;
+        MT_GROUPS.forEach(g => {
+          push(g.title, '정정치(A)', sn => F(sn)[tcKey(g.k, 'set')]);
+          pcts.forEach((p, idx) => {
+            const i = idx + 1;
+            push(g.title, `${p}% 인가치(A)`, sn => { const s = F(sn)[tcKey(g.k, 'set')];
+              return (isFinite(Number(s)) && String(s).trim() !== '') ? Math.round(Number(s) * p / 100 * 10) / 10 : ''; });
+            push(g.title, `${p}% 동작기준치(ms)`, sn => F(sn)[tcKey(g.k, 'b', i)]);
+            push(g.title, `${p}% 허용범위(ms)`, sn => { const r = tcRange(F(sn)[tcKey(g.k, 'b', i)], rule); return r ? `${r.lo} ~ ${r.hi}` : ''; });
+            push(g.title, `${p}% 측정치(ms)`, sn => F(sn)[tcKey(g.k, 'm', i)]);
+            push(g.title, `${p}% 판정`, sn => tcRowJdg(F(sn), g.k, i, rule));
+          });
+        });
+      } else if (it.kind === 'seqTest') {
+        MT_GROUPS.forEach(g => {
+          push(g.title, '정정치(A)', sn => F(sn)[sqKey(g.k, 'set')]);
+          push(g.title, '인가치 1000%(A)', sn => { const s = F(sn)[sqKey(g.k, 'set')];
+            return (isFinite(Number(s)) && String(s).trim() !== '') ? Math.round(Number(s) * 10 * 10) / 10 : ''; });
+          push(g.title, '기준치 1·2회(ms)', sn => F(sn)[sqKey(g.k, 'bf')]);
+          push(g.title, '기준치 3·4회(ms)', sn => F(sn)[sqKey(g.k, 'bs')]);
+          SQ_SHOTS.forEach(s2 => {
+            push(g.title, `${s2}회 측정치(ms)`, sn => F(sn)[sqKey(g.k, 'm', s2)]);
+            push(g.title, `${s2}회 판정`, sn => sqShotJdg(F(sn), g.k, s2, rule));
+          });
+        });
+        SQ_TIMES.forEach(t => {
+          push('다. 재폐로 및 복귀시간', `${t.lab} 기준치(ms)`, sn => F(sn)[`sq_t_${t.k}_b`]);
+          push('다. 재폐로 및 복귀시간', `${t.lab} 측정 BΦ`, sn => F(sn)[`sq_t_${t.k}_bp`]);
+          push('다. 재폐로 및 복귀시간', `${t.lab} 측정 NΦ`, sn => F(sn)[`sq_t_${t.k}_np`]);
+        });
+      }
+      return rows;
+    }
+    // 상세표 시트 (제조번호 × 세부항목)
+    function paramHTML(it, q) {
+      const serials = (it.serials || []).filter(sn => (it.res || {})[sn]);
+      const rows = paramRows(it);
+      if (!serials.length || !rows.length) return '';
+      const head = `<tr><th style="width:16%">구분</th><th style="width:26%">세부항목</th>${serials.map(sn => `<th>${sn}</th>`).join('')}</tr>`;
+      const body = rows.map(r => `<tr><td>${r.grp}</td><td class="item">${r.lab}</td>${serials.map(sn => {
+        const v = r.get(sn); return `<td>${(v === undefined || v === null || v === '') ? '-' : v}</td>`;
+      }).join('')}</tr>`).join('');
+      const resRow = `<tr class="res-row"><td class="item" colspan="2">결&nbsp;&nbsp;&nbsp;&nbsp;과</td>${serials.map(sn => `<td>${jbP(((it.res || {})[sn] || {}).jdg || '-')}</td>`).join('')}</tr>`;
+      return `<div class="pgbreak"></div>
+        <div class="gapji-page" style="padding:10mm;background:#fff">
+          <h1>${it.name}</h1>
+          <div style="font-size:10.5px;color:#555;margin-bottom:8px;text-align:center">${it.crit || ''}</div>
+          <table class="mx"><thead>${head}</thead><tbody>${body}${resRow}</tbody></table>
+        </div>`;
+    }
     // 부분방전(인가부분별 측정) 항목 목록
     function pdPhaseItemsList(q) {
       const out = [];
@@ -2532,9 +2886,9 @@
     function pdPhaseHTML(it, q) {
       const serials = (it.serials || []).filter(sn => (it.res || {})[sn]);
       if (!serials.length) return '';
-      const rows = it.shield ? PD_ROWS.filter(r => r.grp === '대지간') : PD_ROWS;
+      const rows = pdRowsForQIR(q, it);
       const u = it.unit || 'pC';
-      const head = `<tr><th style="width:14%">구분</th><th style="width:20%">인가부분</th>${serials.map(sn => `<th>${sn}</th>`).join('')}</tr>`;
+      const head = `<tr><th style="width:14%">구분</th><th style="width:26%">인가부분</th>${serials.map(sn => `<th>${sn}</th>`).join('')}</tr>`;
       const body = rows.map(rw => `<tr><td>${rw.grp}</td><td class="item">${rw.lab}</td>${serials.map(sn => {
         const v = (((it.res || {})[sn] || {}).fields || {})[rw.k];
         return `<td>${(v === undefined || v === null || v === '') ? '-' : v}</td>`;
@@ -2629,6 +2983,9 @@
 
       // 1-2-1) 취부금구 도금두께 실측값 시트
       platingItemsList(q).forEach(it => { out += platingHTML(it, q); });
+
+      // 1-2-2) 최소동작전류·T-C 특성·Sequence 상세 시트
+      paramItemsList(q).forEach(it => { out += paramHTML(it, q); });
 
       // 1-3) 상연결 접속재 두께 실측값 시트 (A·B·C상 각 3개소)
       phaseConnItemsList(q).forEach(it => { out += phaseConnHTML(it, q); });
@@ -3062,11 +3419,11 @@
       pdPhaseItemsList(q).forEach(it => {
         const serials = pool.filter(sn => it.res && it.res[sn]);
         if (!serials.length) return;
-        const rows = it.shield ? PD_ROWS.filter(r => r.grp === '대지간') : PD_ROWS;
+        const rows = pdRowsForQIR(q, it);
         const ws = wb.addWorksheet(safeSheetName(it.name, usedSheetNames), {
           pageSetup: { orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: printMargins }
         });
-        ws.getColumn(1).width = 10; ws.getColumn(2).width = 16;
+        ws.getColumn(1).width = 10; ws.getColumn(2).width = 34;
         serials.forEach((_, i) => { ws.getColumn(i + 3).width = 11; });
         ws.mergeCells(1, 1, 1, serials.length + 2);
         xlsStyle(ws.getCell(1, 1), { bold: true, size: 13, color: XLS_COLOR.title, border: false });
@@ -3122,6 +3479,45 @@
             xlsStyle(row.getCell(i + 3), { size: 9.5 });
             row.getCell(i + 3).value = (v === undefined || v === null || v === '') ? '-' : Number(v);
           });
+          rr++;
+        });
+        const resRow = ws.getRow(rr);
+        ws.mergeCells(rr, 1, rr, 2);
+        xlsStyle(resRow.getCell(1), { bold: true, bg: XLS_COLOR.resultBg }); resRow.getCell(1).value = '결    과';
+        serials.forEach((sn, i) => {
+          const v = (it.res[sn] || {}).jdg || '-';
+          xlsStyle(resRow.getCell(i + 3), Object.assign({ bold: true, bg: XLS_COLOR.resultBg }, xlsJudgeStyle(v)));
+          resRow.getCell(i + 3).value = v;
+        });
+      });
+
+      // ====== 3-2-2. 최소동작전류·T-C 특성·Sequence 상세 Sheet ======
+      paramItemsList(q).forEach(it => {
+        const serials = pool.filter(sn => it.res && it.res[sn]);
+        const prows = paramRows(it);
+        if (!serials.length || !prows.length) return;
+        const ws = wb.addWorksheet(safeSheetName(it.name, usedSheetNames), {
+          pageSetup: { orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: printMargins }
+        });
+        ws.getColumn(1).width = 18; ws.getColumn(2).width = 26;
+        serials.forEach((_, i) => { ws.getColumn(i + 3).width = 14; });
+        ws.mergeCells(1, 1, 1, serials.length + 2);
+        xlsStyle(ws.getCell(1, 1), { bold: true, size: 13, color: XLS_COLOR.title, border: false });
+        ws.getCell(1, 1).value = it.name + (it.crit ? ' [' + it.crit + ']' : '');
+        const hr = ws.getRow(2);
+        ['구분', '세부항목'].forEach((t, i) => { xlsStyle(hr.getCell(i + 1), { bold: true, bg: XLS_COLOR.headerBg }); hr.getCell(i + 1).value = t; });
+        serials.forEach((sn, i) => { xlsStyle(hr.getCell(i + 3), { bold: true, bg: XLS_COLOR.headerBg }); hr.getCell(i + 3).value = sn; });
+        let rr = 3;
+        prows.forEach(pr => {
+          const row = ws.getRow(rr);
+          xlsStyle(row.getCell(1), { size: 9, align: 'left' }); row.getCell(1).value = pr.grp;
+          xlsStyle(row.getCell(2), { size: 9, align: 'left' }); row.getCell(2).value = pr.lab;
+          serials.forEach((sn, i) => {
+            const v = pr.get(sn);
+            xlsStyle(row.getCell(i + 3), Object.assign({ size: 9.5 }, xlsJudgeStyle(v)));
+            row.getCell(i + 3).value = (v === undefined || v === null || v === '') ? '-' : v;
+          });
+          xlsAutoHeight(row, [{ text: pr.grp, width: 18 }, { text: pr.lab, width: 26 }], { size: 9, min: 18 });
           rr++;
         });
         const resRow = ws.getRow(rr);
