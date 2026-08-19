@@ -469,7 +469,7 @@
           <div class="field"><label>등록 규격서</label>
             <div class="muted" id="specCountInfo">개폐기 구매규격 9건 로드됨 (총 9건 완료)</div></div>
           <button class="btn" id="btnStart" disabled style="width:100%">납품시험검사 시작</button>
-          <div class="toast">엑셀(24년 품질등급)·업무절차서(부록9) 반영: 제조업체 선택 시 <b>등급</b>에 따라 검수항목·발취수량이 자동 조정됩니다.</div>
+          <div class="toast">업무절차서(부록9) 반영: 선택한 <b>품질등급</b>에 따라 검수항목·발취수량이 자동 조정됩니다.</div>
         </div>
       </div>
     </section>
@@ -1356,7 +1356,7 @@
     function renderBasic(){
       const b=STATE.__base||{};
       // 등급 자동 채움 데이터(MAKERS의 g)를 제거했으므로 아래는 항상 기본값 B로 떨어짐(검사자 직접 선택)
-      if(b.maker && CUR.gradeSource!=='직접수정'){ CUR.grade=makerGrade(b.maker,CUR.spec.id); CUR.gradeSource=makerHasGrade(b.maker,CUR.spec.id)?'엑셀(24년 I/P·품목별)':'기본값 B — 등급을 직접 선택하세요'; }
+      if(b.maker && CUR.gradeSource!=='직접수정'){ CUR.grade=makerGrade(b.maker,CUR.spec.id); CUR.gradeSource=makerHasGrade(b.maker,CUR.spec.id)?'업체 등급표(품목별)':'기본값 B — 등급을 직접 선택하세요'; }
       const variantOpts=CUR.spec.variants.map(v=>`<option ${b.variant===v.value?'selected':''}>${v.value}</option>`).join('');
       // 업체별 등급 데이터를 제거했으므로 업체명 뒤에 [등급]을 붙이지 않음
       // (붙이면 전 업체가 일괄 [B]로 표시되어 "모든 업체가 B등급"이라는 잘못된 정보가 됨)
@@ -1375,7 +1375,7 @@
         <div class="field"><label>제조번호 입력 (쉼표 구분 또는 1~10 범위 지정, 빈칸 시 수량만큼 자동생성)</label><textarea id="f_serials_input" placeholder="예: 110, 115, 117 또는 SN-001~SN-010" style="min-height:40px;resize:vertical;">${b.serialsInput||''}</textarea><div class="hint" id="serialHint"></div></div>
         <div class="field"><label>수 량(대) · 제조번호 자동산출</label><input id="f_qty" type="number" min="1" value="${b.qty||''}" ${b.serialsInput?'readonly':''}></div>
         <div class="split2">
-          <div class="field"><label>제조업체 (24년 I/P등급 · 미등록 시 B/normal)</label><select id="f_maker">${makerOpts}</select></div>
+          <div class="field"><label>제조업체</label><select id="f_maker">${makerOpts}</select></div>
           <div class="field"><label>품질등급 (직접 수정 가능)</label>
             <div class="row" style="gap:8px">
               <select id="f_grade" style="flex:1">${['S','A','B','C','D'].map(g=>`<option value="${g}" ${CUR.grade===g?'selected':''}>${g} (${GRADE_LABEL[g]})</option>`).join('')}</select>
@@ -1433,7 +1433,7 @@
       ['f_lot','f_qty','f_serials_input','f_sdate','f_edate','f_insp','f_test','f_itype'].forEach(id=>$(id).addEventListener('input',save));
       $('f_variant').addEventListener('change',save);
       $('f_maker').addEventListener('change',()=>{ const name=$('f_maker').value; CUR.grade=makerGrade(name,CUR.spec.id);
-        CUR.gradeSource=name?(makerHasGrade(name,CUR.spec.id)?'엑셀(24년 I/P·품목별)':'기본값 B — 등급을 직접 선택하세요'):'기본값'; $('f_grade').value=CUR.grade; updateGradeUI(); save(); });
+        CUR.gradeSource=name?(makerHasGrade(name,CUR.spec.id)?'업체 등급표(품목별)':'기본값 B — 등급을 직접 선택하세요'):'기본값'; $('f_grade').value=CUR.grade; updateGradeUI(); save(); });
       $('f_grade').addEventListener('change',()=>{ CUR.grade=$('f_grade').value; CUR.gradeSource='직접수정'; updateGradeUI(); save(); });
       updateGradeUI();
     }
