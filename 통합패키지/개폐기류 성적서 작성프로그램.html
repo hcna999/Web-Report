@@ -469,7 +469,7 @@
           <div class="field"><label>등록 규격서</label>
             <div class="muted" id="specCountInfo">개폐기 구매규격 9건 로드됨 (총 9건 완료)</div></div>
           <button class="btn" id="btnStart" disabled style="width:100%">납품시험검사 시작</button>
-          <div class="toast">엑셀(24년 품질등급)·업무절차서(부록9) 반영: 제조업체 선택 시 <b>등급</b>에 따라 검수항목·발취수량이 자동 조정됩니다.</div>
+          <div class="toast">업무절차서(부록9) 반영: 선택한 <b>품질등급</b>에 따라 검수항목·발취수량이 자동 조정됩니다.</div>
         </div>
       </div>
     </section>
@@ -497,12 +497,18 @@
   </div>
 
   <script>
-    const MAKERS = [{"name":"(주)디투엔지니어링"},{"name":"(주)비츠로일렉트릭","g":{"DREC":"A"}},{"name":"(주)에스얜에스","g":{"EPOXY":"D"}},{"name":"(주)엘파워텍"},{"name":"(주)엠에스그리드"},{"name":"(주)이앤엠테크"},{"name":"(주)이엔에스일렉트릭"},{"name":"(주)이페스"},{"name":"(주)이플전기"},{"name":"(주)케이피 일렉트릭"},{"name":"(주)테크프로","g":{"EPOXY":"D"}},{"name":"경동중전기(주)"},{"name":"구주기술(주)"},{"name":"구주진광 주식회사"},{"name":"동방전기공업 주식회사"},{"name":"동우일렉트릭 주식회사","g":{"POLE":"A"}},{"name":"보국전기공업(주)"},{"name":"보성파워텍(주)"},{"name":"부흥시스템 주식회사"},{"name":"샤든코리아 (주)"},{"name":"서창전기통신(주)","g":{"EPOXY":"S"}},{"name":"선도전기(주)"},{"name":"선일전기공업(주)"},{"name":"신성산전(주)","g":{"REC":"S"}},{"name":"신우전기제조(주)"},{"name":"쌍용전기 주식회사","g":{"EPOXY":"A"}},{"name":"유호전기공업(주)"},{"name":"이엔테크 주식회사"},{"name":"인텍전기전자 주식회사","g":{"REC":"A","DREC":"A","PREC":"A","EPOXY":"A","EFI":"A"}},{"name":"일진홀딩스(주)","g":{"DREC":"A","EFI":"C"}},{"name":"주식회사 광명전기","g":{"REC":"C","DREC":"C","EPOXY":"D","EFI":"A"}},{"name":"주식회사 델코코(Delcoco Co.Ltd)","g":{"EPOXY":"D"}},{"name":"주식회사 동양이이씨","g":{"EPOXY":"A","EFI":"S"}},{"name":"주식회사 두레콤"},{"name":"주식회사 디티알"},{"name":"주식회사 서전기전"},{"name":"주식회사 스위코진광","g":{"DREC":"D"}},{"name":"주식회사 알텍시스템"},{"name":"주식회사 에스지이엠"},{"name":"주식회사 이피이"},{"name":"주식회사 정인시스템"},{"name":"주식회사파워맥스"},{"name":"중앙산업(주)"},{"name":"중원 주식회사","g":{"REC":"S","EFI":"S"}},{"name":"피앤에이파워시스템 주식회사","g":{"EPOXY":"D"}},{"name":"피에스텍(주)","g":{"POLE":"A"}}];
+    const MAKERS = [{"name":"(주)디투엔지니어링"},{"name":"(주)비츠로일렉트릭"},{"name":"(주)에스얜에스"},{"name":"(주)엘파워텍"},{"name":"(주)엠에스그리드"},{"name":"(주)이앤엠테크"},{"name":"(주)이엔에스일렉트릭"},{"name":"(주)이페스"},{"name":"(주)이플전기"},{"name":"(주)케이피 일렉트릭"},{"name":"(주)테크프로"},{"name":"경동중전기(주)"},{"name":"구주기술(주)"},{"name":"구주진광 주식회사"},{"name":"동방전기공업 주식회사"},{"name":"동우일렉트릭 주식회사"},{"name":"보국전기공업(주)"},{"name":"보성파워텍(주)"},{"name":"부흥시스템 주식회사"},{"name":"샤든코리아 (주)"},{"name":"서창전기통신(주)"},{"name":"선도전기(주)"},{"name":"선일전기공업(주)"},{"name":"신성산전(주)"},{"name":"신우전기제조(주)"},{"name":"쌍용전기 주식회사"},{"name":"유호전기공업(주)"},{"name":"이엔테크 주식회사"},{"name":"인텍전기전자 주식회사"},{"name":"일진홀딩스(주)"},{"name":"주식회사 광명전기"},{"name":"주식회사 델코코(Delcoco Co.Ltd)"},{"name":"주식회사 동양이이씨"},{"name":"주식회사 두레콤"},{"name":"주식회사 디티알"},{"name":"주식회사 서전기전"},{"name":"주식회사 스위코진광"},{"name":"주식회사 알텍시스템"},{"name":"주식회사 에스지이엠"},{"name":"주식회사 이피이"},{"name":"주식회사 정인시스템"},{"name":"주식회사파워맥스"},{"name":"중앙산업(주)"},{"name":"중원 주식회사"},{"name":"피앤에이파워시스템 주식회사"},{"name":"피에스텍(주)"}];
 
     // ===== 등급 규칙 (업무절차서 부록9) =====
     // 품질등급제 변경 반영: C등급 2배, D등급 3배
     const GRADE_MULT = { S:0.5, A:0.5, B:1, C:2, D:3 };
-    // 품목(spec.id)별 업체 등급 조회 — 미등록/미평가 시 B
+    // 품목(spec.id)별 업체 등급 조회
+    //
+    // ⚠️ 2026-08-19: 이 앱이 공개 웹(GitHub Pages)에 게시되면서, 업체 실명과 한전 품질등급이
+    //    함께 노출되는 문제가 있어 MAKERS 배열에서 업체별 등급 데이터(g)를 제거했습니다.
+    //    이제 등급은 자동 채움되지 않으며, 검사자가 화면의 "품질등급(직접 수정 가능)"
+    //    드롭다운에서 직접 선택해야 합니다. 아래 두 함수는 호출부 호환을 위해 남겨둔 것으로
+    //    항상 기본값 B / false를 돌려줍니다. (MAKERS에 g를 다시 넣으면 예전처럼 동작함)
     function makerGrade(name, specId){ const m=MAKERS.find(x=>x.name===name); return (m&&m.g&&m.g[specId])||'B'; }
     function makerHasGrade(name, specId){ const m=MAKERS.find(x=>x.name===name); return !!(m&&m.g&&m.g[specId]); }
     const GRADE_LABEL = { S:'Excellent', A:'Good', B:'Normal', C:'Limited', D:'Poor' };
@@ -1388,10 +1394,13 @@
     // ===== Step0: 기본정보 =====
     function renderBasic(){
       const b=STATE.__base||{};
-      if(b.maker && CUR.gradeSource!=='직접수정'){ CUR.grade=makerGrade(b.maker,CUR.spec.id); CUR.gradeSource=makerHasGrade(b.maker,CUR.spec.id)?'엑셀(24년 I/P·품목별)':'기본값(미등록/미평가)'; }
+      // 등급 자동 채움 데이터(MAKERS의 g)를 제거했으므로 아래는 항상 기본값 B로 떨어짐(검사자 직접 선택)
+      if(b.maker && CUR.gradeSource!=='직접수정'){ CUR.grade=makerGrade(b.maker,CUR.spec.id); CUR.gradeSource=makerHasGrade(b.maker,CUR.spec.id)?'업체 등급표(품목별)':'기본값 B — 등급을 직접 선택하세요'; }
       const variantOpts=CUR.spec.variants.map(v=>`<option ${b.variant===v.value?'selected':''}>${v.value}</option>`).join('');
+      // 업체별 등급 데이터를 제거했으므로 업체명 뒤에 [등급]을 붙이지 않음
+      // (붙이면 전 업체가 일괄 [B]로 표시되어 "모든 업체가 B등급"이라는 잘못된 정보가 됨)
       const makerOpts=['<option value="">선택하세요</option>'].concat(
-        MAKERS.map(m=>{const g=makerGrade(m.name,CUR.spec.id);return `<option value="${m.name}" data-grade="${g}" ${b.maker===m.name?'selected':''}>${m.name} [${g}]</option>`;})).join('');
+        MAKERS.map(m=>`<option value="${m.name}" ${b.maker===m.name?'selected':''}>${m.name}</option>`)).join('');
       return `<div class="card">
         <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px">
           <h3 style="margin:0">○ 기본 정보</h3>
@@ -1405,7 +1414,7 @@
         <div class="field"><label>제조번호 입력 (쉼표 구분 또는 1~10 범위 지정, 빈칸 시 수량만큼 자동생성)</label><textarea id="f_serials_input" placeholder="예: 110, 115, 117 또는 SN-001~SN-010" style="min-height:40px;resize:vertical;">${b.serialsInput||''}</textarea><div class="hint" id="serialHint"></div></div>
         <div class="field"><label>수 량(대) · 제조번호 자동산출</label><input id="f_qty" type="number" min="1" value="${b.qty||''}" ${b.serialsInput?'readonly':''}></div>
         <div class="split2">
-          <div class="field"><label>제조업체 (24년 I/P등급 · 미등록 시 B/normal)</label><select id="f_maker">${makerOpts}</select></div>
+          <div class="field"><label>제조업체</label><select id="f_maker">${makerOpts}</select></div>
           <div class="field"><label>품질등급 (직접 수정 가능)</label>
             <div class="row" style="gap:8px">
               <select id="f_grade" style="flex:1">${['S','A','B','C','D'].map(g=>`<option value="${g}" ${CUR.grade===g?'selected':''}>${g} (${GRADE_LABEL[g]})</option>`).join('')}</select>
@@ -1463,7 +1472,7 @@
       ['f_lot','f_qty','f_serials_input','f_sdate','f_edate','f_insp','f_test','f_itype'].forEach(id=>$(id).addEventListener('input',save));
       $('f_variant').addEventListener('change',save);
       $('f_maker').addEventListener('change',()=>{ const name=$('f_maker').value; CUR.grade=makerGrade(name,CUR.spec.id);
-        CUR.gradeSource=name?(makerHasGrade(name,CUR.spec.id)?'엑셀(24년 I/P·품목별)':'기본값(미등록/미평가)'):'기본값'; $('f_grade').value=CUR.grade; updateGradeUI(); save(); });
+        CUR.gradeSource=name?(makerHasGrade(name,CUR.spec.id)?'업체 등급표(품목별)':'기본값 B — 등급을 직접 선택하세요'):'기본값'; $('f_grade').value=CUR.grade; updateGradeUI(); save(); });
       $('f_grade').addEventListener('change',()=>{ CUR.grade=$('f_grade').value; CUR.gradeSource='직접수정'; updateGradeUI(); save(); });
       updateGradeUI();
     }
