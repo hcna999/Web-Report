@@ -578,16 +578,16 @@
                    {value:'4회로 수동형(127428)',mode:'수동',circuits:4}, {value:'4회로 자동형(127429)',mode:'자동',circuits:4} ],
         steps:[
           { key:'appear', title:'외관·구조검사', items:[
-            { key:'ap_body', name:'구조 및 외관검사(본체)', ref:'7.2.1', crit:'5·6항 만족', sampFn:S.note1_dry },
-            { key:'ap_ctrl', name:'제어함 구조 및 외관검사', ref:'7.2.23', crit:'5·6항 만족', autoOnly:true, sampFn:S.note1_dry },
+            { key:'ap_body', name:'구조 및 외관검사(본체)', ref:'7.2.1', crit:'5·6항 만족', sampFn:S.note4_dry, sampAdd:'필요시 시료수 증가 가능' },
+            { key:'ap_ctrl', name:'제어함 구조 및 외관검사', ref:'7.2.23', crit:'5·6항 만족', autoOnly:true, sampFn:S.note4_dry, sampAdd:'필요시 시료수 증가 가능' },
           ]},
           { key:'insul', title:'절연·가스시험', items:[
             { key:'ac_wv', name:'상용주파 내전압시험', ref:'7.2.2.1', crit:'48kV·1분(절연캡 접지)', full:true },
-            { key:'imp_wv', name:'충격파 내전압시험', ref:'7.2.2.2', crit:'125/165kV', sampFn:S.note1_dry, exemptSA:true },
+            { key:'imp_wv', name:'충격파 내전압시험', ref:'7.2.2.2', crit:'극간 165kV · 대지간 125kV · 상간 125kV(1.2×50㎲)', sampFn:S.note4_dry, sampAdd:'필요시 시료수 증가 가능', exemptSA:true },
             { key:'pd', name:'부분방전시험', ref:'7.2.2.3', crit:'20pC 이하', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, sampFn:S.per(10) },
-            { key:'mr', name:'주회로 저항측정', ref:'7.2.3', crit:'단자쌍별 측정(µΩ, 무전압개폐 후)', resistance:'underground', sampFn:S.note1_dry },
+            { key:'mr', name:'주회로 저항측정', ref:'7.2.3', crit:'단자쌍별 측정(µΩ, 무전압개폐 후)', resistance:'underground', sampFn:S.note4_dry, sampAdd:'필요시 시료수 증가 가능' },
             { key:'tight', name:'기밀시험', ref:'7.2.7', crit:'연누기율 0.5% 이하', unit:'%/년', thr:{v:0.5,dir:'le'}, gasLeak:true, sampFn:S.note4_dry },
-            { key:'ir', name:'절연저항 측정(제어회로)', ref:'7.2.15', crit:'측정', sampFn:S.note1_dry },
+            { key:'ir', name:'절연저항 측정(제어회로)', ref:'7.2.15', crit:'측정', sampFn:S.note4_dry, sampAdd:'필요시 시료수 증가 가능' },
             { key:'press', name:'압력시험', ref:'7.2.17', crit:'IEC 62271-200 7.103', sampFn:S.note7_dry },
             { key:'gaspurity', name:'가스순도시험', ref:'7.2.32', crit:'5.8.2 불순물 기준', cert:true, cycle:'성적서 대체' },
             { key:'presslock', name:'압력저하표시·잠금시험', ref:'7.2.33', crit:'6.5.1항', sampFn:S.note7_dry },
@@ -596,19 +596,16 @@
             { key:'novolt', name:'무전압 개폐시험', ref:'7.2.12', crit:'20회 이상없음', full:true },
             { key:'gasrelief', name:'가스방출장치 동작시험', ref:'7.2.21', crit:'동작압력(도면승인)', sampFn:S.per(100) },
             { key:'ctrlfunc', name:'제어기능 확인시험', ref:'7.2.26', crit:'5.10.5·6항', autoOnly:true, full:true },
-            { key:'sys', name:'시스템연결 동작시험', ref:'7.2.27', crit:'6.5항', autoOnly:true, sampFn:S.note1_dry },
+            { key:'sys', name:'시스템연결 동작시험', ref:'7.2.27', crit:'6.5항', autoOnly:true, sampFn:S.note4_dry, sampAdd:'필요시 시료수 증가 가능' },
             { key:'ctrl_ac', name:'제어회로 상용주파 내전압', ref:'7.2.24.1', crit:'IEC 62271-1 a)조건', autoOnly:true, sampFn:S.fixed(1), sampNote:'개발성적서 대체' },
           ]},
           { key:'meas', title:'계측·기타', items:[
-            { key:'av', name:'전압계측 정밀도시험', ref:'7.2.28', crit:'±1%·±40분', autoOnly:true, sampFn:S.note1_dry, exemptSA:true },
-            { key:'ai', name:'전류계측 정밀도시험', ref:'7.2.29', crit:'1.0급·10P20', autoOnly:true, sampFn:S.note1_dry, exemptSA:true },
+            { key:'av', name:'전압계측 정밀도시험', ref:'7.2.28', crit:'±1%·±40분', autoOnly:true, sampFn:S.note4_dry, sampAdd:'필요시 시료수 증가 가능', exemptSA:true },
+            { key:'ai', name:'전류계측 정밀도시험', ref:'7.2.29', crit:'1.0급·10P20', autoOnly:true, sampFn:S.note4_dry, sampAdd:'필요시 시료수 증가 가능', exemptSA:true },
             { key:'paint', name:'도장시험', ref:'7.2.34', crit:'두께 60㎛ 이상', unit:'㎛', thr:{v:60,dir:'ge'}, sampFn:S.note15_dry },
-            { key:'steel_m', name:'강판 재질시험(기계적성질)', ref:'7.2.31', crit:'KS D 3705', cert:true, cycle:'년 1회' },
-            { key:'steel_c', name:'강판 재질시험(화학성분)', ref:'7.2.31', crit:'KS D 3705', cert:true, cycle:'년 1회' },
+            { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.2.31', crit:'KS D 3705', cert:true, cycle:'년 1회' },
             { key:'pt', name:'전압변성장치(PT) 시험', ref:'7.2.20', crit:'IEC 61869-3/PT업체 성적서(검수 매50대)', cert:true, cycle:'성적서 대체', autoOnly:true },
             { key:'oring', name:'밀봉재(O-링) 재질시험', ref:'7.2.19', crit:'KS B 2805 3종/4종C(성적서)', cert:true, cycle:'성적서 대체' },
-            { key:'bushing', name:'부싱시험', ref:'7.2.30', crit:'IEEE Std 386(성능시험 시 생략)', cert:true, cycle:'성적서 대체' },
-            { key:'solid', name:'고체절연물 물성시험(에폭시)', ref:'7.2.38', crit:'표10 전항목(원제조사 성적서)', cert:true, cycle:'성적서 대체' },
           ]},
         ],
         exemptKeys:['imp_wv','av','ai'],
@@ -645,14 +642,17 @@
           { key:'meas', title:'계측·기타', items:[
             { key:'av', name:'전압계측 정밀도 시험', ref:'7.2.22', crit:'±1%·±40분', autoOnly:true, sampFn:S.per(10), exemptSA:true },
             { key:'ai', name:'전류계측 정밀도 시험', ref:'7.2.23', crit:'1.0급·10P20', autoOnly:true, sampFn:S.per(10), exemptSA:true },
-            { key:'paint', name:'도장시험', ref:'7.2.26', crit:'평균 60㎛ 이상', unit:'㎛', thr:{v:60,dir:'ge'}, sampFn:S.note15_dry },
+            { key:'paint', name:'도장시험', ref:'7.2.26', crit:'평균 60㎛ 이상(개별 측정값은 규정값의 80% 이상)', critP:'광고물 부착방지(P)형 — 평균 120㎛ 이상(부착방지 도료 60㎛ 가산)', unit:'㎛', thr:{v:60,dir:'ge'}, thrP:{v:120,dir:'ge'}, sampFn:S.note15_dry },
+            // 광고물 부착방지(-P) 품목 전용 — 부착방지 도료 성능시험(ES-9905-0015)
+            { key:'paint_adh', name:'도장막 밀착성시험', ref:'7.2.26', crit:'KS M ISO 2409 등급 1 이하(도장면·비도장면 각 3개소)', pOnly:true, sampFn:S.note15_dry },
+            { key:'paint_imp', name:'부착방지 도료 충돌시험', ref:'7.2.26', crit:'ES-9905-0015 만족', pOnly:true, sampFn:S.note15_dry },
+            { key:'paint_bond', name:'부착방지 도료 부착력시험', ref:'7.2.26', crit:'ES-9905-0015 만족', pOnly:true, sampFn:S.note15_dry },
             { key:'conn', name:'상연결 접속재 시험', ref:'7.2.15', crit:'절연층 최소두께 12㎜ 이상', phaseConn:true, unit:'mm', thr:{v:12,dir:'ge'}, sampFn:S.per(10) },
             { key:'bushing', name:'부싱 시험', ref:'7.2.24', crit:'', cert:true, cycle:'성적서/주11 검수' },
             { key:'connector', name:'접속재 시험', ref:'7.2.24', crit:'IEEE Std 386/성적서', cert:true, cycle:'성적서 대체' },
             { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.2.25', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
             { key:'pt', name:'전압변성장치(PT) 시험', ref:'7.2.27', crit:'IEC 61869-3/성적서(검수 매50대)', cert:true, cycle:'성적서 대체', autoOnly:true },
-            { key:'oil', name:'절연유 특성시험', ref:'7.2.28', crit:'표7-1/7-2(소호매질 oil)', cert:true, cycle:'년 2회' },
-            { key:'solid', name:'고체절연물 물성시험', ref:'7.2.34', crit:'표8/9(원제조사 성적서)', cert:true, cycle:'성적서 대체' },
+            { key:'oil', name:'절연유 PCB 성적서', ref:'7.2.28', crit:'폴리염화비페닐(PCB) 미함유 확인', cert:true, noFile:true, cycle:'년 2회 중 시행일 기입' },
           ]},
         ],
         exemptKeys:['imp_wv','av','ai'],
@@ -684,7 +684,11 @@
           { key:'meas', title:'계측·기타', items:[
             { key:'av', name:'전압계측 정밀도 시험', ref:'7.2.23', crit:'±1%·±40분', sampFn:S.per(20), exemptSA:true },
             { key:'ai', name:'전류계측 정밀도 시험', ref:'7.2.24', crit:'1.0급·10P20', sampFn:S.per(20), exemptSA:true },
-            { key:'paint', name:'도장시험', ref:'7.2.29', crit:'평균 60㎛ 이상', unit:'㎛', thr:{v:60,dir:'ge'}, sampFn:S.note15_dry },
+            { key:'paint', name:'도장시험', ref:'7.2.29', crit:'평균 60㎛ 이상(개별 측정값은 규정값의 80% 이상)', critP:'광고물 부착방지(P)형 — 평균 120㎛ 이상(부착방지 도료 60㎛ 가산)', unit:'㎛', thr:{v:60,dir:'ge'}, thrP:{v:120,dir:'ge'}, sampFn:S.note15_dry },
+            // 광고물 부착방지(-P) 품목 전용 — 부착방지 도료 성능시험(ES-9905-0015)
+            { key:'paint_adh', name:'도장막 밀착성시험', ref:'7.2.29', crit:'KS M ISO 2409 등급 1 이하(도장면·비도장면 각 3개소)', pOnly:true, sampFn:S.note15_dry },
+            { key:'paint_imp', name:'부착방지 도료 충돌시험', ref:'7.2.29', crit:'ES-9905-0015 만족', pOnly:true, sampFn:S.note15_dry },
+            { key:'paint_bond', name:'부착방지 도료 부착력시험', ref:'7.2.29', crit:'ES-9905-0015 만족', pOnly:true, sampFn:S.note15_dry },
             { key:'conn', name:'상연결 접속재 시험', ref:'7.2.16', crit:'절연층 최소두께 12㎜ 이상', phaseConn:true, unit:'mm', thr:{v:12,dir:'ge'}, sampFn:S.per(20) },
             { key:'bushing', name:'부싱 시험', ref:'7.2.13', crit:'', sampFn:S.per(20) },
             { key:'connector', name:'접속재 시험', ref:'7.2.13', crit:'IEEE 386', cert:true, cycle:'성적서 대체' },
@@ -722,7 +726,11 @@
           { key:'meas', title:'계측·기타', items:[
             { key:'av', name:'전압계측 정밀도 시험', ref:'7.2.23', crit:'±1%·±40분(80~120%)', sampFn:S.per(10), exemptSA:true },
             { key:'ai', name:'전류계측 정밀도 시험', ref:'7.2.24', crit:'1.0급·10P20(5~120%)', sampFn:S.per(10), exemptSA:true },
-            { key:'paint', name:'도장시험', ref:'7.2.29', crit:'평균 60㎛ 이상(광고물기기 +60㎛)', unit:'㎛', thr:{v:60,dir:'ge'}, sampFn:S.note15_dry },
+            { key:'paint', name:'도장시험', ref:'7.2.29', crit:'평균 60㎛ 이상(개별 측정값은 규정값의 80% 이상)', critP:'광고물 부착방지(P)형 — 평균 120㎛ 이상(부착방지 도료 60㎛ 가산)', unit:'㎛', thr:{v:60,dir:'ge'}, thrP:{v:120,dir:'ge'}, sampFn:S.note15_dry },
+            // 광고물 부착방지(-P) 품목 전용 — 부착방지 도료 성능시험(ES-9905-0015)
+            { key:'paint_adh', name:'도장막 밀착성시험', ref:'7.2.29', crit:'KS M ISO 2409 등급 1 이하(도장면·비도장면 각 3개소)', pOnly:true, sampFn:S.note15_dry },
+            { key:'paint_imp', name:'부착방지 도료 충돌시험', ref:'7.2.29', crit:'ES-9905-0015 만족', pOnly:true, sampFn:S.note15_dry },
+            { key:'paint_bond', name:'부착방지 도료 부착력시험', ref:'7.2.29', crit:'ES-9905-0015 만족', pOnly:true, sampFn:S.note15_dry },
             { key:'conn', name:'상연결 접속재 시험', ref:'7.2.16', crit:'절연층 최소두께 12㎜ 이상', phaseConn:true, unit:'mm', thr:{v:12,dir:'ge'}, sampFn:S.per(10) },
             { key:'bushing', name:'부싱 시험', ref:'7.2.13', crit:'내한성(7.2.13.1.3)', sampFn:S.per(20) },
             { key:'connector', name:'접속재 시험', ref:'7.2.13', crit:'IEEE 386', cert:true, cycle:'성적서 대체' },
@@ -744,11 +752,11 @@
             { key:'ap_ctrl', name:'제어함 구조 및 외관검사', ref:'7.3.14', crit:'6항 만족(외관 전량)', full:true, autoOnly:true },
           ]},
           { key:'insul', title:'절연·부분방전시험', items:[
-            { key:'ac_wv', name:'상용주파 내전압시험', ref:'7.3.6.1', crit:'건조 60kV·1분(검수 주수생략, DS 66kV)', full:true },
-            { key:'imp_wv', name:'충격파 내전압시험', ref:'7.3.6.2', crit:'150kV(1.2×50㎲, DS 165kV)', sampFn:S.note2_efi, exemptSA:true },
+            { key:'ac_wv', name:'상용주파 내전압시험', ref:'7.3.6.1', crit:'극간 66kV · 대지간 60kV · 상간 60kV(건조 1분, 검수 주수생략)', full:true },
+            { key:'imp_wv', name:'충격파 내전압시험', ref:'7.3.6.2', crit:'극간 165kV · 대지간 150kV · 상간 150kV(1.2×50㎲)', sampFn:S.note2_efi, exemptSA:true },
             { key:'pd', name:'부분방전시험', ref:'7.3.8', crit:'20pC 이하', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, sampFn:S.per(20) },
             { key:'mr', name:'주회로 저항측정', ref:'7.3.10', crit:'상별 측정(µΩ)', resistance:'overhead', sampFn:S.note2_efi },
-            { key:'seal', name:'본체 밀봉시험', ref:'7.3.11', crit:'IP X8 1h→건조 60kV내전압', sampFn:S.per(50) },
+            { key:'seal', name:'본체 밀봉시험', ref:'7.3.11', crit:'IP X8 1h 침수 후 건조내전압 — 극간 66kV · 대지간 60kV · 상간 60kV', sampFn:S.per(50) },
             { key:'ir', name:'절연저항시험(제어회로)', ref:'7.3.17', crit:'ES-5925-0001', autoOnly:true, sampFn:S.per(50) },
           ]},
           { key:'func', title:'동작·기능시험', items:[
@@ -801,13 +809,12 @@
             { key:'av', name:'전압계측 정밀도시험', ref:'7.2.28', crit:'±1%·±5°(80~120%,50%)', sampFn:S.note1_dry, exemptSA:true },
             { key:'ai', name:'전류계측 정밀도시험', ref:'7.2.29', crit:'1.0급·10P20(5~120%)', sampFn:S.note1_dry, exemptSA:true },
             { key:'bushingvolt', name:'부싱단자 전압시험', ref:'7.2.38', crit:'유기전압 50V·누설 0.5mA 이하', sampFn:S.per(10) },
-            { key:'paint', name:'도장시험', ref:'7.2.34', crit:'평균 60㎛ 이상(광고물기기 +60㎛)', unit:'㎛', thr:{v:60,dir:'ge'}, sampFn:S.note15_dry },
+            { key:'paint', name:'도장시험', ref:'7.2.34', crit:'평균 60㎛ 이상(개별 측정값은 규정값의 80% 이상)', critP:'광고물 부착방지(P)형 — 평균 120㎛ 이상(부착방지 도료 60㎛ 가산)', unit:'㎛', thr:{v:60,dir:'ge'}, thrP:{v:120,dir:'ge'}, sampFn:S.note15_dry },
             { key:'pt', name:'전압변성장치(PT) 시험', ref:'7.2.20', crit:'IEC 61869-3/원제조사 성적서(검수 매50대)', cert:true, cycle:'성적서 대체' },
             { key:'bushing', name:'부싱시험', ref:'7.2.30', crit:'IEEE Std 386(성능시험 시 생략)', cert:true, cycle:'성적서 대체' },
             { key:'oring', name:'밀봉재(O-링) 재질시험', ref:'7.2.19', crit:'KS B 2805 3종/4종C(성적서)', cert:true, cycle:'성적서 대체' },
             { key:'solid', name:'고체절연물 물성시험(에폭시/PC)', ref:'7.2.39', crit:'표5 전항목(원제조사 성적서)', cert:true, cycle:'성적서 대체' },
-            { key:'steel_m', name:'강판 재질시험(기계적성질)', ref:'7.2.31', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'Mill Sheet 대체' },
-            { key:'steel_c', name:'강판 재질시험(화학성분)', ref:'7.2.31', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'Mill Sheet 대체' },
+            { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.2.31', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'Mill Sheet 대체' },
             { key:'steel_t', name:'강판두께 측정', ref:'7.2.31', crit:'외함 2.0㎜↑·베이스 3.0㎜↑', full:true },
           ]},
         ],
@@ -824,7 +831,6 @@
           ]},
           { key:'insul', title:'절연·저항시험', items:[
             { key:'ac_wv', name:'상용주파 내전압시험', ref:'IEC 62271-111 6.2', crit:'건조 60kV·1분(검수 건조만)', full:true },
-            { key:'pd', name:'부분방전시험', ref:'IEC 62271-111 6.106', crit:'20pC 이하(상간28.4/대지16.4kV)', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, sampFn:S.per(20) },
             { key:'mr', name:'주회로 저항측정', ref:'IEC 62271-111 6.4', crit:'상별 측정(µΩ)', resistance:'overhead', sampFn:S.per(20) },
             { key:'ir', name:'절연저항 측정(제어회로)', ref:'ES-5925-0001 6.6항(원문)/5.6항', crit:'제어회로만 적용(주5 발취)', sampFn:S.per(50) },
           ]},
@@ -841,12 +847,9 @@
             { key:'av', name:'전압계측 정밀도 시험', ref:'KS C IEC 60044-2', crit:'±1%·±40분(80~120%)', sampFn:S.per(20), exemptSA:true },
           ]},
           { key:'etc', title:'재질·부품시험(별첨)', items:[
-            { key:'steel_m', name:'강판 재질시험(기계적성질)', ref:'KS D 3705 11항', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
-            { key:'steel_c', name:'강판 재질시험(화학성분)', ref:'KS D 3705 11항', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
+            { key:'steel', name:'강판 재질시험(기계·화학)', ref:'KS D 3705 11항', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
             { key:'plate', name:'취부금구 도금시험', ref:'ES-0000-0003', crit:'취부금구 70㎛↑ · 볼트·너트 50㎛↑', plating:true, unit:'㎛', sampFn:S.per(50) },
-            { key:'bushing', name:'폴리머 부싱시험', ref:'표4(폴리머부싱)', crit:'ANSI/KS/IEC 전항목(성적서)', cert:true, cycle:'성적서 대체' },
             { key:'cover', name:'부싱단자 절연커버 시험', ref:'ES-5970-0042', crit:'ES-5970-0042(성적서)', cert:true, noDate:true, cycle:'성적서 대체' },
-            { key:'downline', name:'특고압 인하용 전선 성능시험', ref:'ES-6145-0022', crit:'ES-6145-0022/ES-5925-0003(성적서)', cert:true, cycle:'성적서 대체' },
           ]},
         ],
         exemptKeys:['av','ai'],
@@ -862,6 +865,7 @@
           ]},
           { key:'insul', title:'절연·저항시험', items:[
             { key:'ac_wv', name:'상용주파 내전압시험', ref:'7.3.2', crit:'건조 60kV·1분(검수 주수생략)', full:true },
+            { key:'imp_wv', name:'충격파 내전압시험', ref:'7.3.2', crit:'150kV(1.2×50㎲)', sampFn:S.per(50), exemptSA:true },
             // 부분방전시험(7.3.14)은 GS-5925-0155 표7상 인정시험 전용이므로 검수 항목에서 제외
             { key:'mr', name:'주회로 저항측정', ref:'7.3.3', crit:'상별 측정(µΩ)', resistance:'overhead', sampFn:S.per(20) },
             { key:'ir', name:'절연저항 측정(제어회로)', ref:'7.3.20', crit:'ES-5925-0001 5.6항(제어회로)', full:true },
@@ -881,8 +885,7 @@
             { key:'av', name:'전압계측 정밀도 시험', ref:'7.3.33', crit:'±1%·±40분(80~120%)', sampFn:S.per(20), exemptSA:true },
           ]},
           { key:'etc', title:'재질·부품시험(별첨)', items:[
-            { key:'steel_m', name:'강판 재질시험(기계적성질)', ref:'7.3.34', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
-            { key:'steel_c', name:'강판 재질시험(화학성분)', ref:'7.3.34', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
+            { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.3.34', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
             { key:'plate', name:'취부금구 도금시험', ref:'7.3.36', crit:'취부금구 70㎛↑ · 볼트·너트 50㎛↑', plating:true, unit:'㎛', sampFn:S.per(50) },
             { key:'bushing', name:'폴리머 부싱시험', ref:'7.3.21', crit:'KS/IEC/ANSI 전14항목(성적서)', cert:true, cycle:'성적서 대체' },
             { key:'cover', name:'부싱단자 절연커버 시험', ref:'7.3.23', crit:'ES-5970-0042(성적서)', cert:true, noDate:true, cycle:'성적서 대체' },
@@ -902,7 +905,7 @@
           ]},
           { key:'insul', title:'절연·저항시험', items:[
             { key:'ac_wv', name:'상용주파 내전압시험', ref:'7.3.2.1', crit:'건조 60kV·1분(검수 주수생략)', full:true },
-            { key:'pd', name:'부분방전시험', ref:'7.3.12', crit:'20pC 이하(상간28.4/대지16.4kV)', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, sampFn:S.per(20) },
+            { key:'pd', name:'부분방전시험', ref:'7.3.12', crit:'20pC 이하(상간28.4/대지16.4kV)', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, sampFn:S.all },
             { key:'mr', name:'주회로 저항측정', ref:'7.3.3', crit:'상별 측정(µΩ)', resistance:'overhead', sampFn:S.per(20) },
             { key:'ir', name:'절연저항 측정(제어회로)', ref:'7.3.15', crit:'ES-5925-0001 5.6항(제어회로)', full:true },
           ]},
@@ -919,17 +922,24 @@
             { key:'av', name:'전압계측 정밀도 시험', ref:'7.3.27', crit:'±1%·±40분(80~120%)', sampFn:S.per(20), exemptSA:true },
           ]},
           { key:'etc', title:'재질·부품시험(별첨)', items:[
-            { key:'steel_m', name:'강판 재질시험(기계적성질)', ref:'7.3.28', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
-            { key:'steel_c', name:'강판 재질시험(화학성분)', ref:'7.3.28', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
+            { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.3.28', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
             { key:'plate', name:'취부금구 도금시험', ref:'7.3.30', crit:'취부금구 70㎛↑ · 볼트·너트 50㎛↑', plating:true, unit:'㎛', sampFn:S.per(50) },
-            { key:'bushing', name:'폴리머 부싱시험', ref:'7.3.16', crit:'KS/IEC/ANSI/NEMA 전14항목(성적서)', cert:true, cycle:'성적서 대체' },
             { key:'cover', name:'부싱단자 절연커버 시험', ref:'7.3.18', crit:'ES-5970-0042(성적서)', cert:true, noDate:true, cycle:'성적서 대체' },
-            { key:'downline', name:'특고압 인하용 전선 성능시험', ref:'7.3.33', crit:'ES-6145-0022/ES-5925-0003(성적서)', cert:true, cycle:'성적서 대체' },
           ]},
         ],
         exemptKeys:['av','ai'],
       },
     ];
+
+    // 제어회로 상용주파 내전압은 절연 성능 시험이므로 전 품목에서 절연·부분방전 카테고리로 통일
+    SPECS.forEach(sp=>{
+      const insul=sp.steps.find(s=>s.key==='insul'); if(!insul) return;
+      sp.steps.forEach(st=>{
+        if(st===insul) return;
+        const i=st.items.findIndex(x=>x.key==='ctrl_ac');
+        if(i>=0) insul.items.push(st.items.splice(i,1)[0]);
+      });
+    });
 
     // 핵심부품 등록서 및 사용부품 확인서 — 전 품목 공통(마지막 시험 스텝 맨 아래)
     // 시험항목이 아닌 제출서류이므로 갑지·을지에는 표시하지 않고(noGapji) 별첨 시트로만 출력
@@ -960,7 +970,13 @@
     function isAuto(){ return CUR.mode==='자동'; }
     // 자동형 전용 항목은 숨기지 않고 항상 표시하되, 수동형에서는 '해당없음'으로 처리(isNA)
     function visibleItems(sd){ return sd.items; }
-    function isNA(it){ return it.autoOnly===true && !isAuto(); }
+    // 광고물 부착방지 도장(-P) 품목 여부 — 도장 두께 기준과 부착방지 도료 시험 적용 대상
+    function isPType(){ const v=String((CUR||{}).variant||''); return /-P(?![A-Za-z0-9])/.test(v)||v.includes('광고물'); }
+    // P형에서 기준이 달라지는 항목은 thrP/critP를 우선 적용
+    function effThr(it){ return (it.thrP && isPType()) ? it.thrP : it.thr; }
+    function effCrit(it){ return (it.critP && isPType()) ? it.critP : it.crit; }
+    // 자동형 전용(autoOnly)·P형 전용(pOnly) 항목은 대상이 아니면 '해당없음'
+    function isNA(it){ return (it.autoOnly===true && !isAuto()) || (it.pOnly===true && !isPType()); }
     function orderedItems(sd){ const its=visibleItems(sd); return [...its.filter(i=>i.full&&!isNA(i)), ...its.filter(i=>!(i.full&&!isNA(i)))]; }
     function isExempt(it){ return (CUR.grade==='S'||CUR.grade==='A') && it.exemptSA===true; }
     function baseQty(){ return Number((STATE.__base||{}).qty)||0; }
@@ -973,7 +989,8 @@
     function autoVal(it,v){
       if(!isFinite(v)) return '';
       if(it.range) return (v>=it.range.min && v<=it.range.max)?'양호':'불량';
-      if(it.thr) return (it.thr.dir==='le'? v<=it.thr.v : v>=it.thr.v)?'양호':'불량';
+      const th=effThr(it);
+      if(th) return (th.dir==='le'? v<=th.v : v>=th.v)?'양호':'불량';
       return '';
     }
     // ===== 가스누설(기밀) 계산 — 기본값(설비 상수) + 입력값(제조번호별 측정) =====
@@ -1514,7 +1531,7 @@
           </span>`;
         }).join('') || '<span class="muted" style="font-size:12px">미발취</span>';
         return `<tr>
-          <td style="text-align:left">${it.name}<div class="muted" style="font-size:11px">${it.ref}${it.autoOnly?' · 자동형':''}</div></td>
+          <td style="text-align:left">${it.name}<div class="muted" style="font-size:11px">${it.ref}${it.autoOnly?' · 자동형':''}${it.pOnly?' · 광고물 부착방지(P)형':''}</div></td>
           <td>${cnt}</td>
           <td style="text-align:left"><div class="row" style="gap:6px;margin-bottom:6px">
             <button class="btn mini secondary" data-addsn="${it.key}">+제조번호 추가</button></div>
@@ -1640,9 +1657,11 @@
                ${selBox(it.key,'cert-submit',['','제출','미제출','해당없음'],submit)}
                ${it.noDate?'':`<input type="date" data-k="${it.key}" data-f="cert-date" value="${date}" style="width:150px">`}
                <span class="muted" style="font-size:11px">${it.cycle||''}</span>
-               <input type="file" accept="image/*,.pdf,application/pdf" multiple id="file_input_${it.key}" data-k="${it.key}" data-f="cert-file-input" style="display:none">
-               <button class="btn mini secondary" data-k="${it.key}" data-f="cert-file-btn">📁 파일/PDF 업로드</button>
+               ${it.noFile?'':`<input type="file" accept="image/*,.pdf,application/pdf" multiple id="file_input_${it.key}" data-k="${it.key}" data-f="cert-file-input" style="display:none">
+               <button class="btn mini secondary" data-k="${it.key}" data-f="cert-file-btn">📁 파일/PDF 업로드</button>`}
              </div>`;
+        // noFile 항목은 첨부 없이 시행일자만 기록한다(예: 절연유 PCB 성적서 — 연 2회 중 시행일)
+        if(it.noFile) return `<div style="display:flex;flex-direction:column;gap:6px">${headRow}</div>`;
         return `<div style="display:flex;flex-direction:column;gap:6px">
           ${headRow}
           <div class="cert-files-wrap" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
@@ -1883,11 +1902,11 @@
       const items=orderedItems(sd);
       const rows=items.map(it=>{
         const exempt=isExempt(it); const na=isNA(it);
-        const samp = na?'해당없음':(it.full?'전량':(it.phaseConn?'A·B·C상<br>각 3개소':(it.cert?(it.cycle||'-'):(it.sampNote||sampCount(it)+'대'))));
+        const samp = na?'해당없음':(it.full?'전량':(it.phaseConn?'A·B·C상<br>각 3개소':(it.cert?(it.cycle||'-'):((it.sampNote||sampCount(it)+'대')+(it.sampAdd?'<br><span class="muted" style="font-size:10px">'+it.sampAdd+'</span>':'')))));
         const result = na? `<span class="muted" style="font-size:12px">자동형 전용 · 해당없음</span>` : (exempt? `<span class="tag-exempt">완화 면제</span>` : itemResultBlock(it));
         return `<tr>
-          <td style="text-align:left;vertical-align:top">${it.name}<div class="muted" style="font-size:11px">${it.ref}${it.autoOnly?' · 자동형':''}</div></td>
-          <td style="vertical-align:top">${it.crit}</td>
+          <td style="text-align:left;vertical-align:top">${it.name}<div class="muted" style="font-size:11px">${it.ref}${it.autoOnly?' · 자동형':''}${it.pOnly?' · 광고물 부착방지(P)형':''}</div></td>
+          <td style="vertical-align:top">${effCrit(it)}</td>
           <td style="vertical-align:top">${samp}</td>
           <td style="text-align:left">${result}</td></tr>`;
       }).join('');
@@ -2377,12 +2396,12 @@
       const b=STATE.__base||{}; const results={};
       CUR.spec.steps.forEach(sd=>{ results[sd.key]={ title:sd.title, overall:stepOverall(sd), remark:(STATE['__remark_'+sd.key]||{}).v||'',
         items:orderedItems(sd).map(it=>{ const st=STATE[it.key]||{}; const na=isNA(it);
-          return { key:it.key, name:it.name, ref:it.ref, crit:it.crit, exempt:isExempt(it), na,
+          return { key:it.key, name:it.name, ref:it.ref, crit:effCrit(it), exempt:isExempt(it), na,
             kind: it.full?'full':it.cert?'cert':it.phaseConn?'phaseConn':it.pdPhase?'pdPhase':it.plating?'plating':it.minTrip?'minTrip':it.tcTest?'tcTest':it.seqTest?'seqTest':it.resistance?'resistance':(it.thr||it.range)?'measureAuto':it.measureManual?'measureManual':'jdg', certFiles: st.certFiles||[],
             noOp: it.minTrip?!!it.noOp:undefined,
             tcTol: (it.tcTest||it.seqTest)?(it.tcTol||'rc'):undefined, tcPcts: it.tcTest?tcPcts(it):undefined,
             shield: it.pdPhase?!!st.shield:undefined, noGapji: !!it.noGapji,
-            samp: na?'해당없음':(it.full?'전량':(it.cert?(it.cycle||'-'):(it.sampNote||sampCount(it)+'대'))),
+            samp: na?'해당없음':(it.full?'전량':(it.cert?(it.cycle||'-'):((it.sampNote||sampCount(it)+'대')+(it.sampAdd?' · '+it.sampAdd:'')))),
             full: st.full||null, cert: it.docOnly?null:(st.cert||null), docOnly: !!it.docOnly, unit: it.unit||'',
             serials: na?[]:(st.serials||[]), res: na?{}:resForQIR(it,st), jdg: na?'':itemJudged(it) }; }) }; });
       return { schema:'kepco-qir-switchgear.v0.2', spec_id:CUR.spec.id, gsNo:CUR.spec.gsNo, material:CUR.spec.name,
