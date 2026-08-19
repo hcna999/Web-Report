@@ -602,7 +602,8 @@
           { key:'meas', title:'계측·기타', items:[
             { key:'av', name:'전압계측 정밀도시험', ref:'7.2.28', crit:'±1%·±40분', autoOnly:true, sampFn:S.note4_dry, sampAdd:'필요시 시료수 증가 가능', exemptSA:true },
             { key:'ai', name:'전류계측 정밀도시험', ref:'7.2.29', crit:'1.0급·10P20', autoOnly:true, sampFn:S.note4_dry, sampAdd:'필요시 시료수 증가 가능', exemptSA:true },
-            { key:'paint', name:'도장시험', ref:'7.2.34', crit:'두께 60㎛ 이상', unit:'㎛', thr:{v:60,dir:'ge'}, sampFn:S.note15_dry },
+            // 도장시험 — 두께(일반형 60㎛↑ / 광고물 부착방지 P형 120㎛↑)·밀착성·충돌·부착력을 한 항목에서 확인
+            { key:'paint', name:'도장시험', ref:'7.2.34', crit:'두께 60㎛ 이상 · 밀착성·충돌·부착력 이상없음', critP:'광고물 부착방지(P)형 — 두께 120㎛ 이상 · 밀착성·충돌·부착력 이상없음', unit:'㎛', paintTest:true, thr:{v:60,dir:'ge'}, thrP:{v:120,dir:'ge'}, sampFn:S.note15_dry },
             { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.2.31', crit:'KS D 3705', cert:true, cycle:'년 1회' },
             { key:'pt', name:'전압변성장치(PT) 시험', ref:'7.2.20', crit:'IEC 61869-3/PT업체 성적서(검수 매50대)', cert:true, cycle:'성적서 대체', autoOnly:true },
             { key:'oring', name:'밀봉재(O-링) 재질시험', ref:'7.2.19', crit:'KS B 2805 3종/4종C(성적서)', cert:true, cycle:'성적서 대체' },
@@ -642,11 +643,8 @@
           { key:'meas', title:'계측·기타', items:[
             { key:'av', name:'전압계측 정밀도 시험', ref:'7.2.22', crit:'±1%·±40분', autoOnly:true, sampFn:S.per(10), exemptSA:true },
             { key:'ai', name:'전류계측 정밀도 시험', ref:'7.2.23', crit:'1.0급·10P20', autoOnly:true, sampFn:S.per(10), exemptSA:true },
-            { key:'paint', name:'도장시험', ref:'7.2.26', crit:'평균 60㎛ 이상(개별 측정값은 규정값의 80% 이상)', critP:'광고물 부착방지(P)형 — 평균 120㎛ 이상(부착방지 도료 60㎛ 가산)', unit:'㎛', thr:{v:60,dir:'ge'}, thrP:{v:120,dir:'ge'}, sampFn:S.note15_dry },
-            // 광고물 부착방지(-P) 품목 전용 — 부착방지 도료 성능시험(ES-9905-0015)
-            { key:'paint_adh', name:'도장막 밀착성시험', ref:'7.2.26', crit:'KS M ISO 2409 등급 1 이하(도장면·비도장면 각 3개소)', pOnly:true, sampFn:S.note15_dry },
-            { key:'paint_imp', name:'부착방지 도료 충돌시험', ref:'7.2.26', crit:'ES-9905-0015 만족', pOnly:true, sampFn:S.note15_dry },
-            { key:'paint_bond', name:'부착방지 도료 부착력시험', ref:'7.2.26', crit:'ES-9905-0015 만족', pOnly:true, sampFn:S.note15_dry },
+            // 도장시험 — 두께(일반형 60㎛↑ / 광고물 부착방지 P형 120㎛↑)·밀착성·충돌·부착력을 한 항목에서 확인
+            { key:'paint', name:'도장시험', ref:'7.2.26', crit:'두께 60㎛ 이상 · 밀착성·충돌·부착력 이상없음', critP:'광고물 부착방지(P)형 — 두께 120㎛ 이상 · 밀착성·충돌·부착력 이상없음', unit:'㎛', paintTest:true, thr:{v:60,dir:'ge'}, thrP:{v:120,dir:'ge'}, sampFn:S.note15_dry },
             { key:'conn', name:'상연결 접속재 시험', ref:'7.2.15', crit:'절연층 최소두께 12㎜ 이상', phaseConn:true, unit:'mm', thr:{v:12,dir:'ge'}, sampFn:S.per(10) },
             { key:'bushing', name:'부싱 시험', ref:'7.2.24', crit:'IEEE 386', cert:true, cycle:'성적서 대체' },
             { key:'connector', name:'접속재 시험', ref:'7.2.24', crit:'IEEE Std 386/성적서', cert:true, cycle:'성적서 대체' },
@@ -684,11 +682,8 @@
           { key:'meas', title:'계측·기타', items:[
             { key:'av', name:'전압계측 정밀도 시험', ref:'7.2.23', crit:'±1%·±40분', sampFn:S.per(20), exemptSA:true },
             { key:'ai', name:'전류계측 정밀도 시험', ref:'7.2.24', crit:'1.0급·10P20', sampFn:S.per(20), exemptSA:true },
-            { key:'paint', name:'도장시험', ref:'7.2.29', crit:'평균 60㎛ 이상(개별 측정값은 규정값의 80% 이상)', critP:'광고물 부착방지(P)형 — 평균 120㎛ 이상(부착방지 도료 60㎛ 가산)', unit:'㎛', thr:{v:60,dir:'ge'}, thrP:{v:120,dir:'ge'}, sampFn:S.note15_dry },
-            // 광고물 부착방지(-P) 품목 전용 — 부착방지 도료 성능시험(ES-9905-0015)
-            { key:'paint_adh', name:'도장막 밀착성시험', ref:'7.2.29', crit:'KS M ISO 2409 등급 1 이하(도장면·비도장면 각 3개소)', pOnly:true, sampFn:S.note15_dry },
-            { key:'paint_imp', name:'부착방지 도료 충돌시험', ref:'7.2.29', crit:'ES-9905-0015 만족', pOnly:true, sampFn:S.note15_dry },
-            { key:'paint_bond', name:'부착방지 도료 부착력시험', ref:'7.2.29', crit:'ES-9905-0015 만족', pOnly:true, sampFn:S.note15_dry },
+            // 도장시험 — 두께(일반형 60㎛↑ / 광고물 부착방지 P형 120㎛↑)·밀착성·충돌·부착력을 한 항목에서 확인
+            { key:'paint', name:'도장시험', ref:'7.2.29', crit:'두께 60㎛ 이상 · 밀착성·충돌·부착력 이상없음', critP:'광고물 부착방지(P)형 — 두께 120㎛ 이상 · 밀착성·충돌·부착력 이상없음', unit:'㎛', paintTest:true, thr:{v:60,dir:'ge'}, thrP:{v:120,dir:'ge'}, sampFn:S.note15_dry },
             { key:'conn', name:'상연결 접속재 시험', ref:'7.2.16', crit:'절연층 최소두께 12㎜ 이상', phaseConn:true, unit:'mm', thr:{v:12,dir:'ge'}, sampFn:S.per(20) },
             { key:'bushing', name:'부싱 시험', ref:'7.2.13', crit:'IEEE 386/내한성', cert:true, cycle:'성적서 대체' },
             { key:'connector', name:'접속재 시험', ref:'7.2.13', crit:'IEEE 386', cert:true, cycle:'성적서 대체' },
@@ -726,11 +721,8 @@
           { key:'meas', title:'계측·기타', items:[
             { key:'av', name:'전압계측 정밀도 시험', ref:'7.2.23', crit:'±1%·±40분(80~120%)', sampFn:S.per(10), exemptSA:true },
             { key:'ai', name:'전류계측 정밀도 시험', ref:'7.2.24', crit:'1.0급·10P20(5~120%)', sampFn:S.per(10), exemptSA:true },
-            { key:'paint', name:'도장시험', ref:'7.2.29', crit:'평균 60㎛ 이상(개별 측정값은 규정값의 80% 이상)', critP:'광고물 부착방지(P)형 — 평균 120㎛ 이상(부착방지 도료 60㎛ 가산)', unit:'㎛', thr:{v:60,dir:'ge'}, thrP:{v:120,dir:'ge'}, sampFn:S.note15_dry },
-            // 광고물 부착방지(-P) 품목 전용 — 부착방지 도료 성능시험(ES-9905-0015)
-            { key:'paint_adh', name:'도장막 밀착성시험', ref:'7.2.29', crit:'KS M ISO 2409 등급 1 이하(도장면·비도장면 각 3개소)', pOnly:true, sampFn:S.note15_dry },
-            { key:'paint_imp', name:'부착방지 도료 충돌시험', ref:'7.2.29', crit:'ES-9905-0015 만족', pOnly:true, sampFn:S.note15_dry },
-            { key:'paint_bond', name:'부착방지 도료 부착력시험', ref:'7.2.29', crit:'ES-9905-0015 만족', pOnly:true, sampFn:S.note15_dry },
+            // 도장시험 — 두께(일반형 60㎛↑ / 광고물 부착방지 P형 120㎛↑)·밀착성·충돌·부착력을 한 항목에서 확인
+            { key:'paint', name:'도장시험', ref:'7.2.29', crit:'두께 60㎛ 이상 · 밀착성·충돌·부착력 이상없음', critP:'광고물 부착방지(P)형 — 두께 120㎛ 이상 · 밀착성·충돌·부착력 이상없음', unit:'㎛', paintTest:true, thr:{v:60,dir:'ge'}, thrP:{v:120,dir:'ge'}, sampFn:S.note15_dry },
             { key:'conn', name:'상연결 접속재 시험', ref:'7.2.16', crit:'절연층 최소두께 12㎜ 이상', phaseConn:true, unit:'mm', thr:{v:12,dir:'ge'}, sampFn:S.per(10) },
             { key:'bushing', name:'부싱 시험', ref:'7.2.13', crit:'내한성(7.2.13.1.3)', cert:true, cycle:'성적서 대체' },
             { key:'connector', name:'접속재 시험', ref:'7.2.13', crit:'IEEE 386', cert:true, cycle:'성적서 대체' },
@@ -809,7 +801,8 @@
             { key:'av', name:'전압계측 정밀도시험', ref:'7.2.28', crit:'±1%·±5°(80~120%,50%)', sampFn:S.note1_dry, exemptSA:true },
             { key:'ai', name:'전류계측 정밀도시험', ref:'7.2.29', crit:'1.0급·10P20(5~120%)', sampFn:S.note1_dry, exemptSA:true },
             { key:'bushingvolt', name:'부싱단자 전압시험', ref:'7.2.38', crit:'유기전압 50V·누설 0.5mA 이하', sampFn:S.per(10) },
-            { key:'paint', name:'도장시험', ref:'7.2.34', crit:'평균 60㎛ 이상(개별 측정값은 규정값의 80% 이상)', critP:'광고물 부착방지(P)형 — 평균 120㎛ 이상(부착방지 도료 60㎛ 가산)', unit:'㎛', thr:{v:60,dir:'ge'}, thrP:{v:120,dir:'ge'}, sampFn:S.note15_dry },
+            // 도장시험 — 두께(일반형 60㎛↑ / 광고물 부착방지 P형 120㎛↑)·밀착성·충돌·부착력을 한 항목에서 확인
+            { key:'paint', name:'도장시험', ref:'7.2.34', crit:'두께 60㎛ 이상 · 밀착성·충돌·부착력 이상없음', critP:'광고물 부착방지(P)형 — 두께 120㎛ 이상 · 밀착성·충돌·부착력 이상없음', unit:'㎛', paintTest:true, thr:{v:60,dir:'ge'}, thrP:{v:120,dir:'ge'}, sampFn:S.note15_dry },
             { key:'pt', name:'전압변성장치(PT) 시험', ref:'7.2.20', crit:'IEC 61869-3/원제조사 성적서(검수 매50대)', cert:true, cycle:'성적서 대체' },
             { key:'bushing', name:'부싱시험', ref:'7.2.30', crit:'IEEE Std 386(성능시험 시 생략)', cert:true, cycle:'성적서 대체' },
             { key:'oring', name:'밀봉재(O-링) 재질시험', ref:'7.2.19', crit:'KS B 2805 3종/4종C(성적서)', cert:true, cycle:'성적서 대체' },
@@ -1155,6 +1148,29 @@
       const f=pltFields(st,sn);
       return PLATE_ROWS.every(r=>Number(f[r.k])>=r.min) ? '양호' : '불량';
     }
+    // ===== 지상기기 도장시험(paintTest) — 한 항목에서 4가지를 확인 =====
+    // 두께는 실측 평균값(일반형 60㎛↑ / 광고물 부착방지 P형 120㎛↑ — effThr로 자동 전환),
+    // 밀착성·충돌·부착력은 양호/불량으로 기입한다. 넷 다 채워야 항목 판정이 확정된다.
+    const PAINT_ROWS=[
+      { k:'pn_thk',  lab:'도장막 두께',  type:'num', crit:'' },
+      { k:'pn_adh',  lab:'밀착성시험',   type:'jdg', crit:'KS M ISO 2409 등급 1 이하' },
+      { k:'pn_imp',  lab:'충돌시험',     type:'jdg', crit:'ES-9905-0015 만족' },
+      { k:'pn_bond', lab:'부착력시험',   type:'jdg', crit:'ES-9905-0015 만족' },
+    ];
+    function pnThrV(it){ const th=effThr(it); return th?Number(th.v):60; }
+    function pnRowCrit(it,rw,u){ return rw.type==='num' ? (pnThrV(it)+(u||'㎛')+' 이상') : rw.crit; }
+    function pnFields(st,sn){ return (((st.res||{})[sn])||{}).fields||{}; }
+    function pnFilled(st,sn){ const f=pnFields(st,sn);
+      return PAINT_ROWS.every(rw=> rw.type==='num'
+        ? (f[rw.k]!==undefined && String(f[rw.k]).trim()!=='' && isFinite(Number(f[rw.k])))
+        : !!f[rw.k]); }
+    function pnAuto(it,st,sn){
+      if(!pnFilled(st,sn)) return '';
+      const f=pnFields(st,sn);
+      if(Number(f.pn_thk) < pnThrV(it)) return '불량';
+      return PAINT_ROWS.filter(rw=>rw.type==='jdg').every(rw=>f[rw.k]==='양호') ? '양호' : '불량';
+    }
+
     // 쉼표(,) 및 물결(~) 혼용 제조번호 파싱
     function parseSerials(str){
       if(!str||!str.trim()) return null;
@@ -1823,6 +1839,23 @@
             </div></div>`;
         }).join('');
       }
+      // 도장시험 — 두께 실측 + 밀착성·충돌·부착력 판정을 한 항목에서 입력
+      if(it.paintTest){
+        const u=it.unit||'㎛';
+        return serials.map(sn=>{
+          const f=pnFields(st,sn); const aj=pnAuto(it,st,sn);
+          return `<div style="margin-bottom:8px"><div class="muted" style="font-size:11px;margin-bottom:3px">제조번호 <b>${sn}</b></div>
+            <table class="rgrid tbl"><tr><th style="min-width:88px">확인항목</th><th>기준</th><th>결과</th></tr>
+              ${PAINT_ROWS.map(rw=>`<tr><td>${rw.lab}</td><td>${pnRowCrit(it,rw,u)}</td>
+                <td>${rw.type==='num'
+                  ? `<input data-k="${it.key}" data-sn="${sn}" data-fld="${rw.k}" value="${f[rw.k]||''}" style="width:90px" placeholder="평균(${u})">`
+                  : selBox2(it.key,sn,rw.k,['','양호','불량'],f[rw.k]||'')}</td></tr>`).join('')}
+            </table>
+            <div class="row" style="gap:10px;margin-top:4px;align-items:center">
+              <span class="muted" style="font-size:11px">판정 <span data-pnauto="${it.key}|${sn}" class="autojdg ${aj==='양호'?'aj-good':aj==='불량'?'aj-bad':'aj-none'}">${aj||'-'}</span></span>
+            </div></div>`;
+        }).join('');
+      }
       // 부분방전시험 — 인가부분별 측정값 (가공형 4점 / 지중·지상형은 회로수에 따라 확장)
       if(it.pdPhase){
         const shielded=pdShielded(st); const rows=pdRows(st); const u=it.unit||'pC';
@@ -1889,7 +1922,7 @@
     function ensureDefaults(sd){
       visibleItems(sd).forEach(it=>{
         if(isNA(it)||isExempt(it)||it.cert) return;
-        if(it.thr||it.range||it.gasLeak||it.pdPhase||it.phaseConn||it.plating||it.minTrip||it.tcTest||it.seqTest) return;   // 값 → 자동판정
+        if(it.thr||it.range||it.gasLeak||it.pdPhase||it.phaseConn||it.plating||it.paintTest||it.minTrip||it.tcTest||it.seqTest) return;   // 값 → 자동판정
         if(it.full){ const st=STATE[it.key]=STATE[it.key]||{}; st.full=st.full||{};
           if(!st.full.jdg) st.full.jdg='양호'; return; }
         const st=STATE[it.key]; if(!st||!Array.isArray(st.serials)) return;
@@ -2115,6 +2148,13 @@
               const aj=pltAuto(s,sn);
               s.res[sn].jdg=aj;                                // 두 부위가 다 채워졌을 때만 판정 확정
               const aEl=host.querySelector(`[data-pltauto="${k}|${sn}"]`);
+              if(aEl){ aEl.textContent=aj||'-'; aEl.className='autojdg '+(aj==='양호'?'aj-good':aj==='불량'?'aj-bad':'aj-none'); }
+            }
+            if(fld.indexOf('pn_')===0){                       // 도장시험: 두께·밀착성·충돌·부착력을 모두 만족해야 양호
+              const item=(CUR.spec.steps.flatMap(x=>x.items)).find(i=>i.key===k);
+              const aj=item?pnAuto(item,s,sn):'';
+              s.res[sn].jdg=aj;
+              const aEl=host.querySelector(`[data-pnauto="${k}|${sn}"]`);
               if(aEl){ aEl.textContent=aj||'-'; aEl.className='autojdg '+(aj==='양호'?'aj-good':aj==='불량'?'aj-bad':'aj-none'); }
             }
             if(fld.indexOf('pc_')===0){                       // 상연결 접속재: 9개소 중 최소두께가 판정 기준
@@ -2397,7 +2437,8 @@
       CUR.spec.steps.forEach(sd=>{ results[sd.key]={ title:sd.title, overall:stepOverall(sd), remark:(STATE['__remark_'+sd.key]||{}).v||'',
         items:orderedItems(sd).map(it=>{ const st=STATE[it.key]||{}; const na=isNA(it);
           return { key:it.key, name:it.name, ref:it.ref, crit:effCrit(it), exempt:isExempt(it), na,
-            kind: it.full?'full':it.cert?'cert':it.phaseConn?'phaseConn':it.pdPhase?'pdPhase':it.plating?'plating':it.minTrip?'minTrip':it.tcTest?'tcTest':it.seqTest?'seqTest':it.resistance?'resistance':(it.thr||it.range)?'measureAuto':it.measureManual?'measureManual':'jdg', certFiles: st.certFiles||[],
+            kind: it.full?'full':it.cert?'cert':it.phaseConn?'phaseConn':it.pdPhase?'pdPhase':it.plating?'plating':it.paintTest?'paintTest':it.minTrip?'minTrip':it.tcTest?'tcTest':it.seqTest?'seqTest':it.resistance?'resistance':(it.thr||it.range)?'measureAuto':it.measureManual?'measureManual':'jdg', certFiles: st.certFiles||[],
+            thrV: it.paintTest?pnThrV(it):undefined,
             noOp: it.minTrip?!!it.noOp:undefined,
             tcTol: (it.tcTest||it.seqTest)?(it.tcTol||'rc'):undefined, tcPcts: it.tcTest?tcPcts(it):undefined,
             shield: it.pdPhase?!!st.shield:undefined, noGapji: !!it.noGapji,
@@ -2866,6 +2907,35 @@
           <table class="mx"><thead>${head}</thead><tbody>${body}${resRow}</tbody></table>
         </div>`;
     }
+    function paintItemsList(q) {
+      const out = [];
+      Object.values(q.results || {}).forEach(grp => {
+        (grp.items || []).forEach(it => { if (it.kind === 'paintTest' && !it.na) out.push(it); });
+      });
+      return out;
+    }
+    // 도장시험 시트 (제조번호 × 두께·밀착성·충돌·부착력)
+    function paintHTML(it, q) {
+      const serials = (it.serials || []).filter(sn => (it.res || {})[sn]);
+      if (!serials.length) return '';
+      const u = it.unit || '㎛';
+      const thr = it.thrV || 60;
+      const head = `<tr><th style="width:18%">확인항목</th><th style="width:22%">기준</th>${serials.map(sn => `<th>${sn}</th>`).join('')}</tr>`;
+      const body = PAINT_ROWS.map(rw => {
+        const crit = rw.type === 'num' ? (thr + u + ' 이상') : rw.crit;
+        return `<tr><td class="item">${rw.lab}</td><td>${crit}</td>${serials.map(sn => {
+          const v = (((it.res || {})[sn] || {}).fields || {})[rw.k];
+          return `<td>${(v === undefined || v === null || v === '') ? '-' : v}</td>`;
+        }).join('')}</tr>`;
+      }).join('');
+      const resRow = `<tr class="res-row"><td class="item" colspan="2">결&nbsp;&nbsp;&nbsp;&nbsp;과</td>${serials.map(sn => `<td>${jbP(((it.res || {})[sn] || {}).jdg || '-')}</td>`).join('')}</tr>`;
+      return `<div class="pgbreak"></div>
+        <div class="gapji-page" style="padding:10mm;background:#fff">
+          <h1>${it.name}</h1>
+          <div style="font-size:10.5px;color:#555;margin-bottom:8px;text-align:center">${it.crit || ''} (두께 단위 ${u})</div>
+          <table class="mx"><thead>${head}</thead><tbody>${body}${resRow}</tbody></table>
+        </div>`;
+    }
     // ===== 최소동작전류·T-C·Sequence 상세표 (별첨/엑셀 공통) =====
     // 항목을 [구분, 세부항목, 제조번호별 값] 행 목록으로 펼친다.
     function paramItemsList(q) {
@@ -3050,6 +3120,7 @@
 
       // 1-2-1) 취부금구 도금두께 실측값 시트
       platingItemsList(q).forEach(it => { out += platingHTML(it, q); });
+      paintItemsList(q).forEach(it => { out += paintHTML(it, q); });
 
       // 1-2-2) 최소동작전류·T-C 특성·Sequence 상세 시트
       paramItemsList(q).forEach(it => { out += paramHTML(it, q); });
@@ -3507,6 +3578,46 @@
             const v = ((it.res[sn] || {}).fields || {})[rw.k];
             xlsStyle(row.getCell(i + 3), { size: 9.5 });
             row.getCell(i + 3).value = (v === undefined || v === null || v === '') ? '-' : v;
+          });
+          rr++;
+        });
+        const resRow = ws.getRow(rr);
+        ws.mergeCells(rr, 1, rr, 2);
+        xlsStyle(resRow.getCell(1), { bold: true, bg: XLS_COLOR.resultBg }); resRow.getCell(1).value = '결    과';
+        serials.forEach((sn, i) => {
+          const v = (it.res[sn] || {}).jdg || '-';
+          xlsStyle(resRow.getCell(i + 3), Object.assign({ bold: true, bg: XLS_COLOR.resultBg }, xlsJudgeStyle(v)));
+          resRow.getCell(i + 3).value = v;
+        });
+      });
+
+      // ====== 3-2-0. 도장시험(두께·밀착성·충돌·부착력) Sheet ======
+      paintItemsList(q).forEach(it => {
+        const serials = pool.filter(sn => it.res && it.res[sn]);
+        if (!serials.length) return;
+        const u = it.unit || '㎛';
+        const thr = it.thrV || 60;
+        const ws = wb.addWorksheet(safeSheetName(it.name, usedSheetNames), {
+          pageSetup: { orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: printMargins }
+        });
+        ws.getColumn(1).width = 16; ws.getColumn(2).width = 22;
+        serials.forEach((_, i) => { ws.getColumn(i + 3).width = 12; });
+        ws.mergeCells(1, 1, 1, serials.length + 2);
+        xlsStyle(ws.getCell(1, 1), { bold: true, size: 13, color: XLS_COLOR.title, border: false });
+        ws.getCell(1, 1).value = it.name + ' [' + (it.crit || '') + ', 두께 단위 ' + u + ']';
+        const hr = ws.getRow(2);
+        ['확인항목', '기준'].forEach((x, i) => { xlsStyle(hr.getCell(i + 1), { bold: true, bg: XLS_COLOR.headerBg }); hr.getCell(i + 1).value = x; });
+        serials.forEach((sn, i) => { xlsStyle(hr.getCell(i + 3), { bold: true, bg: XLS_COLOR.headerBg }); hr.getCell(i + 3).value = sn; });
+        let rr = 3;
+        PAINT_ROWS.forEach(rw => {
+          const row = ws.getRow(rr);
+          xlsStyle(row.getCell(1), { align: 'left', size: 9.5 }); row.getCell(1).value = rw.lab;
+          xlsStyle(row.getCell(2), { size: 9.5 }); row.getCell(2).value = rw.type === 'num' ? (thr + u + ' 이상') : rw.crit;
+          serials.forEach((sn, i) => {
+            const v = ((it.res[sn] || {}).fields || {})[rw.k];
+            const empty = (v === undefined || v === null || v === '');
+            xlsStyle(row.getCell(i + 3), Object.assign({ size: 9.5 }, rw.type === 'jdg' && !empty ? xlsJudgeStyle(v) : {}));
+            row.getCell(i + 3).value = empty ? '-' : (rw.type === 'num' ? Number(v) : v);
           });
           rr++;
         });
