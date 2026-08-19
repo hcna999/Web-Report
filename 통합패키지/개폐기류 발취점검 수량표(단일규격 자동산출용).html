@@ -291,6 +291,10 @@
       "REC": {
         "rule": "전량",
         "type": "full"
+      },
+      "DEMCB": {
+        "rule": "전량",
+        "type": "full"
       }
     }
   },
@@ -336,6 +340,10 @@
       "REC": {
         "rule": "전량",
         "type": "full"
+      },
+      "DEMCB": {
+        "rule": "전량",
+        "type": "full"
       }
     }
   },
@@ -356,6 +364,11 @@
         "rule": "1대/20대",
         "fnKey": "per_20",
         "type": "norm"
+      },
+      "DEMCB": {
+        "rule": "1대/10대",
+        "fnKey": "per_10",
+        "type": "spec"
       }
     }
   },
@@ -407,6 +420,10 @@
       "REC": {
         "rule": "전량",
         "type": "full"
+      },
+      "DEMCB": {
+        "rule": "전량",
+        "type": "full"
       }
     }
   },
@@ -450,6 +467,11 @@
       "REC": {
         "rule": "-",
         "type": "na"
+      },
+      "DEMCB": {
+        "rule": "1대/10대",
+        "fnKey": "per_10",
+        "type": "spec"
       }
     }
   },
@@ -500,6 +522,11 @@
         "rule": "1대/20대",
         "fnKey": "per_20",
         "type": "norm"
+      },
+      "DEMCB": {
+        "rule": "1대/10대",
+        "fnKey": "per_10",
+        "type": "spec"
       }
     }
   },
@@ -585,6 +612,10 @@
       "REC": {
         "rule": "전량",
         "type": "full"
+      },
+      "DEMCB": {
+        "rule": "전량",
+        "type": "full"
       }
     }
   },
@@ -636,6 +667,11 @@
         "fnKey": "per_20",
         "type": "norm",
         "exemptSA": true
+      },
+      "DEMCB": {
+        "rule": "1대/10대",
+        "fnKey": "per_10",
+        "type": "spec"
       }
     }
   },
@@ -687,6 +723,11 @@
         "fnKey": "per_20",
         "type": "norm",
         "exemptSA": true
+      },
+      "DEMCB": {
+        "rule": "1대/10대",
+        "fnKey": "per_10",
+        "type": "spec"
       }
     }
   },
@@ -736,6 +777,10 @@
         "rule": "1대/20대",
         "fnKey": "per_20",
         "type": "norm"
+      },
+      "DEMCB": {
+        "rule": "전량",
+        "type": "full"
       }
     }
   },
@@ -860,6 +905,11 @@
         "rule": "1대/20대",
         "fnKey": "per_20",
         "type": "norm"
+      },
+      "DEMCB": {
+        "rule": "1대/10대",
+        "fnKey": "per_10",
+        "type": "spec"
       }
     }
   },
@@ -908,6 +958,11 @@
       "REC": {
         "rule": "1대/20대",
         "fnKey": "per_20",
+        "type": "spec"
+      },
+      "DEMCB": {
+        "rule": "1대/10대",
+        "fnKey": "per_10",
         "type": "spec"
       }
     }
@@ -990,6 +1045,10 @@
         "rule": "1대/50대",
         "fnKey": "per_50",
         "type": "spec"
+      },
+      "DEMCB": {
+        "rule": "성적서 대체",
+        "type": "cert"
       }
     }
   },
@@ -1013,6 +1072,10 @@
         "rule": "1대/50대",
         "fnKey": "per_50",
         "type": "spec"
+      },
+      "DEMCB": {
+        "rule": "성적서 대체",
+        "type": "cert"
       }
     }
   },
@@ -1035,6 +1098,11 @@
         "type": "spec"
       },
       "AIRPAD": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "spec"
+      },
+      "DEMCB": {
         "rule": "1대/20대",
         "fnKey": "per_20",
         "type": "spec"
@@ -1077,6 +1145,10 @@
         "type": "cert"
       },
       "REC": {
+        "rule": "성적서 대체",
+        "type": "cert"
+      },
+      "DEMCB": {
         "rule": "성적서 대체",
         "type": "cert"
       }
@@ -1158,6 +1230,11 @@
       "REC": {
         "rule": "성적서 대체",
         "type": "cert"
+      },
+      "DEMCB": {
+        "rule": "1대/20대",
+        "fnKey": "per_20",
+        "type": "spec"
       }
     }
   },
@@ -1198,6 +1275,11 @@
         "rule": "1대/10대",
         "fnKey": "per_10",
         "type": "spec"
+      },
+      "DEMCB": {
+        "rule": "1대/10대",
+        "fnKey": "per_10",
+        "type": "spec"
       }
     }
   },
@@ -1233,8 +1315,8 @@
     "rules": {}
   }
 ];
-  const SPECS_KEYS = ["POLE","EMCB","EPOXY","DRYAIR","AIRPAD","DREC","PREC","EFI","REC"];
-  const SPEC_HEADERS = {"POLE":{"name":"ECO 부하개폐기","tag":"가공용"},"EMCB":{"name":"에폭시 다회로차단기","tag":"지중용"},"EPOXY":{"name":"에폭시절연 부하개폐기","tag":"지상용"},"DRYAIR":{"name":"Dry air 절연 부하개폐기","tag":"지중용"},"AIRPAD":{"name":"일반형 공기절연 부하개폐기","tag":"지중/지상용"},"DREC":{"name":"폴리머절연 방향성 R/C","tag":"가공용"},"PREC":{"name":"펄스기능부 폴리머R/C","tag":"가공용"},"EFI":{"name":"에폭시절연 고장구간 차단기","tag":"가공용"},"REC":{"name":"폴리머절연 리클로저","tag":"가공용"}};
+  const SPECS_KEYS = ["POLE","EMCB","DEMCB","EPOXY","DRYAIR","AIRPAD","DREC","PREC","EFI","REC"];
+  const SPEC_HEADERS = {"POLE":{"name":"ECO 부하개폐기","tag":"가공용"},"EMCB":{"name":"에폭시 다회로차단기","tag":"지중용"},"DEMCB":{"name":"에폭시 방향성 다회로차단기","tag":"지중용"},"EPOXY":{"name":"에폭시절연 부하개폐기","tag":"지상용"},"DRYAIR":{"name":"Dry air 절연 부하개폐기","tag":"지중용"},"AIRPAD":{"name":"일반형 공기절연 부하개폐기","tag":"지중/지상용"},"DREC":{"name":"폴리머절연 방향성 R/C","tag":"가공용"},"PREC":{"name":"펄스기능부 폴리머R/C","tag":"가공용"},"EFI":{"name":"에폭시절연 고장구간 차단기","tag":"가공용"},"REC":{"name":"폴리머절연 리클로저","tag":"가공용"}};
   
   let currentSpec = SPECS_KEYS[0]; // Default to POLE
 
