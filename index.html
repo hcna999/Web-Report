@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="ko">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>한국전력공사 전력기자재센터 | 개폐기류 시험검사 통합패키지</title>
+  <meta name="description" content="KEPCO 개폐기류 납품시험검사 성적서 작성 프로그램 및 품질관리 도구 모음">
+  <link rel="icon" href="assets/kepco-logo.png">
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --bg-grad-a: #eef4fc;
+      --bg-grad-b: #f8fafc;
+      --card: #ffffff;
+      --card-border: #dbe4f0;
+      --text: #0f172a;
+      --text-dim: #475569;
+      --text-faint: #7c8ba1;
+      --accent: #1d4ed8;
+      --accent-soft: #eaf1ff;
+      --kepco-red: #ed1c24;
+      --shadow: 0 1px 2px rgba(15, 23, 42, .06), 0 8px 24px rgba(15, 23, 42, .07);
+      --shadow-hover: 0 2px 4px rgba(15, 23, 42, .08), 0 16px 40px rgba(29, 78, 216, .16);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b1220;
+        --bg-grad-a: #0f1a33;
+        --bg-grad-b: #0b1220;
+        --card: #131c2e;
+        --card-border: #23304a;
+        --text: #e8eef8;
+        --text-dim: #a9b6cc;
+        --text-faint: #7183a0;
+        --accent: #60a5fa;
+        --accent-soft: #16233c;
+        --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .35);
+        --shadow-hover: 0 2px 4px rgba(0, 0, 0, .5), 0 16px 40px rgba(96, 165, 250, .18);
+      }
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { margin: 0; padding: 0; }
+
+    body {
+      font-family: "Malgun Gothic", "맑은 고딕", "Pretendard", "나눔고딕", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      background-image: linear-gradient(170deg, var(--bg-grad-a) 0%, var(--bg-grad-b) 46%);
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .wrap {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 40px 20px 64px;
+    }
+
+    /* ===== 헤더 ===== */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding-bottom: 22px;
+      border-bottom: 2px solid var(--accent);
+      margin-bottom: 10px;
+    }
+
+    header img {
+      width: 54px;
+      height: auto;
+      flex-shrink: 0;
+    }
+
+    .brand-text h1 {
+      margin: 0;
+      font-size: clamp(17px, 3.4vw, 21px);
+      font-weight: 800;
+      letter-spacing: -.3px;
+    }
+
+    .brand-text p {
+      margin: 3px 0 0;
+      font-size: clamp(12px, 2.4vw, 13.5px);
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+
+    .lead {
+      margin: 26px 0 30px;
+      font-size: 14.5px;
+      color: var(--text-dim);
+      max-width: 64ch;
+    }
+
+    /* ===== 카드 그리드 ===== */
+    .grid {
+      display: grid;
+      /* min(290px,100%)로 감싸 좁은 화면에서 카드가 뷰포트를 넘겨 가로 스크롤이 생기는 것을 방지 */
+      grid-template-columns: repeat(auto-fit, minmax(min(290px, 100%), 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      display: flex;
+      flex-direction: column;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 22px 22px 20px;
+      box-shadow: var(--shadow);
+      text-decoration: none;
+      color: inherit;
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--kepco-red), var(--accent));
+      opacity: 0;
+      transition: opacity .18s ease;
+    }
+
+    .card:hover,
+    .card:focus-visible {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-hover);
+      border-color: var(--accent);
+      outline: none;
+    }
+
+    .card:hover::before,
+    .card:focus-visible::before { opacity: 1; }
+
+    .card .tag {
+      display: inline-block;
+      align-self: flex-start;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .3px;
+      color: var(--accent);
+      background: var(--accent-soft);
+      border-radius: 999px;
+      padding: 3px 10px;
+      margin-bottom: 12px;
+    }
+
+    .card h2 {
+      margin: 0 0 8px;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -.2px;
+    }
+
+    .card p {
+      margin: 0;
+      font-size: 13px;
+      color: var(--text-dim);
+      flex-grow: 1;
+    }
+
+    .card .go {
+      margin-top: 16px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .card .go::after {
+      content: "→";
+      transition: transform .18s ease;
+    }
+
+    .card:hover .go::after { transform: translateX(3px); }
+
+    /* ===== 푸터 ===== */
+    footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid var(--card-border);
+      font-size: 12px;
+      color: var(--text-faint);
+    }
+
+    footer p { margin: 4px 0; }
+
+    footer a { color: var(--accent); }
+
+    .notice {
+      margin-top: 26px;
+      background: var(--accent-soft);
+      border: 1px solid var(--card-border);
+      border-left: 3px solid var(--accent);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 12.5px;
+      color: var(--text-dim);
+    }
+
+    .notice strong { color: var(--text); }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <img src="assets/kepco-logo.png" alt="한국전력공사 심볼마크">
+      <div class="brand-text">
+        <h1>한국전력공사 전력기자재센터</h1>
+        <p>개폐기류 납품시험검사 통합패키지</p>
+      </div>
+    </header>
+
+    <p class="lead">
+      개폐기류 9개 품목의 납품시험검사 성적서 작성과 품질관리를 지원하는 웹 도구 모음입니다.
+      설치 없이 아래 항목을 클릭해 브라우저에서 바로 사용하실 수 있습니다.
+    </p>
+
+    <div class="grid">
+      <a class="card" href="%ED%86%B5%ED%95%A9%ED%8C%A8%ED%82%A4%EC%A7%80/%EA%B0%9C%ED%8F%90%EA%B8%B0%EB%A5%98%20%EC%84%B1%EC%A0%81%EC%84%9C%20%EC%9E%91%EC%84%B1%ED%94%84%EB%A1%9C%EA%B7%B8%EB%9E%A8.html">
+        <span class="tag">메인 프로그램</span>
+        <h2>성적서 작성 프로그램</h2>
+        <p>
+          품목·규격을 선택해 발취부터 시험결과 입력, 종합판정까지 단계별로 진행하고
+          완성된 성적서를 PDF·XLSX로 저장합니다. 작성 내용은 XML로 저장·불러오기가 가능합니다.
+        </p>
+        <span class="go">열기</span>
+      </a>
+
+      <a class="card" href="%ED%86%B5%ED%95%A9%ED%8C%A8%ED%82%A4%EC%A7%80/%EA%B0%9C%ED%8F%90%EA%B8%B0%EB%A5%98%20%ED%92%88%EC%A7%88%EA%B4%80%EB%A6%AC%20%EB%8C%80%EC%8B%9C%EB%B3%B4%EB%93%9C.html">
+        <span class="tag">분석</span>
+        <h2>품질관리 대시보드</h2>
+        <p>
+          저장된 성적서(XML) 파일을 한꺼번에 불러와 업체별·규격별 합격률과
+          불합격 항목 추이를 집계하여 보여줍니다.
+        </p>
+        <span class="go">열기</span>
+      </a>
+
+      <a class="card" href="%ED%86%B5%ED%95%A9%ED%8C%A8%ED%82%A4%EC%A7%80/%EA%B0%9C%ED%8F%90%EA%B8%B0%EB%A5%98%20%EB%B0%9C%EC%B7%A8%EC%A0%90%EA%B2%80%20%EC%88%98%EB%9F%89%ED%91%9C%28%EB%8B%A8%EC%9D%BC%EA%B7%9C%EA%B2%A9%20%EC%9E%90%EB%8F%99%EC%82%B0%EC%B6%9C%EC%9A%A9%29.html">
+        <span class="tag">자동 산출</span>
+        <h2>발취점검 수량표 <small>(단일규격)</small></h2>
+        <p>
+          규격 하나를 선택하고 로트수량·품질등급을 입력하면
+          항목별 발취수량을 자동으로 계산해 줍니다.
+        </p>
+        <span class="go">열기</span>
+      </a>
+
+      <a class="card" href="%ED%86%B5%ED%95%A9%ED%8C%A8%ED%82%A4%EC%A7%80/%EA%B0%9C%ED%8F%90%EA%B8%B0%EB%A5%98%20%EB%B0%9C%EC%B7%A8%EC%A0%90%EA%B2%80%20%EC%88%98%EB%9F%89%ED%91%9C%28%EC%B6%9C%EB%A0%A5%EC%9A%A9%29.html">
+        <span class="tag">인쇄용</span>
+        <h2>발취점검 수량표 <small>(출력용)</small></h2>
+        <p>
+          9개 규격 전체의 시험항목별 발취수량을 한 장에 정리한 대조표입니다.
+          A3 가로 인쇄에 맞춰 구성되어 있습니다.
+        </p>
+        <span class="go">열기</span>
+      </a>
+    </div>
+
+    <div class="notice">
+      <strong>사용 안내</strong> · 모든 도구는 브라우저 안에서만 동작하며 입력하신 시험 데이터는 서버로 전송되지 않습니다.
+      작성 중인 내용은 저장(XML) 기능으로 직접 보관해 주세요.
+      최신 Chrome 또는 Edge 브라우저 사용을 권장합니다.
+    </div>
+
+    <footer>
+      <p>시험근거 : 개폐기류 구매규격(GS/ES) 및 배전 시험검사 업무절차서</p>
+      <p>
+        소스 저장소 :
+        <a href="https://github.com/hcna999/Web-Report">github.com/hcna999/Web-Report</a>
+      </p>
+    </footer>
+  </div>
+</body>
+
+</html>
