@@ -13,3 +13,12 @@ test/
 .DS_Store
 Thumbs.db
 *.tmp
+
+# Python 가상환경 (발표자료 PPT 변환용 — 아래 requirements로 재생성 가능)
+.venv/
+
+# 발표자료 — 로컬로만 관리 (커밋하지 않음)
+개발중/발표자료.html
+개발중/발표자료.pptx
+개발중/html_to_pptx.py
+개발중/requirements-pptx.txt
