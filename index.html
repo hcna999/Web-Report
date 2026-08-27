@@ -12,17 +12,17 @@
     사이트 루트 접속 시 '성적서 작성 프로그램'으로 바로 이동시킨다.
 
     앱 본체를 루트로 복사하지 않고 리다이렉트를 쓰는 이유:
-    본체 파일은 `통합패키지/` 안에만 두고(배포 zip도 그 폴더를 기준으로 압축) 원본을 1곳으로 유지하기 위함.
-    루트에 사본을 두면 수정할 때마다 통합패키지/·zip·루트 3곳을 손으로 맞춰야 해서 누락 위험이 큼.
+    본체 파일은 `배포/` 안에만 두고(배포 zip도 그 폴더를 기준으로 압축) 원본을 1곳으로 유지하기 위함.
+    루트에 사본을 두면 수정할 때마다 배포/·zip·루트 3곳을 손으로 맞춰야 해서 누락 위험이 큼.
 
-    이동 대상 경로(디코딩): 통합패키지/개폐기류 성적서 작성프로그램.html
+    이동 대상 경로(디코딩): 배포/개폐기류 성적서 작성프로그램.html
     ※ 앱 파일명이나 폴더명을 바꾸면 아래 3곳(meta refresh / script / 폴백 <a>)의 경로도 함께 고쳐야 함.
   -->
   <meta http-equiv="refresh"
-    content="0; url=%ED%86%B5%ED%95%A9%ED%8C%A8%ED%82%A4%EC%A7%80/%EA%B0%9C%ED%8F%90%EA%B8%B0%EB%A5%98%20%EC%84%B1%EC%A0%81%EC%84%9C%20%EC%9E%91%EC%84%B1%ED%94%84%EB%A1%9C%EA%B7%B8%EB%9E%A8.html">
+    content="0; url=%EB%B0%B0%ED%8F%AC/%EA%B0%9C%ED%8F%90%EA%B8%B0%EB%A5%98%20%EC%84%B1%EC%A0%81%EC%84%9C%20%EC%9E%91%EC%84%B1%ED%94%84%EB%A1%9C%EA%B7%B8%EB%9E%A8.html">
   <script>
     // history를 남기지 않도록 replace 사용(뒤로가기 시 리다이렉트 루프 방지)
-    location.replace("%ED%86%B5%ED%95%A9%ED%8C%A8%ED%82%A4%EC%A7%80/%EA%B0%9C%ED%8F%90%EA%B8%B0%EB%A5%98%20%EC%84%B1%EC%A0%81%EC%84%9C%20%EC%9E%91%EC%84%B1%ED%94%84%EB%A1%9C%EA%B7%B8%EB%9E%A8.html");
+    location.replace("%EB%B0%B0%ED%8F%AC/%EA%B0%9C%ED%8F%90%EA%B8%B0%EB%A5%98%20%EC%84%B1%EC%A0%81%EC%84%9C%20%EC%9E%91%EC%84%B1%ED%94%84%EB%A1%9C%EA%B7%B8%EB%9E%A8.html");
   </script>
 
   <style>
@@ -63,7 +63,7 @@
     <p>성적서 작성 프로그램으로 이동 중입니다…</p>
     <p>
       <a
-        href="%ED%86%B5%ED%95%A9%ED%8C%A8%ED%82%A4%EC%A7%80/%EA%B0%9C%ED%8F%90%EA%B8%B0%EB%A5%98%20%EC%84%B1%EC%A0%81%EC%84%9C%20%EC%9E%91%EC%84%B1%ED%94%84%EB%A1%9C%EA%B7%B8%EB%9E%A8.html">자동으로
+        href="%EB%B0%B0%ED%8F%AC/%EA%B0%9C%ED%8F%90%EA%B8%B0%EB%A5%98%20%EC%84%B1%EC%A0%81%EC%84%9C%20%EC%9E%91%EC%84%B1%ED%94%84%EB%A1%9C%EA%B7%B8%EB%9E%A8.html">자동으로
         넘어가지 않으면 여기를 클릭하세요</a>
     </p>
   </div>
