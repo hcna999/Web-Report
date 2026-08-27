@@ -6,8 +6,8 @@
 배포 폴더의 HTML을 고쳤으면 반드시 이 스크립트를 돌린다.
 
 사용법
-    python 개발/배포zip_만들기.py
-    python 개발/배포zip_만들기.py --확인      # 다시 만들지 않고 최신인지 검사만
+    python 03_개발/배포zip_만들기.py
+    python 03_개발/배포zip_만들기.py --확인      # 다시 만들지 않고 최신인지 검사만
 """
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-DIST = ROOT / "배포"
+DIST = ROOT / "01_배포"
 ZIP = DIST / "개폐기류_시험검사_통합패키지.zip"
 
 # zip에 넣을 파일. 테스트 데이터는 검사자에게 갈 필요가 없으므로 넣지 않는다.
