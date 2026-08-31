@@ -24,3 +24,7 @@ test/
 .DS_Store
 Thumbs.db
 *.tmp
+
+# 앱이 실행 중 내려받는 산출물 (성적서 PDF·XLSX)
+개폐기류_시험성적서_*.pdf
+개폐기류_시험성적서_*.xlsx
