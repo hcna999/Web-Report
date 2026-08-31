@@ -316,7 +316,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
           <article class="card">
             <div class="card-head">
               <h4><i class="fa-solid fa-ranking-star"></i> 자동 인사이트</h4>
-              <button type="button" class="graph-help-btn" data-help="현재 적재된 데이터의 위험점수, 불합격률, 품질등급(C/D) 및 상연결 접속재 두께 취약점을 바탕으로 자동 생성된 유용한 진단 문장입니다.">?</button>
+              <button type="button" class="graph-help-btn" data-help="AI가 요약하는 것이 아니라, 지금 화면에 걸린 필터 범위의 로트를 아래 4개 규칙에 차례로 대입해 만든 문장입니다. ① 업체별로 평균 위험점수를 구해 가장 높은 업체 1곳의 평균 위험점수와 고위험(60점 이상) 로트 비율을 씁니다. ② 품목별 불합격률을 구해 전체 평균보다 높은 품목이 있으면 그 품목을 지목합니다. ③ 품질등급 C·D 로트 건수를 세어 발취수량 강화 대상(D 3배·C 2배)임을 알립니다. ④ 상연결 접속재 최소두께가 14mm 미만인 로트 건수를 셉니다(기준 12mm 대비 여유 2mm 미만). 조건에 맞는 규칙만 문장이 되므로 데이터에 따라 문장 수가 달라지고, 필터를 바꾸면 그 범위로 다시 계산합니다.">?</button>
             </div>
             <div class="card-body"><ul class="insight-list" id="insights"></ul></div>
           </article>
@@ -744,6 +744,16 @@ function qirXmlToJsObject(root) {
               itemObj.phase[ph] = Array.from(phEl.children).map(c => c.textContent.trim());
             }
           });
+        } else if (resEl) {
+          // 성적서 프로그램은 상연결 접속재 9칸을 <Res><SNRes><Fields><Field name="pc_A1">
+          // 형태로 저장한다. <Phase> 서식만 읽으면 실측값이 통째로 누락되어
+          // 위험점수(12mm 미만 +30 / 14mm 미만 +15)와 자동 인사이트가 동작하지 않는다.
+          const phase = { A: [], B: [], C: [] };
+          Array.from(resEl.querySelectorAll("Fields > Field")).forEach(f => {
+            const m = /^pc_([ABC])(\d+)$/.exec(f.getAttribute("name") || "");
+            if (m) phase[m[1]].push(f.textContent.trim());
+          });
+          if (phase.A.length || phase.B.length || phase.C.length) itemObj.phase = phase;
         }
 
         items.push(itemObj);
