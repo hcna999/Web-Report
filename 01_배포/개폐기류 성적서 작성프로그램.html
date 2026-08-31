@@ -1609,6 +1609,10 @@
         </div>
         <table class="tbl"><thead><tr><th style="width:34%">발취 대상 항목</th><th style="width:12%">발취수량</th><th>발취 제조번호 선택</th></tr></thead>
           <tbody>${rows||'<tr><td colspan=3 class="muted">발취 대상 항목이 없습니다. 수량을 입력하세요.</td></tr>'}</tbody></table>
+        <div style="margin-top:12px;max-width:360px">
+          ${signPadHTML('inspector','발취 입회자 서명',(STATE.__base||{}).insp,88)}
+          <div class="muted" style="font-size:11px;margin-top:2px">발취 현장에서 입회자가 직접 서명합니다. 서명은 갑지·을지의 <b>시험입회자</b> 칸에 인쇄됩니다.</div>
+        </div>
         ${navRow()}
       </div>`;
     }
@@ -1630,6 +1634,7 @@
       host.querySelectorAll('[data-del]').forEach(x=>x.onclick=()=>{ const k=x.dataset.del,i=Number(x.dataset.i); STATE[k].serials.splice(i,1); renderStep(); });
       host.querySelectorAll('select[data-sn], input[data-sn]').forEach(inp=>inp.addEventListener('change',()=>{ const k=inp.dataset.sn,i=Number(inp.dataset.i); STATE[k].serials[i]=inp.value.trim(); updateSummary(); buildStepper(); setupKeyboardAccess(); }));
 
+      bindSignPads();
       $('sampleTester')?.addEventListener('input', e => {
         STATE.__base = STATE.__base || {};
         STATE.__base.test = e.target.value;
@@ -2399,11 +2404,11 @@
       return '합격';
     }
     // ===== 서명 (검사자·시험자) =====
-    function signPadHTML(role,label,name){
+    function signPadHTML(role,label,name,h){
       const cur=(STATE.__sign||{})[role]||'';
       return `<div class="field">
         <label>${label}${name?' · '+escapeHtml(name):''}</label>
-        <div style="position:relative;border:1px dashed var(--line);border-radius:8px;background:#fff;height:110px">
+        <div style="position:relative;border:1px dashed var(--line);border-radius:8px;background:#fff;height:${h||110}px">
           <canvas data-sign="${role}" style="width:100%;height:100%;touch-action:none;cursor:crosshair"></canvas>
           ${cur?`<img data-signimg="${role}" src="${cur}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none">`:''}
         </div>
@@ -3441,8 +3446,8 @@
         ['검사로트번호', q.lot_no || '-', null, null],
         ['품    명', q.material || '-', '제작회사', q.maker || '-'],
         ['규    격', q.variant || '-', '시험년월일', dateStr || '-'],
-        ['수    량', (q.qty || 0) + ' 대', '시  험  자', (q.attendants || {}).tester || '-'],
-        ['제조번호', serialRange(pool), '시험입회자', (q.attendants || {}).inspector || '-']
+        ['수    량', (q.qty || 0) + ' 대', '시  험  자', ((q.attendants || {}).tester || '-') + '    (서명)'],
+        ['제조번호', serialRange(pool), '시험입회자', ((q.attendants || {}).inspector || '-') + '    (서명)']
       ];
       let r = 2;
       metaRowsG.forEach((row, idx) => {
@@ -3461,6 +3466,16 @@
           { min: 20 });
         r++;
       });
+
+      // 서명 이미지를 시험자·시험입회자 칸의 '(서명)' 위에 겹쳐 넣는다(HTML 갑지와 동일 표기)
+      (function(){
+        const sg = q.signatures || {};
+        [[5, sg.tester], [6, sg.inspector]].forEach(([rowNo, src]) => {
+          if (!src) return;
+          wsGapji.getRow(rowNo).height = Math.max(wsGapji.getRow(rowNo).height || 20, 30);
+          xlsAddImage(wb, wsGapji, src, { tl: { col: 3.45, row: rowNo - 0.92 }, ext: { width: 72, height: 26 } });
+        });
+      })();
 
       r++; // 여백용 빈 행 (테두리 없음)
 
