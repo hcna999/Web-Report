@@ -2410,7 +2410,6 @@
         <label>${label}${name?' · '+escapeHtml(name):''}</label>
         <div style="position:relative;border:1px dashed var(--line);border-radius:8px;background:#fff;height:${h||110}px">
           <canvas data-sign="${role}" style="width:100%;height:100%;touch-action:none;cursor:crosshair"></canvas>
-          ${cur?`<img data-signimg="${role}" src="${cur}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none">`:''}
         </div>
         <div class="row" style="gap:6px;margin-top:4px">
           <button class="btn mini secondary" data-signclear="${role}">지우기</button>
@@ -2428,16 +2427,22 @@
         const ctx=cv.getContext('2d');
         ctx.lineWidth=2; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.strokeStyle='#111';
         // 기존 서명이 있으면 캔버스에 복원해 이어 그릴 수 있게 함
+        // 저장된 서명은 비율을 유지해(contain) 가운데 그린다.
+        // 늘려 그리면 발취 화면(낮은 패드)과 최종 확인 화면(높은 패드)의 모양이 달라져
+        // 서명이 두 개로 겹쳐 보였다.
         const prev=(STATE.__sign||{})[role];
-        if(prev){ const img=new Image(); img.onload=()=>ctx.drawImage(img,0,0,cv.width,cv.height); img.src=prev; }
+        if(prev){ const img=new Image();
+          img.onload=()=>{ const s=Math.min(cv.width/img.width, cv.height/img.height);
+            const w=img.width*s, h=img.height*s;
+            ctx.drawImage(img,(cv.width-w)/2,(cv.height-h)/2,w,h); };
+          img.src=prev; }
         let drawing=false, dirty=false;
         const pos=e=>{ const r=cv.getBoundingClientRect(); return { x:e.clientX-r.left, y:e.clientY-r.top }; };
         const start=e=>{ drawing=true; const p=pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); cv.setPointerCapture?.(e.pointerId); e.preventDefault(); };
         const move=e=>{ if(!drawing) return; const p=pos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); dirty=true; e.preventDefault(); };
         const end=()=>{ if(!drawing) return; drawing=false;
           if(dirty){ STATE.__sign=STATE.__sign||{}; STATE.__sign[role]=cv.toDataURL('image/png');
-            const s=host.querySelector(`[data-signstate="${role}"]`); if(s) s.textContent='서명 완료';
-            const ov=host.querySelector(`img[data-signimg="${role}"]`); if(ov) ov.remove(); } };
+            const s=host.querySelector(`[data-signstate="${role}"]`); if(s) s.textContent='서명 완료'; } };
         cv.addEventListener('pointerdown',start);
         cv.addEventListener('pointermove',move);
         cv.addEventListener('pointerup',end);
