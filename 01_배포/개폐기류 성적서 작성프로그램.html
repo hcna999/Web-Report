@@ -3457,7 +3457,7 @@
         pageSetup: { orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: printMargins }
       });
       // 시험항목명이 길어 잘리는 일이 잦아 항목 열을 넓히고 결과 열을 줄임
-      const GAPJI_W = [38, 13, 38, 13];
+      const GAPJI_W = [38, 13, 33, 18];   // D열은 서명칸 — 서명 이미지가 들어가도록 넓게
       wsGapji.columns = GAPJI_W.map(w => ({ width: w }));
 
       wsGapji.mergeCells('A1:D1');
@@ -3471,8 +3471,11 @@
         ['검사로트번호', q.lot_no || '-', null, null],
         ['품    명', q.material || '-', '제작회사', q.maker || '-'],
         ['규    격', q.variant || '-', '시험년월일', dateStr || '-'],
-        ['수    량', (q.qty || 0) + ' 대', '시  험  자', ((q.attendants || {}).tester || '-') + '    (서명)'],
-        ['제조번호', serialRange(pool), '시험입회자', ((q.attendants || {}).inspector || '-') + '    (서명)']
+        // 서명 이미지를 '(서명)' 위에 정확히 얹으려면 '(서명)'이 독립된 셀이어야 한다.
+        // (ExcelJS는 이미지 앵커의 소수 좌표를 열 폭(문자수)만큼의 픽셀까지만 이동시켜,
+        //  '홍길동    (서명)'처럼 한 셀에 같이 두면 서명이 이름 쪽으로 붙어버린다)
+        ['수    량', (q.qty || 0) + ' 대', '시  험  자    ' + ((q.attendants || {}).tester || '-'), '(서명)'],
+        ['제조번호', serialRange(pool), '시험입회자    ' + ((q.attendants || {}).inspector || '-'), '(서명)']
       ];
       let r = 2;
       metaRowsG.forEach((row, idx) => {
@@ -3481,8 +3484,11 @@
         xlsStyle(rr.getCell(1), { bold: true, bg: XLS_COLOR.labelBg }); rr.getCell(1).value = row[0];
         xlsStyle(rr.getCell(2), { align: 'left' }); rr.getCell(2).value = row[1];
         if (idx !== 0) {
-          xlsStyle(rr.getCell(3), { bold: true, bg: XLS_COLOR.labelBg }); rr.getCell(3).value = row[2];
+          const signRow = (idx === 3 || idx === 4);          // 시험자·시험입회자 행
+          xlsStyle(rr.getCell(3), Object.assign({ bg: XLS_COLOR.labelBg }, signRow ? { align: 'left' } : { bold: true }));
+          rr.getCell(3).value = row[2];
           xlsStyle(rr.getCell(4), { align: 'left' }); rr.getCell(4).value = row[3];
+          if (signRow) rr.getCell(3).font = Object.assign({}, rr.getCell(3).font, { bold: true });
         }
         // 품명·규격은 길어서 잘리기 쉬움 (1행은 B:D 병합이라 폭을 합산)
         xlsAutoHeight(rr, idx === 0
@@ -3492,13 +3498,15 @@
         r++;
       });
 
-      // 서명 이미지를 시험자·시험입회자 칸의 '(서명)' 위에 겹쳐 넣는다(HTML 갑지와 동일 표기)
+      // 서명 이미지를 D열의 '(서명)' 위에 겹쳐 넣는다(HTML 갑지와 동일 표기).
+      // ExcelJS는 소수 앵커를 '열 폭(문자수)'만큼의 픽셀까지만 이동시키므로 D열 안쪽에서만 미세조정이 가능하다.
       (function(){
         const sg = q.signatures || {};
         [[5, sg.tester], [6, sg.inspector]].forEach(([rowNo, src]) => {
           if (!src) return;
           wsGapji.getRow(rowNo).height = Math.max(wsGapji.getRow(rowNo).height || 20, 30);
-          xlsAddImage(wb, wsGapji, src, { tl: { col: 3.45, row: rowNo - 0.92 }, ext: { width: 72, height: 26 } });
+          xlsAddImage(wb, wsGapji, src,
+            { tl: { col: 3 + 2 / GAPJI_W[3], row: (rowNo - 1) + 0.15 }, ext: { width: 96, height: 26 } });
         });
       })();
 
