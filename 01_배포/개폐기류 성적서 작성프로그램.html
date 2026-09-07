@@ -568,7 +568,7 @@
           { key:'func', title:'동작·기능시험', items:[
             { key:'novolt', name:'무전압 개폐시험', ref:'7.3.6', crit:'10회 이상없음', full:true },
             { key:'mintrip', name:'최소 Trip 전류시험', ref:'7.3.13', crit:'정정치 ±10%(90% 부동작 확인)', unit:'A', minTrip:true, noOp:true, sampFn:S.per(50) },
-            { key:'tc', name:'T-C 특성시험', ref:'7.3.13', crit:'단락요소·지락요소 이상없음', unit:'ms', tcTest:true, simpleJdg:true, tcTol:'efi', sampFn:S.per(50) },
+            { key:'tc', name:'T-C 특성시험', ref:'7.3.13', crit:'150%,300%,600%,1000% 단락요소·지락요소 이상없음', unit:'ms', tcTest:true, simpleJdg:true, tcTol:'efi', sampFn:S.per(50) },
             { key:'opfunc', name:'동작기능시험', ref:'7.3.14', crit:'6항(자동형 6.1)', sampFn:S.per(50) },
             { key:'opchk', name:'조작확인시험', ref:'7.3.15', crit:'이상없음', sampFn:S.per(50) },
             { key:'sys', name:'시스템연결 동작시험', ref:'7.3.28', crit:'H/W 포인트', autoOnly:true, sampFn:S.per(50) },
@@ -840,7 +840,7 @@
           ]},
           { key:'func', title:'동작·특성시험', items:[
             { key:'mintrip', name:'최소동작전류시험', ref:'IEC 62271-111 6.105', crit:'정정치 ±10%(검수 1상)', unit:'A', minTrip:true, sampFn:S.per(20) },
-            { key:'tc', name:'T-C 특성시험', ref:'IEC 62271-111 6.108', crit:'단락요소·지락요소 이상없음', unit:'ms', tcTest:true, simpleJdg:true, tcTol:'rc', sampFn:S.per(20) },
+            { key:'tc', name:'T-C 특성시험', ref:'IEC 62271-111 6.108', crit:'150%,300%,600%,1000% 단락요소·지락요소 이상없음', unit:'ms', tcTest:true, simpleJdg:true, tcTol:'rc', sampFn:S.per(20) },
             { key:'seqtest', name:'Sequence Test', ref:'6.1.1항', crit:'1000% 단락·지락요소, 재폐로·복귀시간 이상없음', unit:'ms', seqTest:true, simpleJdg:true, tcTol:'rc', sampFn:S.per(20) },
             { key:'novolt', name:'무전압 개폐시험', ref:'IEC 62271-111 6.109', crit:'검수 10회 연속 이상없음', full:true },
           ]},
@@ -876,7 +876,7 @@
           ]},
           { key:'func', title:'동작·특성시험', items:[
             { key:'mintrip', name:'최소동작전류시험', ref:'7.3.13', crit:'정정치 ±10%(검수 1상)', unit:'A', minTrip:true, sampFn:S.per(20) },
-            { key:'tc', name:'T-C 특성시험', ref:'7.3.16', crit:'단락요소·지락요소 이상없음', unit:'ms', tcTest:true, simpleJdg:true, tcTol:'rc', sampFn:S.per(20) },
+            { key:'tc', name:'T-C 특성시험', ref:'7.3.16', crit:'150%,300%,600%,1000% 단락요소·지락요소 이상없음', unit:'ms', tcTest:true, simpleJdg:true, tcTol:'rc', sampFn:S.per(20) },
             { key:'seqtest', name:'Sequence Test', ref:'7.3.28', crit:'1000% 단락·지락요소, 재폐로·복귀시간 이상없음', unit:'ms', seqTest:true, simpleJdg:true, tcTol:'rc', sampFn:S.per(20) },
             { key:'novolt', name:'무전압 개폐시험', ref:'7.3.17', crit:'검수 10회 연속 이상없음', full:true },
             { key:'pulse_novolt', name:'펄스무전압 개폐시험', ref:'7.3.27.2', crit:'O-Pulse(A,B,C)·검수 3회(주8)', measureManual:true, sampFn:S.per(20) },
@@ -915,7 +915,7 @@
           ]},
           { key:'func', title:'동작·특성시험', items:[
             { key:'mintrip', name:'최소동작전류시험', ref:'7.3.11', crit:'정정치 ±10%(검수 1상)', unit:'A', minTrip:true, sampFn:S.per(20) },
-            { key:'tc', name:'T-C 특성시험', ref:'7.3.13', crit:'단락요소·지락요소 이상없음', unit:'ms', tcTest:true, simpleJdg:true, tcTol:'rc', sampFn:S.per(20) },
+            { key:'tc', name:'T-C 특성시험', ref:'7.3.13', crit:'150%,300%,600%,1000% 단락요소·지락요소 이상없음', unit:'ms', tcTest:true, simpleJdg:true, tcTol:'rc', sampFn:S.per(20) },
             { key:'seqtest', name:'Sequence Test', ref:'7.3.22', crit:'1000% 단락·지락요소, 재폐로·복귀시간 이상없음', unit:'ms', seqTest:true, simpleJdg:true, tcTol:'rc', sampFn:S.per(20) },
             { key:'novolt', name:'무전압 개폐시험', ref:'7.3.14', crit:'검수 10회 연속 이상없음', full:true },
           ]},
