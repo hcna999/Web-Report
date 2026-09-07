@@ -894,7 +894,7 @@
           ]},
           { key:'insul', title:'절연·저항시험', items:[
             { key:'ac_wv', name:'상용주파 내전압시험', ref:'7.3.2.1', crit:'건조 60kV·1분(검수 주수생략)', full:true },
-            { key:'pd', name:'부분방전시험', ref:'7.3.12', crit:'20pC 이하(상간28.4/대지16.4kV)', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, sampFn:S.all },
+            { key:'pd', name:'부분방전시험', ref:'7.3.12', crit:'20pC 이하(상간28.4/대지16.4kV)', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, fullSample:true },
             { key:'mr', name:'주회로 저항측정', ref:'7.3.3', crit:'상별 측정(µΩ)', resistance:'overhead', sampFn:S.per(20) },
             { key:'ir', name:'절연저항 측정(제어회로)', ref:'7.3.15', crit:'ES-5925-0001 5.6항(제어회로)', full:true },
           ]},
@@ -1004,6 +1004,7 @@
     function isExempt(it){ return (CUR.grade==='S'||CUR.grade==='A') && it.exemptSA===true; }
     function baseQty(){ return Number((STATE.__base||{}).qty)||0; }
     function sampCount(it){
+      if(isFullSample(it)) return baseQty();
       if(!it.sampFn) return 0;
       let n=it.sampFn(baseQty());
       if(!it.sampNote){ n=Math.max(1,Math.ceil(n*(GRADE_MULT[CUR.grade]||1))); }
@@ -1029,7 +1030,9 @@
       return P*31536000*(meas-atm)*Vv*pct/den*100;
     }
     // 발취 대상 여부(전수·주기제출 제외)
-    function isSampled(it){ return !it.full && !it.cert; }
+    function isSampled(it){ return !it.full && !it.cert && !it.fullSample; }
+    // 전수 발취 항목: 측정은 제조번호별로 하되 대상이 전량이라 발취 화면에서 고르지 않고 자동 배정한다.
+    function isFullSample(it){ return !!it.fullSample && !it.full && !it.cert; }
     // ===== 상연결 접속재(phaseConn) — 제조번호별 A·B·C상 각 3개소(9칸) 절연층 두께 실측 =====
     // 규격 주13) 절연체 최소두께를 1상당 3개소 측정. 발취 대상이므로 제조번호별로 입력받는다.
     // 9칸 값은 res[sn].fields(pc_A1…pc_C3)에 저장하고, 최소값을 res[sn].val로 넣어 기존 thr 자동판정에 연결.
@@ -1563,9 +1566,21 @@
 
     // ===== Step1: 발취(샘플링) =====
     function allSampledItems(){ const out=[]; CUR.spec.steps.forEach(sd=>visibleItems(sd).filter(it=>isSampled(it) && !isExempt(it) && !isNA(it)).forEach(it=>out.push(it))); return out; }
-    function allFullItems(){ const out=[]; CUR.spec.steps.forEach(sd=>visibleItems(sd).filter(it=>it.full && !isNA(it)).forEach(it=>out.push(it))); return out; }
+    function allFullItems(){ const out=[]; CUR.spec.steps.forEach(sd=>visibleItems(sd).filter(it=>(it.full||isFullSample(it)) && !isNA(it) && !isExempt(it)).forEach(it=>out.push(it))); return out; }
+    // 전수 발취 항목의 제조번호는 전량으로 자동 배정한다(발취 화면에서 선택하지 않음)
+    function syncFullSampleSerials(){
+      const all=pool();
+      CUR.spec.steps.forEach(sd=>visibleItems(sd).forEach(it=>{
+        if(!isFullSample(it) || isNA(it) || isExempt(it)) return;
+        const st=STATE[it.key]=STATE[it.key]||{};
+        st.serials=all.slice(); st.res=st.res||{};
+        all.forEach(sn=>{ st.res[sn]=st.res[sn]||{fields:{}}; });
+        Object.keys(st.res).forEach(sn=>{ if(!all.includes(sn)) delete st.res[sn]; });
+      }));
+    }
     function renderSampling(){
       const q=baseQty();
+      syncFullSampleSerials();
       const fulls=allFullItems(), samps=allSampledItems();
       const fullBlock = fulls.length? `<div class="full-block"><h4>■ 전수검사 항목 (전량 · 발취 불필요)</h4>
         ${fulls.map(it=>`<div>· ${it.name} <span class="muted">(${it.ref})</span> — <b>전량 ${q||'-'}대</b></div>`).join('')}</div>`:'';
@@ -2006,11 +2021,12 @@
       });
     }
     function renderTestStep(sd){
+      syncFullSampleSerials();
       ensureDefaults(sd);
       const items=orderedItems(sd);
       const rows=items.map(it=>{
         const exempt=isExempt(it); const na=isNA(it);
-        const samp = na?'해당없음':(it.full?'전량':(it.phaseConn?'A·B·C상<br>각 3개소':(it.cert?(it.cycle||'-'):((it.sampNote||sampCount(it)+'대')+(it.sampAdd?'<br><span class="muted" style="font-size:10px">'+it.sampAdd+'</span>':'')))));
+        const samp = na?'해당없음':((it.full||isFullSample(it))?'전량':(it.phaseConn?'A·B·C상<br>각 3개소':(it.cert?(it.cycle||'-'):((it.sampNote||sampCount(it)+'대')+(it.sampAdd?'<br><span class="muted" style="font-size:10px">'+it.sampAdd+'</span>':'')))));
         const result = na? `<span class="muted" style="font-size:12px">자동형 전용 · 해당없음</span>` : (exempt? `<span class="tag-exempt">완화 면제</span>` : itemResultBlock(it));
         return `<tr>
           <td style="text-align:left;vertical-align:top">${it.name}<div class="muted" style="font-size:11px">${it.ref}${it.autoOnly?' · 자동형':''}${it.pOnly?' · 광고물 부착방지(P)형':''}</div></td>
@@ -2538,7 +2554,7 @@
             // 주회로 저항은 적용된 업체 기준치 세트를 함께 남겨 출력물에 표기한다
             mcr: (function(){ if(!it.resistance) return undefined;
               const pk=mcrPick(it); return pk?{ label:pk.set.label, vals:pk.set.vals }:undefined; })(),
-            samp: na?'해당없음':(it.full?'전량':(it.cert?(it.cycle||'-'):((it.sampNote||sampCount(it)+'대')+(it.sampAdd?' · '+it.sampAdd:'')))),
+            samp: na?'해당없음':((it.full||isFullSample(it))?'전량':(it.cert?(it.cycle||'-'):((it.sampNote||sampCount(it)+'대')+(it.sampAdd?' · '+it.sampAdd:'')))),
             full: st.full||null, cert: it.docOnly?null:(st.cert||null), docOnly: !!it.docOnly, unit: it.unit||'',
             serials: na?[]:(st.serials||[]), res: na?{}:resForQIR(it,st), jdg: na?'':itemJudged(it) }; }) }; });
       return { schema:'kepco-qir-switchgear.v0.2', spec_id:CUR.spec.id, gsNo:CUR.spec.gsNo, material:CUR.spec.name,
