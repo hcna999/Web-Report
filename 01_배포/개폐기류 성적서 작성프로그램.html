@@ -1049,12 +1049,17 @@
     // 지중·지상형: 전체 대지간 1 + 회로별 대지간(3상×회로수) + 상간 3
     //   예) 4회로 = 1 + 12 + 3 = 16점
     const PHASE3=['A','B','C'];
+    // IEC 62271-201 Annex BB(Procedure B) 기준
+    //  · 대지간 : 3상을 묶어 1.1Ur/√3로 1회 측정 (전 회로 투입 상태)
+    //  · 상 간  : 각 상 순차 1.1Ur — 하우징 실드 처리 시 한전 규격 주2)로 생략 가능
+    //  · 개방형 : BB.4의 권고(should) — 한 회로만 투입하고 나머지를 개방해 극간 절연을 확인.
+    //             투입 상태에서는 극간에 전위차가 없어 드러나지 않는 결함을 보기 위한 추가시험.
     function pdRowsUnderground(nCircuit){
       const n=Math.max(1, Number(nCircuit)||4);
       const rows=[{ k:'pd_g', lab:'ABC (S1~S'+n+' CLOSE) - F', grp:'대지간' }];
       for(let i=1;i<=n;i++){
         const others=[]; for(let j=1;j<=n;j++) if(j!==i) others.push('S'+j);
-        PHASE3.forEach(p=>rows.push({ k:`pd_c${i}${p}`, lab:`${p}${i} (S${i} Close, ${others.join(',')} Open) - F`, grp:'대지간' }));
+        PHASE3.forEach(p=>rows.push({ k:`pd_c${i}${p}`, lab:`${p}${i} (S${i} Close, ${others.join(',')} Open) - F`, grp:'대지간(개방)' }));
       }
       PHASE3.forEach(p=>{ const o=PHASE3.filter(x=>x!==p).join(',');
         rows.push({ k:'pd_p'+p, lab:`${p} (${o} 접지)`, grp:'상 간' }); });
@@ -1066,14 +1071,18 @@
       return pdShieldable() ? pdRowsUnderground(nCircuit!==undefined?nCircuit:circuits()) : PD_ROWS_OVERHEAD;
     }
     function pdShielded(st){ return !!(st||{}).shield; }
+    function pdOpenAdd(st){ return !!(st||{}).openAdd; }
+    // 실드 처리 → 상간 제외 / 개방형 추가시험 미체크 → 회로별 행 제외
+    function pdPick(all, shield, openAdd){
+      return all.filter(r=> (r.grp==='상 간' ? !shield : (r.grp==='대지간(개방)' ? !!openAdd : true)));
+    }
     function pdRows(st,nCircuit){
-      const all=pdAllRows(nCircuit);
-      return pdShielded(st)?all.filter(r=>r.grp==='대지간'):all;
+      return pdPick(pdAllRows(nCircuit), pdShielded(st), pdOpenAdd(st));
     }
     // 저장된 성적서(q)로 출력할 때는 CUR가 아닌 q의 설치형태·회로수로 인가부분을 복원한다
     function pdRowsForQIR(q,it){
       const all=((q||{}).install!=='가공') ? pdRowsUnderground((q||{}).circuits) : PD_ROWS_OVERHEAD;
-      return it && it.shield ? all.filter(r=>r.grp==='대지간') : all;
+      return pdPick(all, !!(it&&it.shield), !!(it&&it.openAdd));
     }
     // 활성 인가부분 중 최대 측정값 → 기존 thr 자동판정(r.val)에 그대로 연결
     function pdMax(st,sn){
@@ -1893,12 +1902,20 @@
       }
       // 부분방전시험 — 인가부분별 측정값 (가공형 4점 / 지중·지상형은 회로수에 따라 확장)
       if(it.pdPhase){
-        const shielded=pdShielded(st); const rows=pdRows(st); const u=it.unit||'pC';
+        const shielded=pdShielded(st); const openAdd=pdOpenAdd(st); const rows=pdRows(st); const u=it.unit||'pC';
+        const nOpen = pdShieldable() ? (circuits()||4)*3 : 0;
         const shieldBox = pdShieldable()
-          ? `<label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;margin-bottom:6px;cursor:pointer">
-               <input type="checkbox" data-k="${it.key}" data-f="pd-shield" ${shielded?'checked':''}>
-               하우징 실드 처리 — 상간 측정 생략(대지간만 측정)
-             </label>` : '';
+          ? `<div style="display:flex;flex-direction:column;gap:2px;margin-bottom:6px">
+               <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+                 <input type="checkbox" data-k="${it.key}" data-f="pd-shield" ${shielded?'checked':''}>
+                 하우징 실드 처리 — 상간 측정 생략(대지간만 측정)
+               </label>
+               <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+                 <input type="checkbox" data-k="${it.key}" data-f="pd-openadd" ${openAdd?'checked':''}>
+                 개방형 대지간 추가시험 — 한 회로씩 투입하고 나머지 개방(${nOpen}개소 추가)
+               </label>
+               <span class="muted" style="font-size:11px">기본은 IEC 62271-201 Annex BB의 3상 일괄 대지간 1회입니다. 개방형은 BB.4 권고 항목으로, 극간 절연을 확인할 때 체크하세요.</span>
+             </div>` : '';
         const tbl=serials.map(sn=>{
           const r=(st.res||{})[sn]||{}; const f=r.fields||{};
           const mx=pdMax(st,sn); const aj=(mx!==''&&pdFilled(st,sn))?autoVal(it,Number(mx)):'';
@@ -2117,10 +2134,10 @@
           el.addEventListener('input', updateGasDef);
           el.addEventListener('change', updateGasDef);
         }
-        else if(f==='pd-shield'){
+        else if(f==='pd-shield' || f==='pd-openadd'){
           el.addEventListener('change',()=>{
-            const s=STATE[k]=STATE[k]||{}; s.shield=el.checked;
-            const item=(CUR.spec.steps.flatMap(x=>x.items)).find(i=>i.key===k);
+            const s=STATE[k]=STATE[k]||{};
+            if(f==='pd-shield') s.shield=el.checked; else s.openAdd=el.checked;
             // 활성 인가부분이 바뀌므로 제조번호별 최대값(=판정 기준값) 재계산
             (s.serials||[]).forEach(sn=>{ if(s.res&&s.res[sn]) s.res[sn].val=pdMax(s,sn); });
             renderStep();
@@ -2519,7 +2536,7 @@
             thrV: it.paintTest?pnThrV(it):undefined,
             noOp: it.minTrip?!!it.noOp:undefined,
             tcTol: (it.tcTest||it.seqTest)?(it.tcTol||'rc'):undefined, tcPcts: it.tcTest?tcPcts(it):undefined,
-            shield: it.pdPhase?!!st.shield:undefined, noGapji: !!it.noGapji,
+            shield: it.pdPhase?!!st.shield:undefined, openAdd: it.pdPhase?!!st.openAdd:undefined, noGapji: !!it.noGapji,
             samp: na?'해당없음':(it.full?'전량':(it.cert?(it.cycle||'-'):((it.sampNote||sampCount(it)+'대')+(it.sampAdd?' · '+it.sampAdd:'')))),
             full: st.full||null, cert: it.docOnly?null:(st.cert||null), docOnly: !!it.docOnly, unit: it.unit||'',
             serials: na?[]:(st.serials||[]), res: na?{}:resForQIR(it,st), jdg: na?'':itemJudged(it) }; }) }; });
@@ -2571,6 +2588,7 @@
               `          <File name="${escXml(f.name)}" type="${escXml(f.type)}">${escXml(f.dataUrl)}</File>\n`).join('')}        </CertFiles>\n`;
           }
           if(it.shield!==undefined){ xml+=`        <Shield>${escXml(it.shield)}</Shield>\n`; }
+          if(it.openAdd!==undefined){ xml+=`        <OpenAdd>${escXml(it.openAdd)}</OpenAdd>\n`; }
           if(it.serials&&it.serials.length){ xml+=`        <Serials>${it.serials.map(s=>`<SN>${escXml(s)}</SN>`).join('')}</Serials>\n`; }
           if(it.res){ xml+=`        <Res>\n`; Object.entries(it.res).forEach(([sn,r])=>{
             xml+=`          <SNRes sn="${escXml(sn)}" val="${escXml(r.val)}" jdg="${escXml(r.jdg)}">\n`;
@@ -2606,6 +2624,8 @@
           const unit=getTxt(iEl,'Unit')||'';
           const shEl=iEl.querySelector('Shield');
           const shield = shEl ? (shEl.textContent.trim()==='true') : undefined;
+          const oaEl=iEl.querySelector('OpenAdd');
+          const openAdd = oaEl ? (oaEl.textContent.trim()==='true') : undefined;
           const serials=Array.from(iEl.querySelectorAll('Serials SN')).map(sn=>sn.textContent.trim());
           const res={};
           iEl.querySelectorAll('Res SNRes').forEach(snEl=>{
@@ -2613,7 +2633,7 @@
             snEl.querySelectorAll('Fields Field').forEach(fEl=>{ fields[fEl.getAttribute('name')]=fEl.textContent.trim(); });
             res[sn]={ val: (val!=='' && !isNaN(val)) ? Number(val) : val, jdg:rJdg, fields };
           });
-          items.push({ key, name, ref, crit, kind, samp, exempt, na, full, cert, certFiles, unit, shield, noGapji, docOnly, serials, res, jdg });
+          items.push({ key, name, ref, crit, kind, samp, exempt, na, full, cert, certFiles, unit, shield, openAdd, noGapji, docOnly, serials, res, jdg });
         });
         results[sKey]={ title:sTitle, overall:getTxt(sEl,'Overall'), remark:getTxt(sEl,'Remark'), items };
       });
@@ -2679,7 +2699,8 @@
           desc:s.fixed?s.desc:((q.photos[i]||{}).caption||''), fixed:s.fixed }));
       } else { ensurePhotos(); }
       Object.values(q.results||{}).forEach(g=>{ g.items.forEach(it=>{ STATE[it.key]={ serials:it.serials||[], res:it.res||{}, full:it.full||undefined, cert:it.cert||undefined,
-        certFiles:it.certFiles||undefined, shield:(it.shield!==undefined?it.shield:undefined) }; }); });
+        certFiles:it.certFiles||undefined, shield:(it.shield!==undefined?it.shield:undefined),
+        openAdd:(it.openAdd!==undefined?it.openAdd:undefined) }; }); });
       activeStep=0;
     }
     // (메인 화면의 저장 파일(XML) 불러오기 UI는 제거됨 — xmlToQIR/loadQIRObj는 내부 로직에서 계속 사용)
@@ -3113,7 +3134,7 @@
         <div class="gapji-page" style="padding:10mm;background:#fff">
           <h1>${it.name}</h1>
           <div style="font-size:10.5px;color:#555;margin-bottom:8px;text-align:center">
-            ${it.crit ? ('판정기준 : ' + it.crit + ' (단위 ' + u + ')') : ''}${it.shield ? ' · 하우징 실드 처리로 상간 측정 생략' : ''}</div>
+            ${it.crit ? ('판정기준 : ' + it.crit + ' (단위 ' + u + ')') : ''}${it.shield ? ' · 하우징 실드 처리로 상간 측정 생략' : ''}${it.openAdd ? ' · 개방형 대지간 추가시험 시행' : ''}</div>
           <table class="mx"><thead>${head}</thead><tbody>${body}${resRow}</tbody></table>
         </div>`;
     }
@@ -3681,7 +3702,7 @@
         serials.forEach((_, i) => { ws.getColumn(i + 3).width = 11; });
         ws.mergeCells(1, 1, 1, serials.length + 2);
         xlsStyle(ws.getCell(1, 1), { bold: true, size: 13, color: XLS_COLOR.title, border: false });
-        ws.getCell(1, 1).value = it.name + (it.crit ? ' [' + it.crit + ']' : '') + (it.shield ? ' · 하우징 실드 처리(상간 측정 생략)' : '');
+        ws.getCell(1, 1).value = it.name + (it.crit ? ' [' + it.crit + ']' : '') + (it.shield ? ' · 하우징 실드 처리(상간 측정 생략)' : '') + (it.openAdd ? ' · 개방형 대지간 추가시험' : '');
         const hr = ws.getRow(2);
         ['구분', '인가부분'].forEach((t, i) => { xlsStyle(hr.getCell(i + 1), { bold: true, bg: XLS_COLOR.headerBg }); hr.getCell(i + 1).value = t; });
         serials.forEach((sn, i) => { xlsStyle(hr.getCell(i + 3), { bold: true, bg: XLS_COLOR.headerBg }); hr.getCell(i + 3).value = sn; });
