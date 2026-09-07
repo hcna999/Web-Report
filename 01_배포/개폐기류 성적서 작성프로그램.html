@@ -1903,7 +1903,6 @@
       // 부분방전시험 — 인가부분별 측정값 (가공형 4점 / 지중·지상형은 회로수에 따라 확장)
       if(it.pdPhase){
         const shielded=pdShielded(st); const openAdd=pdOpenAdd(st); const rows=pdRows(st); const u=it.unit||'pC';
-        const nOpen = pdShieldable() ? (circuits()||4)*3 : 0;
         const shieldBox = pdShieldable()
           ? `<div style="display:flex;flex-direction:column;gap:2px;margin-bottom:6px">
                <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
@@ -1912,9 +1911,8 @@
                </label>
                <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
                  <input type="checkbox" data-k="${it.key}" data-f="pd-openadd" ${openAdd?'checked':''}>
-                 개방형 대지간 추가시험 — 한 회로씩 투입하고 나머지 개방(${nOpen}개소 추가)
+                 개방형 대지간 추가시험(필요시)
                </label>
-               <span class="muted" style="font-size:11px">기본은 IEC 62271-201 Annex BB의 3상 일괄 대지간 1회입니다. 개방형은 BB.4 권고 항목으로, 극간 절연을 확인할 때 체크하세요.</span>
              </div>` : '';
         const tbl=serials.map(sn=>{
           const r=(st.res||{})[sn]||{}; const f=r.fields||{};
