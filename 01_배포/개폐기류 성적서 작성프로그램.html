@@ -2535,6 +2535,9 @@
             noOp: it.minTrip?!!it.noOp:undefined,
             tcTol: (it.tcTest||it.seqTest)?(it.tcTol||'rc'):undefined, tcPcts: it.tcTest?tcPcts(it):undefined,
             shield: it.pdPhase?!!st.shield:undefined, openAdd: it.pdPhase?!!st.openAdd:undefined, noGapji: !!it.noGapji,
+            // 주회로 저항은 적용된 업체 기준치 세트를 함께 남겨 출력물에 표기한다
+            mcr: (function(){ if(!it.resistance) return undefined;
+              const pk=mcrPick(it); return pk?{ label:pk.set.label, vals:pk.set.vals }:undefined; })(),
             samp: na?'해당없음':(it.full?'전량':(it.cert?(it.cycle||'-'):((it.sampNote||sampCount(it)+'대')+(it.sampAdd?' · '+it.sampAdd:'')))),
             full: st.full||null, cert: it.docOnly?null:(st.cert||null), docOnly: !!it.docOnly, unit: it.unit||'',
             serials: na?[]:(st.serials||[]), res: na?{}:resForQIR(it,st), jdg: na?'':itemJudged(it) }; }) }; });
@@ -2587,6 +2590,7 @@
           }
           if(it.shield!==undefined){ xml+=`        <Shield>${escXml(it.shield)}</Shield>\n`; }
           if(it.openAdd!==undefined){ xml+=`        <OpenAdd>${escXml(it.openAdd)}</OpenAdd>\n`; }
+          if(it.mcr){ xml+=`        <McrLimits label="${escXml(it.mcr.label)}">${escXml(JSON.stringify(it.mcr.vals))}</McrLimits>\n`; }
           if(it.serials&&it.serials.length){ xml+=`        <Serials>${it.serials.map(s=>`<SN>${escXml(s)}</SN>`).join('')}</Serials>\n`; }
           if(it.res){ xml+=`        <Res>\n`; Object.entries(it.res).forEach(([sn,r])=>{
             xml+=`          <SNRes sn="${escXml(sn)}" val="${escXml(r.val)}" jdg="${escXml(r.jdg)}">\n`;
@@ -2624,6 +2628,8 @@
           const shield = shEl ? (shEl.textContent.trim()==='true') : undefined;
           const oaEl=iEl.querySelector('OpenAdd');
           const openAdd = oaEl ? (oaEl.textContent.trim()==='true') : undefined;
+          const mcEl=iEl.querySelector('McrLimits');
+          let mcr; if(mcEl){ try{ mcr={ label:mcEl.getAttribute('label')||'', vals:JSON.parse(mcEl.textContent||'{}') }; }catch(e){ mcr=undefined; } }
           const serials=Array.from(iEl.querySelectorAll('Serials SN')).map(sn=>sn.textContent.trim());
           const res={};
           iEl.querySelectorAll('Res SNRes').forEach(snEl=>{
@@ -2631,7 +2637,7 @@
             snEl.querySelectorAll('Fields Field').forEach(fEl=>{ fields[fEl.getAttribute('name')]=fEl.textContent.trim(); });
             res[sn]={ val: (val!=='' && !isNaN(val)) ? Number(val) : val, jdg:rJdg, fields };
           });
-          items.push({ key, name, ref, crit, kind, samp, exempt, na, full, cert, certFiles, unit, shield, openAdd, noGapji, docOnly, serials, res, jdg });
+          items.push({ key, name, ref, crit, kind, samp, exempt, na, full, cert, certFiles, unit, shield, openAdd, mcr, noGapji, docOnly, serials, res, jdg });
         });
         results[sKey]={ title:sTitle, overall:getTxt(sEl,'Overall'), remark:getTxt(sEl,'Remark'), items };
       });
@@ -2698,7 +2704,7 @@
       } else { ensurePhotos(); }
       Object.values(q.results||{}).forEach(g=>{ g.items.forEach(it=>{ STATE[it.key]={ serials:it.serials||[], res:it.res||{}, full:it.full||undefined, cert:it.cert||undefined,
         certFiles:it.certFiles||undefined, shield:(it.shield!==undefined?it.shield:undefined),
-        openAdd:(it.openAdd!==undefined?it.openAdd:undefined) }; }); });
+        openAdd:(it.openAdd!==undefined?it.openAdd:undefined), mcr:it.mcr||undefined }; }); });
       activeStep=0;
     }
     // (메인 화면의 저장 파일(XML) 불러오기 UI는 제거됨 — xmlToQIR/loadQIRObj는 내부 로직에서 계속 사용)
@@ -3192,16 +3198,21 @@
       const serials = pool.filter(sn => it.res && it.res[sn]);
       if (!serials.length) return '';
       const fieldSet = resistanceFieldSet(it, serials);
-      const headRow = `<tr><th style="width:22%">제조번호 \\ 측정항목</th>${serials.map(sn => `<th>${sn}</th>`).join('')}</tr>`;
-      const bodyRows = fieldSet.map(fk => `<tr><td class="item">${fk}</td>${serials.map(sn => {
-        const v = ((it.res[sn] || {}).fields || {})[fk];
-        return `<td>${(v === undefined || v === null || v === '') ? '-' : v}</td>`;
-      }).join('')}</tr>`).join('');
-      const resRow = `<tr class="res-row"><td class="item">결&nbsp;&nbsp;&nbsp;&nbsp;과</td>${serials.map(sn => `<td>${jbP((it.res[sn] || {}).jdg || '-')}</td>`).join('')}</tr>`;
+      const lim = (it.mcr || {}).vals || null;
+      const headRow = `<tr><th style="width:22%">제조번호 \\ 측정항목</th>${lim ? '<th style="width:13%">기준치(µΩ)</th>' : ''}${serials.map(sn => `<th>${sn}</th>`).join('')}</tr>`;
+      const bodyRows = fieldSet.map(fk => {
+        const lv = lim ? lim[fk] : undefined;
+        return `<tr><td class="item">${fk}</td>${lim ? `<td><b>${lv === undefined ? '-' : '≤ ' + lv}</b></td>` : ''}${serials.map(sn => {
+          const v = ((it.res[sn] || {}).fields || {})[fk];
+          const over = (lv !== undefined && v !== undefined && v !== null && v !== '' && isFinite(Number(v)) && Number(v) > Number(lv));
+          return `<td${over ? ' style="color:#b91c1c;font-weight:700"' : ''}>${(v === undefined || v === null || v === '') ? '-' : v}</td>`;
+        }).join('')}</tr>`;
+      }).join('');
+      const resRow = `<tr class="res-row"><td class="item"${lim ? ' colspan="2"' : ''}>결&nbsp;&nbsp;&nbsp;&nbsp;과</td>${serials.map(sn => `<td>${jbP((it.res[sn] || {}).jdg || '-')}</td>`).join('')}</tr>`;
       return `<div class="pgbreak"></div>
         <div class="gapji-page" style="padding:10mm;background:#fff">
           <h1>${it.name}</h1>
-          <div style="font-size:10.5px;color:#555;margin-bottom:8px;text-align:center">${it.crit ? ('판정기준 : ' + it.crit) : ''}</div>
+          <div style="font-size:10.5px;color:#555;margin-bottom:8px;text-align:center">${it.crit ? ('판정기준 : ' + it.crit) : ''}${lim ? ` · 기준치 : ${((it.mcr.label ? it.mcr.label + ' ' : '') + (q.maker || '')).trim()}` : ''}</div>
           <table class="mx"><thead>${headRow}</thead><tbody>${bodyRows}${resRow}</tbody></table>
         </div>`;
     }
@@ -3660,31 +3671,43 @@
         const ws = wb.addWorksheet(safeSheetName(it.name, usedSheetNames), {
           pageSetup: { orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: printMargins }
         });
+        // 업체 기준치가 있으면 '기준치(µΩ)' 열을 끼워 넣고, 초과한 측정값은 붉게 표시한다
+        const lim = (it.mcr || {}).vals || null;
+        const c0 = lim ? 3 : 2;                       // 측정값이 시작되는 열
         ws.getColumn(1).width = 20;
-        serials.forEach((_, i) => { ws.getColumn(i + 2).width = 11; });
-        ws.mergeCells(1, 1, 1, serials.length + 1);
+        if (lim) ws.getColumn(2).width = 12;
+        serials.forEach((_, i) => { ws.getColumn(i + c0).width = 11; });
+        ws.mergeCells(1, 1, 1, serials.length + c0 - 1);
         xlsStyle(ws.getCell(1, 1), { bold: true, size: 13, color: XLS_COLOR.title, border: false });
-        ws.getCell(1, 1).value = it.name + (it.crit ? ' [' + it.crit + ']' : '');
+        ws.getCell(1, 1).value = it.name + (it.crit ? ' [' + it.crit + ']' : '')
+          + (lim ? ' · 기준치 : ' + ((it.mcr.label ? it.mcr.label + ' ' : '') + (q.maker || '')).trim() : '');
         const hr = ws.getRow(2);
         xlsStyle(hr.getCell(1), { bold: true, bg: XLS_COLOR.headerBg }); hr.getCell(1).value = '제조번호';
-        serials.forEach((sn, i) => { xlsStyle(hr.getCell(i + 2), { bold: true, bg: XLS_COLOR.headerBg }); hr.getCell(i + 2).value = sn; });
+        if (lim) { xlsStyle(hr.getCell(2), { bold: true, bg: XLS_COLOR.headerBg }); hr.getCell(2).value = '기준치(µΩ)'; }
+        serials.forEach((sn, i) => { xlsStyle(hr.getCell(i + c0), { bold: true, bg: XLS_COLOR.headerBg }); hr.getCell(i + c0).value = sn; });
         let rr = 3;
         fieldSet.forEach(fk => {
           const row = ws.getRow(rr);
           xlsStyle(row.getCell(1), { align: 'left', size: 9.5 }); row.getCell(1).value = fk;
+          const lv = lim ? lim[fk] : undefined;
+          if (lim) { xlsStyle(row.getCell(2), { size: 9.5, bold: true });
+            row.getCell(2).value = (lv === undefined) ? '-' : ('≤ ' + lv); }
           serials.forEach((sn, i) => {
             const v = ((it.res[sn] || {}).fields || {})[fk];
-            xlsStyle(row.getCell(i + 2), { size: 9.5 });
-            row.getCell(i + 2).value = (v === undefined || v === null || v === '') ? '-' : v;
+            const over = (lv !== undefined && v !== undefined && v !== null && v !== '' && isFinite(Number(v)) && Number(v) > Number(lv));
+            xlsStyle(row.getCell(i + c0), Object.assign({ size: 9.5 }, over ? { color: 'FFB91C1C', bold: true } : {}));
+            row.getCell(i + c0).value = (v === undefined || v === null || v === '') ? '-' : v;
           });
           rr++;
         });
         const resRow = ws.getRow(rr);
+        if (lim) ws.mergeCells(rr, 1, rr, 2);
         xlsStyle(resRow.getCell(1), { bold: true, bg: XLS_COLOR.resultBg }); resRow.getCell(1).value = '결    과';
+        if (lim) xlsStyle(resRow.getCell(2), { bold: true, bg: XLS_COLOR.resultBg });
         serials.forEach((sn, i) => {
           const v = (it.res[sn] || {}).jdg || '-';
-          xlsStyle(resRow.getCell(i + 2), Object.assign({ bold: true, bg: XLS_COLOR.resultBg }, xlsJudgeStyle(v)));
-          resRow.getCell(i + 2).value = v;
+          xlsStyle(resRow.getCell(i + c0), Object.assign({ bold: true, bg: XLS_COLOR.resultBg }, xlsJudgeStyle(v)));
+          resRow.getCell(i + c0).value = v;
         });
       });
 
