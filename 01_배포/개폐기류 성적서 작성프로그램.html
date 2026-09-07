@@ -3398,8 +3398,10 @@
         new Promise((_, rj) => { t = setTimeout(() => rj(new Error((label || '작업') + ' 시간 초과')), ms); })
       ]);
     }
-    // PDF 각 페이지를 PNG dataURL로 변환 (기본 최대 5페이지)
-    async function pdfToImages(dataUrl, maxPages = 5) {
+    // PDF 각 페이지를 PNG dataURL로 변환.
+    // 상한을 두는 이유는 페이지마다 PNG를 만들어 엑셀에 넣기 때문에 용량·시간이 크게 늘어서다.
+    // 종전 5페이지는 성적서 첨부에 비해 너무 낮아 6페이지짜리가 5장만 나왔다 → 30페이지로 상향.
+    async function pdfToImages(dataUrl, maxPages = 30) {
       const lib = await withTimeout(loadPdfJs(), 15000, 'pdf.js 로드');
       const pdf = await withTimeout(lib.getDocument({ data: dataUrlToUint8(dataUrl) }).promise, 15000, 'PDF 열기');
       const out = [];
@@ -3965,6 +3967,14 @@
               for (const pg of pages) {
                 const label = { name: `${f.name || 'PDF'} (${pg.page}/${pg.total})`, dataUrl: pg.dataUrl };
                 if (await xlsAddImageBlock(wb, ws, label, idx, rr)) rr += 17; else failed++;
+              }
+              // 상한을 넘겨 잘린 경우 몇 장이 빠졌는지 시트에 남긴다(조용히 누락되지 않도록)
+              const total = pages[0].total || pages.length;
+              if (total > pages.length) {
+                ws.mergeCells(rr, 1, rr, 3);
+                xlsStyle(ws.getCell(rr, 1), { align: 'left', size: 9, color: XLS_COLOR.gray, border: false });
+                ws.getCell(rr, 1).value = `※ ${f.name || 'PDF'} 는 ${total}쪽 중 ${pages.length}쪽만 실었습니다. 나머지는 원본 파일을 확인하세요.`;
+                rr += 2;
               }
             } catch (e) { console.warn('PDF 이미지 변환 실패:', f.name, e); failed++; }
             continue;
