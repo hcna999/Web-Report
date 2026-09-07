@@ -455,6 +455,21 @@
         </div>
       </div>
 
+      <div class="card" style="margin-bottom:16px">
+        <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:6px">
+          <h2 style="margin:0;font-size:17px">작성 이어하기</h2>
+          <span id="draftNotice" class="muted" style="font-size:11px"></span>
+        </div>
+        <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center">
+          <button class="btn" id="btnResumeDraft" disabled>▶ 이어서 작성</button>
+          <button class="btn secondary" id="btnClearDraft" disabled>🗑️ 임시본 삭제</button>
+          <span style="width:12px"></span>
+          <input type="file" id="qirFileInput" accept=".xml,text/xml,application/xml" style="display:none">
+          <button class="btn secondary" id="btnLoadQIR">📂 저장파일(XML) 불러오기</button>
+          <span class="muted" style="font-size:11px">임시본은 이 브라우저에만 저장되며 사진·첨부파일은 포함되지 않습니다. 사진까지 남기려면 작성 화면의 <b>중간저장(XML)</b>을 쓰세요.</span>
+        </div>
+      </div>
+
       <div class="grid">
         <div class="card">
           <h2>자재 선택</h2>
@@ -1249,6 +1264,53 @@
       return out.sort((a,b)=>(''+a).localeCompare(''+b,undefined,{numeric:true}));
     }
 
+    // ===== 작성 중 자동저장 =====
+    // 브라우저에 남기는 임시본. 사진·첨부파일은 용량이 커서(사진 4장만 해도 160KB, PDF 첨부는 MB 단위)
+    // localStorage 한도(약 5MB)를 금방 넘기므로 제외한다. 그 둘까지 남기려면 '저장(XML)'을 쓴다.
+    const DRAFT_KEY = "kepco_draft_v1";
+    let draftTimer = null;
+    function draftSnapshot(){
+      if(!CUR || !CUR.spec) return null;
+      const st={};
+      Object.keys(STATE).forEach(k=>{
+        if(k==='__photos') return;                       // 사진 제외
+        const v=STATE[k];
+        if(v && typeof v==='object' && Array.isArray(v.certFiles)){
+          const c=Object.assign({},v); delete c.certFiles; st[k]=c; return;   // 첨부 제외
+        }
+        st[k]=v;
+      });
+      return { at:new Date().toISOString(), specId:CUR.spec.id, variant:CUR.variant, mode:CUR.mode,
+               grade:CUR.grade, gradeSource:CUR.gradeSource, activeStep, state:st };
+    }
+    function saveDraft(){
+      try{
+        const snap=draftSnapshot(); if(!snap) return;
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(snap));
+      }catch(e){ console.warn('자동저장 실패(용량 초과 등):', e); }
+    }
+    function saveDraftSoon(){ clearTimeout(draftTimer); draftTimer=setTimeout(saveDraft, 400); }
+    function getDraft(){ try{ const r=localStorage.getItem(DRAFT_KEY); return r?JSON.parse(r):null; }catch(e){ return null; } }
+    function clearDraft(){ try{ localStorage.removeItem(DRAFT_KEY); }catch(e){} }
+    function restoreDraft(d){
+      const spec=SPECS.find(s=>s.id===d.specId); if(!spec){ alert('저장된 임시본의 규격을 찾을 수 없습니다.'); return false; }
+      CUR={ spec, variant:d.variant, mode:d.mode, grade:d.grade||'B', gradeSource:d.gradeSource||'-' };
+      STATE=d.state||{};
+      ensurePhotos();                                    // 사진은 저장하지 않으므로 빈 슬롯으로 시작
+      selectedSpec=spec.id; activeStep=Math.max(0, Number(d.activeStep)||0);
+      $('screenMain').style.display='none'; $('screenDetail').style.display='';
+      buildStepper(); renderStep(); updateSummary();
+      return true;
+    }
+    function draftAgeText(iso){
+      const t=new Date(iso), now=new Date();
+      const m=Math.round((now-t)/60000);
+      if(m<1) return '방금 전';
+      if(m<60) return m+'분 전';
+      const h=Math.round(m/60); if(h<24) return h+'시간 전';
+      return Math.round(h/24)+'일 전';
+    }
+
     // ===== 프리셋 (자주 쓰는 기본정보 저장/불러오기) =====
     const PRESET_KEY = "kepco_basic_preset_v1";
     function getPreset() {
@@ -1304,6 +1366,54 @@
       $('btnSavePreset')?.addEventListener('click', savePreset);
       $('btnClearPreset')?.addEventListener('click', clearPreset);
       updatePresetUI();
+      initDraftUI();
+    }
+
+    // 창을 닫기 직전에도 한 번 더 저장(디바운스 대기 중인 변경 유실 방지)
+    window.addEventListener('beforeunload', ()=>{ try{ saveDraft(); }catch(e){} });
+
+    // ===== 작성 이어하기 UI =====
+    function updateDraftUI(){
+      const d=getDraft(); const note=$('draftNotice');
+      const ok=!!(d && d.specId && SPECS.some(s=>s.id===d.specId));
+      if($('btnResumeDraft')) $('btnResumeDraft').disabled=!ok;
+      if($('btnClearDraft')) $('btnClearDraft').disabled=!ok;
+      if(note){
+        if(!ok){ note.textContent='저장된 임시본 없음'; note.style.color=''; }
+        else {
+          const sp=SPECS.find(s=>s.id===d.specId);
+          const b=(d.state||{}).__base||{};
+          note.textContent=`${sp.name} · 로트 ${b.lot||'-'} · ${draftAgeText(d.at)} 자동저장`;
+          note.style.color='#059669';
+        }
+      }
+    }
+    function initDraftUI(){
+      $('btnResumeDraft')?.addEventListener('click', ()=>{
+        const d=getDraft(); if(!d) return;
+        if(restoreDraft(d)) console.info('임시본 복원:', d.at);
+      });
+      $('btnClearDraft')?.addEventListener('click', ()=>{
+        if(!confirm('저장된 임시본을 삭제할까요? 되돌릴 수 없습니다.')) return;
+        clearDraft(); updateDraftUI();
+      });
+      $('btnLoadQIR')?.addEventListener('click', ()=>$('qirFileInput')?.click());
+      $('qirFileInput')?.addEventListener('change', e=>{
+        const f=e.target.files && e.target.files[0]; if(!f) return;
+        const rd=new FileReader();
+        rd.onload=()=>{
+          try{
+            const q=xmlToQIR(String(rd.result));
+            loadQIRObj(q);
+            selectedSpec=CUR.spec.id;
+            $('screenMain').style.display='none'; $('screenDetail').style.display='';
+            buildStepper(); renderStep(); updateSummary();
+          }catch(err){ console.warn(err); alert('XML을 읽지 못했습니다. 이 프로그램에서 저장한 파일인지 확인하세요.'); }
+          e.target.value='';
+        };
+        rd.readAsText(f, 'utf-8');
+      });
+      updateDraftUI();
     }
 
     // ===== 메인 목록 =====
@@ -1326,8 +1436,8 @@
     initPresetControls();
     $('btnStart').onclick=()=>{ if(selectedSpec) startInspection(SPECS.find(s=>s.id===selectedSpec)); };
     $('btnGoMain').onclick=$('btnBack')&&(()=>{ $('screenMain').style.display='block'; $('screenDetail').style.display='none'; });
-    $('btnGoMain').onclick=()=>{ $('screenMain').style.display='block'; $('screenDetail').style.display='none'; };
-    $('btnBack').onclick=()=>{ $('screenMain').style.display='block'; $('screenDetail').style.display='none'; };
+    $('btnGoMain').onclick=()=>{ saveDraft(); $('screenMain').style.display='block'; $('screenDetail').style.display='none'; updateDraftUI(); };
+    $('btnBack').onclick=()=>{ saveDraft(); $('screenMain').style.display='block'; $('screenDetail').style.display='none'; updateDraftUI(); };
 
     // ===== 개선의견 (Google Sheet 연동) =====
     // TODO: 아래 URL을 Google Apps Script 웹앱 배포 후 발급받은 실제 URL로 교체하세요.
@@ -1413,9 +1523,22 @@
           <button class="btn" data-nav="${Math.min(total-1,activeStep+1)}" ${activeStep===total-1?'disabled':''}>다음 →</button>
         </div>
         ${failBtn}
+        <div class="row" style="gap:8px">
+          <button class="btn secondary" data-savexml="1" title="작성 중인 내용을 XML 파일로 저장합니다(사진·첨부 포함)">💾 중간저장(XML)</button>
+        </div>
       </div>`;
     }
 
+    // 모든 단계 공통 바인딩(중간저장 버튼) — renderStep 끝에서 호출
+    function bindStepCommon(){
+      document.querySelectorAll('[data-savexml]').forEach(b=>{ b.onclick=saveQIR; });
+      const host=$('stepHost');
+      if(host && !host.dataset.draftBound){
+        host.dataset.draftBound='1';
+        host.addEventListener('input', saveDraftSoon);
+        host.addEventListener('change', saveDraftSoon);
+      }
+    }
     // ===== 스텝 디스패치 =====
     function renderStep(){
       const active = document.activeElement;
@@ -1459,6 +1582,8 @@
         }
       });
       updateSummary();
+      bindStepCommon();
+      saveDraftSoon();                       // 화면이 바뀔 때마다 임시본 갱신
 
       if (focusSelector) {
         const toFocus = document.querySelector(focusSelector);
