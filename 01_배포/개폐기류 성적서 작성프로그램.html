@@ -1206,6 +1206,46 @@
         const j=sqTimeJdg(f,t.k,w,rule); if(j){ any=true; if(j==='불량') bad=true; } }));
       return any?(bad?'불량':'양호'):'';
     }
+    // ===== 주기시험 =====
+    // 설비진단처 '개폐기파트 주기시험 항목정리'(구매규격 기준) — 개폐기류 해당분만.
+    //  가공개폐기류 : 강판재질시험(년1회), 취부금구 도금시험(반기1회)
+    //  지중개폐기류 : 구조 및 외관검사(반기1회), 부싱 및 접속재시험 내한성(분기1회),
+    //                강판재질시험(년1회), 절연유 특성시험(반기1회)
+    const PERIODIC_TESTS = [
+      { grp:'가공', key:'steel',     cycle:'년',   note:'공인시험기관 시험성적서 제출' },
+      { grp:'가공', key:'plate',     cycle:'반기', note:'처내시험' },
+      { grp:'지중', key:'ap_body',   cycle:'반기', note:'절연유 주입량 · 극간거리(접지부) · 공장시험' },
+      { grp:'지중', key:'connector', cycle:'분기', note:'1회로분(3대) · 처내시험' },
+      { grp:'지중', key:'steel',     cycle:'년',   note:'공인시험기관 시험성적서 제출' },
+      { grp:'지중', key:'oil',       cycle:'반기', note:'처내시험' },
+    ];
+    const CYCLE_LABEL = { '분기':'분기 1회', '반기':'반기 1회', '년':'년 1회' };
+    function periodicGroup(){ return ((CUR||{}).spec||{}).install==='가공' ? '가공' : '지중'; }
+    function periodicOf(it){
+      if(!it || !CUR || !CUR.spec) return null;
+      const g=periodicGroup();
+      return PERIODIC_TESTS.find(x=>x.grp===g && x.key===it.key) || null;
+    }
+    // 날짜를 주기 구간 코드로 (예: 2026-05-13 → 분기 2026Q2 / 반기 2026H1 / 년 2026)
+    function periodCode(dateStr, cycle){
+      const d=new Date(dateStr);
+      if(!dateStr || isNaN(d)) return null;
+      const y=d.getFullYear(), m=d.getMonth();
+      if(cycle==='분기') return y+'Q'+(Math.floor(m/3)+1);
+      if(cycle==='반기') return y+'H'+(m<6?1:2);
+      return String(y);
+    }
+    function periodicState(it){ return (STATE[it.key]||{}).periodic || {}; }
+    // 이번 검수 구간에 제출 이력이 없으면 '주기 도래'로 본다.
+    function periodicDue(it){
+      const def=periodicOf(it); if(!def) return false;
+      const ps=periodicState(it);
+      if(ps.done) return false;                          // 이번 검수에 제출함
+      const now=periodCode((STATE.__base||{}).sdate || fmtToday(), def.cycle);
+      const prev=periodCode(ps.prevDate, def.cycle);
+      return !(prev && now && prev===now);               // 같은 구간에 낸 적 있으면 도래 아님
+    }
+
     // ===== T-C·Sequence 간이판정(simpleJdg) =====
     // 리클로저·EFI는 수치를 옮겨 적지 않고 요소별로 양호/불량만 기입한다.
     function tcSimpleRows(){ return MT_GROUPS.map(g=>({ k:'tc_'+g.k+'_j', lab:g.title, ph:g.ph })); }
@@ -2205,11 +2245,26 @@
         const exempt=isExempt(it); const na=isNA(it);
         const samp = na?'해당없음':((it.full||isFullSample(it))?'전량':(it.phaseConn?'A·B·C상<br>각 3개소':(it.cert?(it.cycle||'-'):((it.sampNote||sampCount(it)+'대')+(it.sampAdd?'<br><span class="muted" style="font-size:10px">'+it.sampAdd+'</span>':'')))));
         const result = na? `<span class="muted" style="font-size:12px">자동형 전용 · 해당없음</span>` : (exempt? `<span class="tag-exempt">완화 면제</span>` : itemResultBlock(it));
-        return `<tr>
+        const pdef=periodicOf(it); const due=pdef&&periodicDue(it);
+        const ps=periodicState(it);
+        const periodicBox = pdef ? `
+          <div style="margin-top:6px;padding:6px 8px;border-radius:6px;border:1px solid ${due?'#f59e0b':'var(--line)'};background:${due?'rgba(245,158,11,0.10)':'transparent'}">
+            <div style="font-size:11px;font-weight:700;margin-bottom:4px">
+              🗓 주기시험 · ${CYCLE_LABEL[pdef.cycle]}${due?' <span style="color:#b45309">— 주기 도래</span>':''}
+              <span class="muted" style="font-weight:400">${pdef.note}</span></div>
+            <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;margin-right:10px">
+              <input type="checkbox" data-k="${it.key}" data-f="pr-done" ${ps.done?'checked':''}> 이번 검수 시 제출
+            </label>
+            <span style="font-size:12px">이전 제출 로트
+              <input data-k="${it.key}" data-f="pr-lot" value="${ps.prevLot||''}" placeholder="로트번호" style="width:110px;padding:3px 6px" ${ps.done?'disabled':''}>
+              <input type="date" data-k="${it.key}" data-f="pr-date" value="${ps.prevDate||''}" style="width:140px;padding:3px 6px" ${ps.done?'disabled':''}>
+            </span>
+          </div>` : '';
+        return `<tr${due?' style="outline:2px solid #f59e0b;outline-offset:-2px"':''}>
           <td style="text-align:left;vertical-align:top">${it.name}<div class="muted" style="font-size:11px">${it.ref}${it.autoOnly?' · 자동형':''}${it.pOnly?' · 광고물 부착방지(P)형':''}</div></td>
           <td style="vertical-align:top">${effCrit(it)}</td>
-          <td style="vertical-align:top">${samp}</td>
-          <td style="text-align:left">${result}</td></tr>`;
+          <td style="vertical-align:top">${samp}${pdef?`<div class="muted" style="font-size:10px;margin-top:2px">주기 ${CYCLE_LABEL[pdef.cycle]}</div>`:''}</td>
+          <td style="text-align:left">${result}${periodicBox}</td></tr>`;
       }).join('');
       const overall=stepOverall(sd);
       return `<div class="card">
@@ -2270,6 +2325,15 @@
             }
             renderStep();
           };
+        }
+        else if(f==='pr-done' || f==='pr-lot' || f==='pr-date'){
+          const evt = (f==='pr-done')?'change':'input';
+          el.addEventListener(evt, ()=>{
+            const s=STATE[k]=STATE[k]||{}; s.periodic=s.periodic||{};
+            if(f==='pr-done'){ s.periodic.done=el.checked; if(el.checked){ s.periodic.prevLot=''; s.periodic.prevDate=''; } renderStep(); }
+            else if(f==='pr-lot'){ s.periodic.prevLot=el.value.trim(); saveDraftSoon(); }
+            else { s.periodic.prevDate=el.value; renderStep(); }
+          });
         }
         else if(f==='mcr-set'){ el.addEventListener('change',()=>{ STATE[k]=STATE[k]||{}; STATE[k].mcrSet=Number(el.value)||0; renderStep(); }); }
         else if(f==='cert-submit'){ el.addEventListener('change',()=>{ STATE[k]=STATE[k]||{}; STATE[k].cert=STATE[k].cert||{}; STATE[k].cert.submit=el.value; updateStepCalc(sd); }); }
@@ -2738,6 +2802,10 @@
             shield: it.pdPhase?!!st.shield:undefined, openAdd: it.pdPhase?!!st.openAdd:undefined, noGapji: !!it.noGapji,
             // 주회로 저항은 적용된 업체 기준치 세트를 함께 남겨 출력물에 표기한다
             simpleJdg: ((it.tcTest||it.seqTest)&&it.simpleJdg)?true:undefined,
+            periodic: (function(){ const pd=periodicOf(it); if(!pd) return undefined;
+              const ps=(st.periodic)||{};
+              return { cycle:pd.cycle, note:pd.note, done:!!ps.done,
+                       prevLot:ps.prevLot||'', prevDate:ps.prevDate||'', due:periodicDue(it) }; })(),
             mcr: (function(){ if(!it.resistance) return undefined;
               const pk=mcrPick(it); return pk?{ label:pk.set.label, vals:pk.set.vals }:undefined; })(),
             samp: na?'해당없음':((it.full||isFullSample(it))?'전량':(it.cert?(it.cycle||'-'):((it.sampNote||sampCount(it)+'대')+(it.sampAdd?' · '+it.sampAdd:'')))),
@@ -2793,6 +2861,8 @@
           if(it.shield!==undefined){ xml+=`        <Shield>${escXml(it.shield)}</Shield>\n`; }
           if(it.openAdd!==undefined){ xml+=`        <OpenAdd>${escXml(it.openAdd)}</OpenAdd>\n`; }
           if(it.simpleJdg){ xml+=`        <SimpleJdg>true</SimpleJdg>\n`; }
+          if(it.periodic){ const pr=it.periodic;
+            xml+=`        <Periodic cycle="${escXml(pr.cycle)}" done="${escXml(pr.done)}" due="${escXml(pr.due)}" prevLot="${escXml(pr.prevLot)}" prevDate="${escXml(pr.prevDate)}">${escXml(pr.note)}</Periodic>\n`; }
           if(it.mcr){ xml+=`        <McrLimits label="${escXml(it.mcr.label)}">${escXml(JSON.stringify(it.mcr.vals))}</McrLimits>\n`; }
           if(it.serials&&it.serials.length){ xml+=`        <Serials>${it.serials.map(s=>`<SN>${escXml(s)}</SN>`).join('')}</Serials>\n`; }
           if(it.res){ xml+=`        <Res>\n`; Object.entries(it.res).forEach(([sn,r])=>{
@@ -2833,6 +2903,10 @@
           const openAdd = oaEl ? (oaEl.textContent.trim()==='true') : undefined;
           const sjEl=iEl.querySelector('SimpleJdg');
           const simpleJdg = sjEl ? (sjEl.textContent.trim()==='true') : undefined;
+          const prEl=iEl.querySelector('Periodic');
+          const periodic = prEl ? { cycle:prEl.getAttribute('cycle')||'', note:prEl.textContent||'',
+            done:prEl.getAttribute('done')==='true', due:prEl.getAttribute('due')==='true',
+            prevLot:prEl.getAttribute('prevLot')||'', prevDate:prEl.getAttribute('prevDate')||'' } : undefined;
           const mcEl=iEl.querySelector('McrLimits');
           let mcr; if(mcEl){ try{ mcr={ label:mcEl.getAttribute('label')||'', vals:JSON.parse(mcEl.textContent||'{}') }; }catch(e){ mcr=undefined; } }
           const serials=Array.from(iEl.querySelectorAll('Serials SN')).map(sn=>sn.textContent.trim());
@@ -2842,7 +2916,7 @@
             snEl.querySelectorAll('Fields Field').forEach(fEl=>{ fields[fEl.getAttribute('name')]=fEl.textContent.trim(); });
             res[sn]={ val: (val!=='' && !isNaN(val)) ? Number(val) : val, jdg:rJdg, fields };
           });
-          items.push({ key, name, ref, crit, kind, samp, exempt, na, full, cert, certFiles, unit, shield, openAdd, simpleJdg, mcr, noGapji, docOnly, serials, res, jdg });
+          items.push({ key, name, ref, crit, kind, samp, exempt, na, full, cert, certFiles, unit, shield, openAdd, simpleJdg, periodic, mcr, noGapji, docOnly, serials, res, jdg });
         });
         results[sKey]={ title:sTitle, overall:getTxt(sEl,'Overall'), remark:getTxt(sEl,'Remark'), items };
       });
@@ -2909,7 +2983,8 @@
       } else { ensurePhotos(); }
       Object.values(q.results||{}).forEach(g=>{ g.items.forEach(it=>{ STATE[it.key]={ serials:it.serials||[], res:it.res||{}, full:it.full||undefined, cert:it.cert||undefined,
         certFiles:it.certFiles||undefined, shield:(it.shield!==undefined?it.shield:undefined),
-        openAdd:(it.openAdd!==undefined?it.openAdd:undefined), mcr:it.mcr||undefined }; }); });
+        openAdd:(it.openAdd!==undefined?it.openAdd:undefined), mcr:it.mcr||undefined,
+        periodic:it.periodic||undefined }; }); });
       activeStep=0;
     }
     // (메인 화면의 저장 파일(XML) 불러오기 UI는 제거됨 — xmlToQIR/loadQIRObj는 내부 로직에서 계속 사용)
@@ -3806,8 +3881,16 @@
       const footRow2 = wsGapji.getRow(r);
       xlsStyle(footRow2.getCell(1), { align: 'left', size: 9, color: XLS_COLOR.gray });
       footRow2.getCell(1).value = (q.final || {}).remark || '';
-      xlsStyle(footRow2.getCell(3), { bold: true }); footRow2.getCell(3).value = '한국전력공사';
-      footRow2.height = 20;
+      // 한국전력공사 왼쪽에 심볼마크를 얹는다(HTML 갑지와 동일 표기).
+      // 셀 텍스트는 마크 자리만큼 공백을 앞에 둬 글자가 마크와 겹치지 않게 한다.
+      xlsStyle(footRow2.getCell(3), { bold: true });
+      const kepcoMark = kepcoLogoDataURL();
+      footRow2.getCell(3).value = kepcoMark ? '       한국전력공사' : '한국전력공사';
+      footRow2.height = 28;
+      if (kepcoMark) {
+        xlsAddImage(wb, wsGapji, kepcoMark,
+          { tl: { col: 2 + 1 / GAPJI_W[2], row: (r - 1) + 0.12 }, ext: { width: 34, height: 20 } });
+      }
 
       // ====== 2. 을지 Sheet (제조번호 매트릭스) ======
       const itemsForEulji = [];
