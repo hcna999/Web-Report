@@ -1,0 +1,1169 @@
+<!doctype html>
+<html lang="ko">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>개폐기류 제조사 자체검사 기록 프로그램</title>
+  <script>
+    (() => {
+      try { document.documentElement.dataset.theme = localStorage.getItem("mfr_ui_theme_v1") || "light"; }
+      catch (err) { document.documentElement.dataset.theme = "light"; }
+    })();
+  </script>
+  <style>
+    :root, html[data-theme="dark"] {
+      --bg:#0b1220; --card:#0f1a33; --line:rgba(255,255,255,.09);
+      --text:rgba(255,255,255,.92); --muted:rgba(255,255,255,.62);
+      --accent:#7dd3fc; --warn:#fbbf24; --good:#34d399; --bad:#f87171;
+      --chip:rgba(255,255,255,.06); --shadow:0 12px 40px rgba(0,0,0,.35);
+      --bodybg: radial-gradient(900px 500px at 20% -10%, rgba(125,211,252,.18), transparent 60%),
+                radial-gradient(700px 400px at 80% 0%, rgba(167,139,250,.16), transparent 55%),
+                linear-gradient(180deg,#050a14,#0b1220 30%,#050a14);
+    }
+    html[data-theme="light"] {
+      --bg:#f4f6fb; --card:#ffffff; --line:rgba(15,23,42,.12);
+      --text:#0f172a; --muted:#5b6478;
+      --accent:#1d56bc; --warn:#b45309; --good:#0a7f45; --bad:#c02434;
+      --chip:rgba(15,23,42,.05); --shadow:0 10px 28px rgba(15,23,42,.10);
+      --bodybg: linear-gradient(180deg,#eef2fa,#f6f8fc 40%,#f4f6fb);
+    }
+    * { box-sizing:border-box }
+    body { margin:0; background:var(--bodybg); color:var(--text); min-height:100vh;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif; }
+    .wrap { max-width:1180px; margin:0 auto; padding:20px }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:14px;
+      box-shadow:var(--shadow); padding:16px; margin-bottom:14px }
+    h1 { font-size:19px; margin:0 0 2px }
+    h2 { font-size:15px; margin:0 0 10px }
+    .sub { color:var(--muted); font-size:12.5px }
+    .muted { color:var(--muted) }
+    .top { display:flex; align-items:center; gap:12px; justify-content:space-between; flex-wrap:wrap; margin-bottom:14px }
+    .pill { background:var(--chip); border:1px solid var(--line); border-radius:999px;
+      padding:5px 12px; font-size:12px; color:var(--muted) }
+    button { font:inherit; cursor:pointer; border-radius:9px; border:1px solid var(--line);
+      background:var(--chip); color:var(--text); padding:8px 14px }
+    button:hover { border-color:var(--accent) }
+    button.primary { background:var(--accent); color:#fff; border-color:transparent; font-weight:700 }
+    html[data-theme="dark"] button.primary { color:#06263c }
+    button.ghost { background:transparent }
+    button:disabled { opacity:.45; cursor:not-allowed }
+    input, select, textarea { font:inherit; color:var(--text); background:var(--bg);
+      border:1px solid var(--line); border-radius:8px; padding:7px 9px; width:100% }
+    textarea { resize:vertical; min-height:54px }
+    input:focus, select:focus, textarea:focus { outline:2px solid var(--accent); outline-offset:-1px }
+    label.f { display:block; font-size:12px; color:var(--muted); margin-bottom:4px }
+    .grid { display:grid; gap:10px }
+    .g2 { grid-template-columns:repeat(2,1fr) } .g3 { grid-template-columns:repeat(3,1fr) }
+    .g4 { grid-template-columns:repeat(4,1fr) }
+    @media (max-width:820px){ .g2,.g3,.g4 { grid-template-columns:1fr } }
+    table { width:100%; border-collapse:collapse; font-size:13px }
+    th, td { border:1px solid var(--line); padding:7px 8px; text-align:center; vertical-align:middle }
+    th { background:var(--chip); font-weight:700; font-size:12px }
+    td.l, th.l { text-align:left }
+    .steps { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px }
+    .steps button { font-size:12.5px; padding:7px 12px }
+    .steps button.on { background:var(--accent); color:#fff; border-color:transparent; font-weight:700 }
+    html[data-theme="dark"] .steps button.on { color:#06263c }
+    .jbtn { border-radius:8px; padding:5px 11px; font-size:12.5px; font-weight:700 }
+    .jbtn.on-good { background:var(--good); color:#fff; border-color:transparent }
+    .jbtn.on-bad { background:var(--bad); color:#fff; border-color:transparent }
+    .jbtn.on-na { background:var(--muted); color:var(--card); border-color:transparent }
+    .badge { display:inline-block; border-radius:999px; padding:2px 9px; font-size:11.5px; font-weight:700 }
+    .badge.good { background:rgba(16,185,129,.16); color:var(--good) }
+    .badge.bad { background:rgba(239,68,68,.16); color:var(--bad) }
+    .badge.na { background:var(--chip); color:var(--muted) }
+    tr.rowbad > td { background:rgba(239,68,68,.07) }
+    .panel { border:1px dashed var(--line); border-radius:10px; padding:12px; margin-top:8px; background:var(--chip) }
+    .panel.bad { border-color:var(--bad); border-style:solid; background:rgba(239,68,68,.06) }
+    .kpi { display:grid; grid-template-columns:repeat(5,1fr); gap:10px }
+    @media (max-width:900px){ .kpi { grid-template-columns:repeat(2,1fr) } }
+    .kpi .b { background:var(--chip); border:1px solid var(--line); border-radius:12px; padding:12px; font-size:12px; color:var(--muted) }
+    .kpi .b b { display:block; font-size:22px; margin-top:3px; color:var(--text) }
+    .hint { font-size:12px; color:var(--muted); margin-top:8px; line-height:1.6 }
+    .row-act { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; margin-top:12px }
+    .lim { font-size:11.5px; color:var(--muted) }
+    .fitgrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(118px,1fr)); gap:7px }
+    .fitgrid .cell.over input { border-color:var(--bad); color:var(--bad); font-weight:700 }
+    .fitgrid .cell label { font-size:11px; color:var(--muted); display:block; margin-bottom:2px }
+    .hidden { display:none !important }
+    @media print {
+      body { background:#fff } .card { box-shadow:none; break-inside:avoid }
+      .row-act, .steps, .top button, #secBase, #draftCard { display:none !important }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <h1>개폐기류 제조사 자체검사 기록 프로그램</h1>
+        <div class="sub">제조사 자체 품질검사 기록 · 불량 상세사유 관리 <span id="appVer">ver.</span></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="pill" id="pillDate"></span>
+        <button class="ghost" id="btnTheme">테마</button>
+      </div>
+    </div>
+
+    <div class="card" id="draftCard" style="display:none">
+      <h2>작성 이어하기</h2>
+      <div class="sub" id="draftInfo"></div>
+      <div class="row-act">
+        <button class="ghost" id="btnDraftDrop">삭제하고 새로 시작</button>
+        <button class="primary" id="btnDraftGo">이어서 작성</button>
+      </div>
+    </div>
+
+    <div class="card" id="secBase">
+      <h2>1. 기본정보</h2>
+      <div class="grid g3">
+        <div>
+          <label class="f">제조업체</label>
+          <select id="fMaker"></select>
+        </div>
+        <div id="wrapMakerEtc" style="display:none">
+          <label class="f">업체명 직접입력</label>
+          <input id="fMakerEtc" placeholder="업체명">
+        </div>
+        <div>
+          <label class="f">품목(규격)</label>
+          <select id="fSpec"></select>
+        </div>
+        <div>
+          <label class="f">형식</label>
+          <select id="fVariant"></select>
+        </div>
+      </div>
+      <div class="grid g4" style="margin-top:10px">
+        <div><label class="f">제조 로트번호</label><input id="fLot" placeholder="예: 496100"></div>
+        <div><label class="f">생산(검사대상) 수량</label><input id="fQty" type="number" min="0" step="1" placeholder="예: 200"></div>
+        <div><label class="f">검사 시작일</label><input id="fD1" type="date"></div>
+        <div><label class="f">검사 종료일</label><input id="fD2" type="date"></div>
+      </div>
+      <div class="grid g3" style="margin-top:10px">
+        <div><label class="f">검사 담당자</label><input id="fWriter" placeholder="성명"></div>
+        <div><label class="f">제조번호 범위(선택)</label><input id="fSerial" placeholder="예: 26-001 ~ 26-200"></div>
+        <div><label class="f">비고</label><input id="fMemo" placeholder="특이사항"></div>
+      </div>
+      <div class="hint">
+        · 이 프로그램은 <b>제조사 자체검사용</b>입니다. 한전 검수용 항목(품질등급 · 검수자 서명 · 시험사진 · 첨부파일)은 포함하지 않습니다.<br>
+        · 검사수량은 항목별로 직접 입력하며 기본값은 생산수량(전수)입니다. 판정을 <b>불량</b>으로 선택하면 상세사유 입력란이 열립니다.
+      </div>
+      <div class="row-act">
+        <button class="ghost" id="btnLoad">파일 불러오기</button>
+        <input type="file" id="fileLoad" accept=".json,application/json" style="display:none">
+        <button class="primary" id="btnStart">검사표 작성 시작</button>
+      </div>
+    </div>
+
+    <div class="card hidden" id="secTest">
+      <div class="steps" id="stepTabs"></div>
+      <div id="stepBody"></div>
+      <div class="row-act">
+        <button class="ghost" id="btnBack">이전</button>
+        <button class="ghost" id="btnSave">중간저장</button>
+        <button class="primary" id="btnNext">다음</button>
+      </div>
+    </div>
+
+    <div class="card hidden" id="secSum">
+      <h2>검사결과 요약</h2>
+      <div id="sumHead" class="sub" style="margin-bottom:10px"></div>
+      <div class="kpi" id="sumKpi"></div>
+      <div style="margin-top:14px;overflow-x:auto"><table id="sumTable"></table></div>
+      <div class="hint" id="sumHint"></div>
+      <div class="row-act">
+        <button class="ghost" id="btnSumBack">항목 수정</button>
+        <button class="ghost" id="btnPrint">인쇄 / PDF</button>
+        <button class="primary" id="btnExport">검사기록 저장(JSON)</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ===== 공용 데이터 =====
+       한전 「개폐기류 성적서 작성프로그램」의 업체 목록 · 품목/시험항목 정의 ·
+       업체별 주회로 저항 기준치를 그대로 사용해 동일한 기준으로 자체검사한다.
+       (발취수량 함수 S는 SPECS 정의가 참조하므로 포함하되, 자체검사에서는 사용하지 않는다) */
+    const MAKERS = [{"name":"(주)디투엔지니어링"},{"name":"(주)비츠로일렉트릭"},{"name":"(주)에스얜에스"},{"name":"(주)엘파워텍"},{"name":"(주)엠에스그리드"},{"name":"(주)이앤엠테크"},{"name":"(주)이엔에스일렉트릭"},{"name":"(주)이페스"},{"name":"(주)이플전기"},{"name":"(주)케이피 일렉트릭"},{"name":"(주)테크프로"},{"name":"경동중전기(주)"},{"name":"구주기술(주)"},{"name":"구주진광 주식회사"},{"name":"동방전기공업 주식회사"},{"name":"동우일렉트릭 주식회사"},{"name":"리파워솔루션(주)"},{"name":"보국전기공업(주)"},{"name":"보성파워텍(주)"},{"name":"부흥시스템 주식회사"},{"name":"샤든코리아 (주)"},{"name":"서창전기통신(주)"},{"name":"선도전기(주)"},{"name":"선일전기공업(주)"},{"name":"시앤파워텍"},{"name":"신성산전(주)"},{"name":"신우전기제조(주)"},{"name":"쌍용전기 주식회사"},{"name":"유호전기공업(주)"},{"name":"이엔테크 주식회사"},{"name":"이화산업전력(주)"},{"name":"인텍전기전자 주식회사"},{"name":"일진홀딩스(주)"},{"name":"주식회사 광명전기"},{"name":"주식회사 델코코(Delcoco Co.Ltd)"},{"name":"주식회사 동양이이씨"},{"name":"주식회사 두레콤"},{"name":"주식회사 디티알"},{"name":"주식회사 삼성파워텍"},{"name":"주식회사 서전기전"},{"name":"주식회사 스위코진광"},{"name":"주식회사 알텍시스템"},{"name":"주식회사 에스지이엠"},{"name":"주식회사 이피이"},{"name":"주식회사 정인시스템"},{"name":"주식회사파워맥스"},{"name":"중앙산업(주)"},{"name":"중원 주식회사"},{"name":"피앤에이파워시스템 주식회사"},{"name":"피에스텍(주)"}];
+
+    const S = {
+      fixed:(n)=>()=>n,
+      note2_efi:(q)=> q<=50?1:3,
+      note1_dry:(q)=> q<=20?2:2+Math.ceil((q-20)/20),
+      note4_dry:(q)=> q<5?q:1+Math.ceil((q-5)/5),
+      note7_dry:(q)=> q<=100?1:(q<=200?2:3),
+      note15_dry:(q)=> q<20?1:1+Math.ceil((q-20)/20),
+      per:(u)=>(q)=>Math.max(1,Math.ceil(q/u)),
+      all:(q)=>q,
+    };
+
+    const SPECS = [
+      {
+        id:'EFI', gsNo:'GS-5925-0135', name:'25.8kV 에폭시 고장구간 차단기(EFI)',
+        install:'가공', unit:'대', keywords:['고장구간','차단기','efi','에폭시'],
+        variants:[ {value:'25.8kV 400A 수동형(120920)',mode:'수동'}, {value:'25.8kV 400A 자동형(126314)',mode:'자동'} ],
+        steps:[
+          { key:'appear', title:'외관·구조검사', items:[
+            { key:'ap_body', name:'구조 및 외관검사(본체)', ref:'7.3.1', crit:'4·5항 만족', full:true },
+            { key:'ap_ctrl', name:'제어함 구조 및 외관검사', ref:'7.3.16', crit:'4.4항 만족', sampFn:S.per(50) },
+          ]},
+          { key:'insul', title:'절연시험', items:[
+            { key:'ac_wv', name:'상용주파 내전압시험', ref:'7.3.7.1', crit:'건조 60kV·1분(검수 주수생략)', full:true },
+            { key:'imp_wv', name:'충격파 내전압시험', ref:'7.3.7.2', crit:'150kV(1.2×50㎲)', sampFn:S.note2_efi, exemptSA:true },
+            { key:'pd', name:'부분방전시험', ref:'7.3.9', crit:'20pC 이하', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, sampFn:S.note2_efi },
+            { key:'ctrl_ac', name:'제어회로 상용주파 내전압', ref:'7.3.20.1', crit:'2kV·1분', full:true },
+            { key:'seal', name:'본체 밀봉시험', ref:'7.3.24', crit:'IP X8 1h→건조내전압', sampFn:S.per(50), exemptSA:true },
+            { key:'ir', name:'절연저항 측정(제어회로)', ref:'7.3.12', crit:'측정', full:true },
+          ]},
+          { key:'func', title:'동작·기능시험', items:[
+            { key:'novolt', name:'무전압 개폐시험', ref:'7.3.6', crit:'10회 이상없음', full:true },
+            { key:'mintrip', name:'최소 Trip 전류시험', ref:'7.3.13', crit:'정정치 ±10%(90% 부동작 확인)', unit:'A', minTrip:true, noOp:true, sampFn:S.per(50) },
+            { key:'tc', name:'T-C 특성시험', ref:'7.3.13', crit:'150%,300%,600%,1000% 단락요소·지락요소 이상없음', unit:'ms', tcTest:true, simpleJdg:true, tcTol:'efi', sampFn:S.per(50) },
+            { key:'opfunc', name:'동작기능시험', ref:'7.3.14', crit:'6항(자동형 6.1)', sampFn:S.per(50) },
+            { key:'opchk', name:'조작확인시험', ref:'7.3.15', crit:'이상없음', sampFn:S.per(50) },
+            { key:'sys', name:'시스템연결 동작시험', ref:'7.3.28', crit:'H/W 포인트', autoOnly:true, sampFn:S.per(50) },
+            { key:'dir', name:'방향성 동작시험', ref:'7.3.32', crit:'5.10항', autoOnly:true, sampFn:S.per(50) },
+          ]},
+          { key:'meas', title:'계측·기타', items:[
+            { key:'mr', name:'주회로 저항측정', ref:'7.3.11', crit:'상별 측정(µΩ)', resistance:'overhead', sampFn:S.note2_efi },
+            { key:'ai', name:'전류계측 정밀도 시험', ref:'7.3.26', crit:'1.0급/5P20', sampFn:S.per(25), exemptSA:true },
+            { key:'av', name:'전압계측 정밀도 시험', ref:'7.3.27', crit:'±1%·±40분', autoOnly:true, sampFn:S.per(25), exemptSA:true },
+            { key:'batt', name:'축전지 성능시험', ref:'7.3.33', crit:'투개방 CO 50회(휴지30s)·24V(19~29V), GS-6140-0034', cert:true, noDate:true, cycle:'성적서 대체', autoOnly:true },
+            { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.3.21', crit:'KS D 3705', cert:true, cycle:'년 1회' },
+            { key:'cover', name:'부싱단자 절연카바시험', ref:'7.3.22', crit:'ES-5970-0042', cert:true, noDate:true, cycle:'성적서 대체' },
+            { key:'plate', name:'취부금구 도금시험', ref:'7.3.30', crit:'취부금구 70㎛↑ · 볼트·너트 50㎛↑', plating:true, unit:'㎛', sampFn:S.per(50) },
+          ]},
+        ],
+        exemptKeys:['imp_wv','av','ai','seal'],
+      },
+      {
+        id:'DRYAIR', gsNo:'GS-5925-0157', name:'25.8kV Dry-air 절연 부하개폐기(지중용)',
+        install:'지중', unit:'대', keywords:['dry','부하개폐기','지중','드라이에어'],
+        variants:[ {value:'3회로 수동형(127432)',mode:'수동',circuits:3}, {value:'3회로 자동형(127433)',mode:'자동',circuits:3},
+                   {value:'4회로 수동형(127428)',mode:'수동',circuits:4}, {value:'4회로 자동형(127429)',mode:'자동',circuits:4} ],
+        steps:[
+          { key:'appear', title:'외관·구조검사', items:[
+            { key:'ap_body', name:'구조 및 외관검사(본체)', ref:'7.2.1', crit:'5·6항 만족', sampFn:S.note4_dry, sampAdd:'필요시 시료수 증가 가능' },
+            { key:'ap_ctrl', name:'제어함 구조 및 외관검사', ref:'7.2.23', crit:'5·6항 만족', autoOnly:true, sampFn:S.note4_dry, sampAdd:'필요시 시료수 증가 가능' },
+          ]},
+          { key:'insul', title:'절연·가스시험', items:[
+            { key:'ac_wv', name:'상용주파 내전압시험', ref:'7.2.2.1', crit:'48kV·1분(절연캡 접지)', full:true },
+            { key:'imp_wv', name:'충격파 내전압시험', ref:'7.2.2.2', crit:'극간 165kV · 대지간 125kV · 상간 125kV(1.2×50㎲)', sampFn:S.note4_dry, sampAdd:'필요시 시료수 증가 가능', exemptSA:true },
+            { key:'pd', name:'부분방전시험', ref:'7.2.2.3', crit:'20pC 이하', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, sampFn:S.per(10) },
+            { key:'mr', name:'주회로 저항측정', ref:'7.2.3', crit:'단자쌍별 측정(µΩ, 무전압개폐 후)', resistance:'underground', sampFn:S.note4_dry, sampAdd:'필요시 시료수 증가 가능' },
+            { key:'tight', name:'기밀시험', ref:'7.2.7', crit:'연누기율 0.5% 이하', unit:'%/년', thr:{v:0.5,dir:'le'}, gasLeak:true, sampFn:S.note4_dry },
+            { key:'ir', name:'절연저항 측정(제어회로)', ref:'7.2.15', crit:'측정', sampFn:S.note4_dry, sampAdd:'필요시 시료수 증가 가능' },
+            { key:'press', name:'압력시험', ref:'7.2.17', crit:'IEC 62271-200 7.103', sampFn:S.note7_dry },
+            { key:'gaspurity', name:'가스순도시험', ref:'7.2.32', crit:'5.8.2 불순물 기준', cert:true, cycle:'성적서 대체' },
+            { key:'presslock', name:'압력저하표시·잠금시험', ref:'7.2.33', crit:'6.5.1항', sampFn:S.note7_dry },
+          ]},
+          { key:'func', title:'동작·기능시험', items:[
+            { key:'novolt', name:'무전압 개폐시험', ref:'7.2.12', crit:'20회 이상없음', full:true },
+            { key:'gasrelief', name:'가스방출장치 동작시험', ref:'7.2.21', crit:'동작압력(도면승인)', sampFn:S.per(100) },
+            { key:'ctrlfunc', name:'제어기능 확인시험', ref:'7.2.26', crit:'5.10.5·6항', autoOnly:true, full:true },
+            { key:'sys', name:'시스템연결 동작시험', ref:'7.2.27', crit:'6.5항', autoOnly:true, sampFn:S.note4_dry, sampAdd:'필요시 시료수 증가 가능' },
+            { key:'ctrl_ac', name:'제어회로 상용주파 내전압', ref:'7.2.24.1', crit:'IEC 62271-1 a)조건', autoOnly:true, sampFn:S.fixed(1), sampNote:'개발성적서 대체' },
+          ]},
+          { key:'meas', title:'계측·기타', items:[
+            { key:'av', name:'전압계측 정밀도시험', ref:'7.2.28', crit:'±1%·±40분', autoOnly:true, sampFn:S.note4_dry, sampAdd:'필요시 시료수 증가 가능', exemptSA:true },
+            { key:'ai', name:'전류계측 정밀도시험', ref:'7.2.29', crit:'1.0급·10P20', autoOnly:true, sampFn:S.note4_dry, sampAdd:'필요시 시료수 증가 가능', exemptSA:true },
+            // 도장시험 — 두께(일반형 60㎛↑ / 광고물 부착방지 P형 120㎛↑)·밀착성·충돌·부착력을 한 항목에서 확인
+            { key:'paint', name:'도장시험', ref:'7.2.34', crit:'두께 60㎛ 이상 · 밀착성·충돌·부착력 이상없음', critP:'광고물 부착방지(P)형 — 두께 120㎛ 이상 · 밀착성·충돌·부착력 이상없음', unit:'㎛', paintTest:true, thr:{v:60,dir:'ge'}, thrP:{v:120,dir:'ge'}, sampFn:S.note15_dry },
+            { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.2.31', crit:'KS D 3705', cert:true, cycle:'년 1회' },
+            { key:'pt', name:'전압변성장치(PT) 시험', ref:'7.2.20', crit:'IEC 61869-3/PT업체 성적서(검수 매50대)', cert:true, cycle:'성적서 대체', autoOnly:true },
+            { key:'oring', name:'밀봉재(O-링) 재질시험', ref:'7.2.19', crit:'KS B 2805 3종/4종C(성적서)', cert:true, cycle:'성적서 대체' },
+          ]},
+        ],
+        exemptKeys:['imp_wv','av','ai'],
+      },
+      {
+        id:'EPOXY', gsNo:'GS-5925-0011', name:'25.8kV 에폭시 지상개폐기',
+        install:'지상', unit:'대', keywords:['에폭시','지상개폐기','부하개폐기','지중','다회로','glbs'],
+        variants:[ {value:'44-D-M-125 수동형(124943)',mode:'수동',circuits:4}, {value:'44-D-M-125-P 수동형(121463)',mode:'수동',circuits:4},
+                   {value:'44-D-A-125 자동형(124944)',mode:'자동',circuits:4}, {value:'44-D-A-125-P 자동형(121464)',mode:'자동',circuits:4},
+                   {value:'33-D-M-125 수동형(124945)',mode:'수동',circuits:3}, {value:'33-D-M-125-P 수동형(121465)',mode:'수동',circuits:3},
+                   {value:'33-D-A-125 자동형(125363)',mode:'자동',circuits:3}, {value:'33-D-A-125-P 자동형(125364)',mode:'자동',circuits:3},
+                   {value:'44-D-M-125(DS) 수동형(126824)',mode:'수동',circuits:4}, {value:'44-D-M-125-P(DS) 수동형(126825)',mode:'수동',circuits:4},
+                   {value:'44-D-A-125(DS) 자동형(126826)',mode:'자동',circuits:4}, {value:'44-D-A-125-P(DS) 자동형(126827)',mode:'자동',circuits:4},
+                   {value:'33-D-M-125(DS) 수동형(126828)',mode:'수동',circuits:3}, {value:'33-D-M-125-P(DS) 수동형(126829)',mode:'수동',circuits:3},
+                   {value:'33-D-A-125(DS) 자동형(126830)',mode:'자동',circuits:3}, {value:'33-D-A-125-P(DS) 자동형(126831)',mode:'자동',circuits:3} ],
+        steps:[
+          { key:'appear', title:'외관·구조검사', items:[
+            { key:'ap_body', name:'구조 및 외관검사(본체)', ref:'7.2.1', crit:'5·6항 만족', sampFn:S.per(20) },
+            { key:'ap_ctrl', name:'제어함 구조 및 외관검사', ref:'7.2.17', crit:'5·6항 만족(외관 전량)', full:true, autoOnly:true },
+          ]},
+          { key:'insul', title:'절연·부분방전시험', items:[
+            { key:'ac_wv', name:'상용주파 내전압시험', ref:'7.2.6', crit:'48kV·1분(절연캡 접지)', full:true },
+            { key:'imp_wv', name:'충격파 내전압시험', ref:'7.2.6', crit:'주회로 125kV(1.2×50㎲)', sampFn:S.per(20), exemptSA:true },
+            { key:'pd', name:'부분방전시험', ref:'7.2.12', crit:'20pC 이하', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, sampFn:S.per(20) },
+            { key:'mr', name:'주회로 저항측정', ref:'7.2.2', crit:'단자쌍별 측정(µΩ, 전류前 1.2배 이하)', resistance:'underground', sampFn:S.per(20) },
+            { key:'ir', name:'절연저항 측정(제어회로)', ref:'7.2.9', crit:'ES-5925-0001 5.6항', autoOnly:true, full:true },
+          ]},
+          { key:'func', title:'동작·기능시험', items:[
+            { key:'novolt', name:'무전압 개폐시험', ref:'7.2.8', crit:'검수 10회 이상없음', full:true },
+            { key:'ctrlfunc', name:'제어기능 확인시험', ref:'7.2.20', crit:'5.9.5·6항', autoOnly:true, sampFn:S.per(10) },
+            { key:'sys', name:'시스템연결 동작시험', ref:'7.2.21', crit:'6항(모의주장치)', autoOnly:true, sampFn:S.per(10) },
+            { key:'ctrl_ac', name:'제어회로 상용주파 내전압', ref:'7.2.18.1', crit:'2kV·1분', autoOnly:true, sampFn:S.per(10) },
+          ]},
+          { key:'meas', title:'계측·기타', items:[
+            { key:'av', name:'전압계측 정밀도 시험', ref:'7.2.22', crit:'±1%·±40분', autoOnly:true, sampFn:S.per(10), exemptSA:true },
+            { key:'ai', name:'전류계측 정밀도 시험', ref:'7.2.23', crit:'1.0급·10P20', autoOnly:true, sampFn:S.per(10), exemptSA:true },
+            // 도장시험 — 두께(일반형 60㎛↑ / 광고물 부착방지 P형 120㎛↑)·밀착성·충돌·부착력을 한 항목에서 확인
+            { key:'paint', name:'도장시험', ref:'7.2.26', crit:'두께 60㎛ 이상 · 밀착성·충돌·부착력 이상없음', critP:'광고물 부착방지(P)형 — 두께 120㎛ 이상 · 밀착성·충돌·부착력 이상없음', unit:'㎛', paintTest:true, thr:{v:60,dir:'ge'}, thrP:{v:120,dir:'ge'}, sampFn:S.note15_dry },
+            { key:'conn', name:'상연결 접속재 시험', ref:'7.2.15', crit:'절연층 최소두께 12㎜ 이상', phaseConn:true, unit:'mm', thr:{v:12,dir:'ge'}, sampFn:S.per(10) },
+            { key:'connector', name:'접속재 시험', ref:'7.2.24', crit:'IEEE Std 386/성적서', cert:true, cycle:'성적서 대체' },
+            { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.2.25', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
+            { key:'pt', name:'전압변성장치(PT) 시험', ref:'7.2.27', crit:'IEC 61869-3/성적서(검수 매50대)', cert:true, cycle:'성적서 대체', autoOnly:true },
+            { key:'oil', name:'절연유 PCB 성적서', ref:'7.2.28', crit:'폴리염화비페닐(PCB) 미함유 확인', cert:true, noFile:true, cycle:'년 2회 중 시행일 기입' },
+          ]},
+        ],
+        exemptKeys:['imp_wv','av','ai'],
+      },
+      {
+        id:'EMCB', gsNo:'GS-5925-0012', name:'25.8kV 에폭시 다회로차단기',
+        install:'지상', unit:'대', keywords:['에폭시','다회로차단기','다회로','차단기','지중','지상','원격조작','emcb'],
+        variants:[ {value:'33-1B-A-125 3회로 1차단형(108174)',mode:'자동',circuits:3}, {value:'33-1B-A-125-P 3회로 1차단형 광고물(121466)',mode:'자동',circuits:3},
+                   {value:'33-2B-A-125-P 3회로 2차단형 광고물(126869)',mode:'자동',circuits:3}, {value:'44-2B-A-125 4회로 2차단형(108175)',mode:'자동',circuits:4},
+                   {value:'44-2B-A-125-P 4회로 2차단형 광고물(121467)',mode:'자동',circuits:4}, {value:'44-3B-A-125-P 4회로 3차단형 광고물(126870)',mode:'자동',circuits:4} ],
+        steps:[
+          { key:'appear', title:'외관·구조검사', items:[
+            { key:'ap_body', name:'구조 및 외관검사', ref:'7.2.1', crit:'5항 만족(외관 전량)', full:true },
+            { key:'ap_ctrl', name:'제어함 구조 및 외관검사', ref:'7.2.18', crit:'5.4항 만족(외관 전량)', full:true },
+          ]},
+          { key:'insul', title:'절연·부분방전시험', items:[
+            { key:'ac_wv', name:'상용주파 내전압시험', ref:'7.2.8', crit:'48kV·1분(절연캡 접지)', full:true },
+            { key:'imp_wv', name:'충격파 내전압시험', ref:'7.2.8', crit:'주회로 125kV(1.2×50㎲)', sampFn:S.per(20), exemptSA:true },
+            { key:'pd', name:'부분방전시험', ref:'7.2.10', crit:'20pC 이하', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, sampFn:S.per(20) },
+            { key:'mr', name:'주회로 저항측정', ref:'7.2.12', crit:'단자쌍별 측정(µΩ, 전류前 1.2배 이하)', resistance:'underground', sampFn:S.per(20) },
+          ]},
+          { key:'func', title:'동작·기능시험', items:[
+            { key:'novolt', name:'무전압 개폐시험', ref:'7.2.6', crit:'검수 10회 이상없음', full:true },
+            { key:'mintrip', name:'최소동작전류 시험', ref:'7.2.19', crit:'정정치 ±10%(3상중1상)', unit:'A', minTrip:true, sampFn:S.per(20) },
+            { key:'tc', name:'T-C 특성시험', ref:'7.2.20', crit:'150/300/500/1000%', unit:'ms', tcTest:true, tcTol:'rc', tcPcts:[150,300,500,1000], sampFn:S.per(20) },
+            { key:'ctrl_ac', name:'제어회로 상용주파 내전압', ref:'7.2.21.1', crit:'IEC 62271-111 6.10항', sampFn:S.per(20) },
+            { key:'sys', name:'시스템 연결동작 시험', ref:'7.2.22', crit:'6.6항(무전압개폐 3회)', full:true },
+          ]},
+          { key:'meas', title:'계측·기타', items:[
+            { key:'av', name:'전압계측 정밀도 시험', ref:'7.2.23', crit:'±1%·±40분', sampFn:S.per(20), exemptSA:true },
+            { key:'ai', name:'전류계측 정밀도 시험', ref:'7.2.24', crit:'1.0급·10P20', sampFn:S.per(20), exemptSA:true },
+            // 도장시험 — 두께(일반형 60㎛↑ / 광고물 부착방지 P형 120㎛↑)·밀착성·충돌·부착력을 한 항목에서 확인
+            { key:'paint', name:'도장시험', ref:'7.2.29', crit:'두께 60㎛ 이상 · 밀착성·충돌·부착력 이상없음', critP:'광고물 부착방지(P)형 — 두께 120㎛ 이상 · 밀착성·충돌·부착력 이상없음', unit:'㎛', paintTest:true, thr:{v:60,dir:'ge'}, thrP:{v:120,dir:'ge'}, sampFn:S.note15_dry },
+            { key:'conn', name:'상연결 접속재 시험', ref:'7.2.16', crit:'절연층 최소두께 12㎜ 이상', phaseConn:true, unit:'mm', thr:{v:12,dir:'ge'}, sampFn:S.per(20) },
+            { key:'connector', name:'접속재 시험', ref:'7.2.13', crit:'IEEE 386', cert:true, cycle:'성적서 대체' },
+            { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.2.26', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
+            { key:'steel_t', name:'강판두께 측정', ref:'7.2.26', crit:'외함 2.0㎜↑·베이스 3.0㎜↑', full:true },
+            { key:'pt', name:'전압변성장치(PT) 시험', ref:'7.2.30', crit:'본체·케이블 내전압/부분방전', cert:true, cycle:'성적서 대체' },
+          ]},
+        ],
+        exemptKeys:['imp_wv','av','ai'],
+      },
+      {
+        id:'DEMCB', gsNo:'GS-5925-0141', name:'25.8kV 에폭시 방향성 다회로차단기',
+        install:'지상', unit:'대', keywords:['에폭시','방향성','다회로차단기','다회로','차단기','지중','지상','원격조작','demcb','방향성차단기'],
+        variants:[ {value:'33-1B-A-125 3회로 1차단형(121628)',mode:'자동',circuits:3}, {value:'33-1B-A-125-P 3회로 1차단형 광고물(121629)',mode:'자동',circuits:3},
+                   {value:'33-2B-A-125-P 3회로 2차단형 광고물(126871)',mode:'자동',circuits:3}, {value:'44-2B-A-125 4회로 2차단형(121630)',mode:'자동',circuits:4},
+                   {value:'44-2B-A-125-P 4회로 2차단형 광고물(121631)',mode:'자동',circuits:4}, {value:'44-3B-A-125-P 4회로 3차단형 광고물(126872)',mode:'자동',circuits:4} ],
+        steps:[
+          { key:'appear', title:'외관·구조검사', items:[
+            { key:'ap_body', name:'구조 및 외관검사', ref:'7.2.1', crit:'5항 만족(외관 전량)', full:true },
+            { key:'ap_ctrl', name:'제어함 구조 및 외관검사', ref:'7.2.18', crit:'5.8항 만족(외관 전량)', full:true },
+          ]},
+          { key:'insul', title:'절연·부분방전시험', items:[
+            { key:'ac_wv', name:'상용주파 내전압시험', ref:'7.2.8', crit:'48kV·1분(절연캡 접지)', full:true },
+            { key:'imp_wv', name:'충격파 내전압시험', ref:'7.2.8', crit:'주회로 125kV(1.2×50㎲)', sampFn:S.per(10), exemptSA:true },
+            { key:'pd', name:'부분방전시험', ref:'7.2.10', crit:'20pC 이하(상간28.4/대지16.4kV)', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, sampFn:S.per(10) },
+            { key:'mr', name:'주회로 저항측정', ref:'7.2.12', crit:'단자쌍별 측정(µΩ, 전류前 1.2배 이하)', resistance:'underground', sampFn:S.per(10) },
+          ]},
+          { key:'func', title:'동작·기능시험', items:[
+            { key:'novolt', name:'무전압 개폐시험', ref:'7.2.6', crit:'검수 10회 이상없음', full:true },
+            { key:'mintrip', name:'최소동작전류 시험', ref:'7.2.19', crit:'정정치 ±10%(3상중1상·최소/중간/최대)', unit:'A', minTrip:true, sampFn:S.per(10) },
+            { key:'tc', name:'T-C 특성시험', ref:'7.2.20', crit:'150/300/500/1000%', unit:'ms', tcTest:true, tcTol:'rc', tcPcts:[150,300,500,1000], sampFn:S.per(10) },
+            { key:'ctrl_ac', name:'제어회로 상용주파 내전압', ref:'7.2.21.1', crit:'IEC 62271-111 6.10항', sampFn:S.per(10) },
+            { key:'sys', name:'시스템 연결동작 시험', ref:'7.2.22', crit:'6.3.4·6.8항(방향성 보호기능 포함)', full:true },
+          ]},
+          { key:'meas', title:'계측·기타', items:[
+            { key:'av', name:'전압계측 정밀도 시험', ref:'7.2.23', crit:'±1%·±40분(80~120%)', sampFn:S.per(10), exemptSA:true },
+            { key:'ai', name:'전류계측 정밀도 시험', ref:'7.2.24', crit:'1.0급·10P20(5~120%)', sampFn:S.per(10), exemptSA:true },
+            // 도장시험 — 두께(일반형 60㎛↑ / 광고물 부착방지 P형 120㎛↑)·밀착성·충돌·부착력을 한 항목에서 확인
+            { key:'paint', name:'도장시험', ref:'7.2.29', crit:'두께 60㎛ 이상 · 밀착성·충돌·부착력 이상없음', critP:'광고물 부착방지(P)형 — 두께 120㎛ 이상 · 밀착성·충돌·부착력 이상없음', unit:'㎛', paintTest:true, thr:{v:60,dir:'ge'}, thrP:{v:120,dir:'ge'}, sampFn:S.note15_dry },
+            { key:'conn', name:'상연결 접속재 시험', ref:'7.2.16', crit:'절연층 최소두께 12㎜ 이상', phaseConn:true, unit:'mm', thr:{v:12,dir:'ge'}, sampFn:S.per(10) },
+            { key:'connector', name:'접속재 시험', ref:'7.2.13', crit:'IEEE 386', cert:true, cycle:'성적서 대체' },
+            { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.2.26', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
+            { key:'steel_t', name:'강판두께 측정', ref:'7.2.26', crit:'외함 2.0㎜↑·베이스 3.0㎜↑', full:true },
+            { key:'pt', name:'전압변성장치(PT) 시험', ref:'7.2.30', crit:'50kV 유도내전압·부분방전 20pC(검수 매50대)', cert:true, cycle:'성적서 대체' },
+          ]},
+        ],
+        exemptKeys:['imp_wv','av','ai'],
+      },
+      {
+        id:'POLE', gsNo:'ES-5925-0004', name:'25.8kV 에폭시 주상개폐기(Eco)',
+        install:'가공', unit:'대', keywords:['에폭시','주상개폐기','부하개폐기','가공','진공','vi','pole'],
+        variants:[ {value:'25.8kV 630A 수동 DS 일반선로(126848)',mode:'수동'}, {value:'25.8kV 630A 자동 DS 일반선로(126849)',mode:'자동'},
+                   {value:'25.8kV 630A 수동 DS 대용량선로(126906)',mode:'수동'}, {value:'25.8kV 630A 자동 DS 대용량선로(126907)',mode:'자동'} ],
+        steps:[
+          { key:'appear', title:'외관·구조검사', items:[
+            { key:'ap_body', name:'구조 및 외관검사(본체)', ref:'7.3.1', crit:'5·6항 만족(외관 전량)', full:true },
+            { key:'ap_ctrl', name:'제어함 구조 및 외관검사', ref:'7.3.14', crit:'6항 만족(외관 전량)', full:true, autoOnly:true },
+          ]},
+          { key:'insul', title:'절연·부분방전시험', items:[
+            { key:'ac_wv', name:'상용주파 내전압시험', ref:'7.3.6.1', crit:'극간 66kV · 대지간 60kV · 상간 60kV(건조 1분, 검수 주수생략)', full:true },
+            { key:'imp_wv', name:'충격파 내전압시험', ref:'7.3.6.2', crit:'극간 165kV · 대지간 150kV · 상간 150kV(1.2×50㎲)', sampFn:S.note2_efi, exemptSA:true },
+            { key:'pd', name:'부분방전시험', ref:'7.3.8', crit:'20pC 이하', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, sampFn:S.per(20) },
+            { key:'mr', name:'주회로 저항측정', ref:'7.3.10', crit:'상별 측정(µΩ)', resistance:'overhead', sampFn:S.note2_efi },
+            { key:'seal', name:'본체 밀봉시험', ref:'7.3.11', crit:'IP X8 1h 침수 후 건조내전압 — 극간 66kV · 대지간 60kV · 상간 60kV', sampFn:S.per(50) },
+            { key:'ir', name:'절연저항시험(제어회로)', ref:'7.3.17', crit:'ES-5925-0001', autoOnly:true, sampFn:S.per(50) },
+          ]},
+          { key:'func', title:'동작·기능시험', items:[
+            { key:'novolt', name:'무전압 개폐시험', ref:'7.3.5', crit:'검수 10회(VI성능확인 제외)', full:true },
+            { key:'opchk', name:'조작확인시험', ref:'7.3.13', crit:'조작력 100~300N', sampFn:S.per(50) },
+            { key:'ctrl_ac', name:'제어회로 상용주파 내전압', ref:'7.3.15.1', crit:'2kV·1분', autoOnly:true, sampFn:S.per(50) },
+            { key:'sys', name:'시스템연결 동작시험', ref:'7.3.22', crit:'모의장치 신호전송', autoOnly:true, sampFn:S.per(50) },
+            { key:'ctrlfunc', name:'제어기능 확인시험', ref:'7.3.23', crit:'6.6항(현장/원격)', autoOnly:true, full:true },
+          ]},
+          { key:'meas', title:'계측·기타', items:[
+            { key:'ai', name:'전류계측 정밀도 시험', ref:'7.3.19', crit:'1.0급·10P20', autoOnly:true, sampFn:S.per(50), exemptSA:true },
+            { key:'av', name:'전압계측 정밀도 시험', ref:'7.3.20', crit:'전자식 1.0급(60044-7)', autoOnly:true, sampFn:S.per(50), exemptSA:true },
+            { key:'batt', name:'축전지 성능시험', ref:'7.3.31', crit:'투개방 50회·24V(19~29V)', cert:true, noDate:true, cycle:'성적서 대체', autoOnly:true },
+            { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.3.24', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
+            { key:'cover', name:'절연커버 성능시험', ref:'7.3.27', crit:'', cert:true, noDate:true, cycle:'성적서 대체' },
+            { key:'plate', name:'취부금구 도금시험', ref:'7.3.28', crit:'취부금구 70㎛↑ · 볼트·너트 50㎛↑', plating:true, unit:'㎛', sampFn:S.per(50) },
+          ]},
+        ],
+        exemptKeys:['imp_wv','av','ai'],
+      },
+      {
+        id:'AIRPAD', gsNo:'GS-5925-0158', name:'25.8kV 공기절연 지상개폐기',
+        install:'지상', unit:'대', keywords:['공기절연','지상개폐기','부하개폐기','dry air','드라이에어','다회로','지중','127918','128782'],
+        variants:[ {value:'4회로 자동형 에폭시(127918)',mode:'자동',circuits:4}, {value:'4회로 자동형 PC(128782)',mode:'자동',circuits:4},
+                   {value:'3회로 자동형 에폭시(127919)',mode:'자동',circuits:3}, {value:'3회로 자동형 PC(128783)',mode:'자동',circuits:3} ],
+        steps:[
+          { key:'appear', title:'외관·구조검사', items:[
+            { key:'ap_body', name:'구조 및 외관검사(본체)', ref:'7.2.1', crit:'5·6항 만족', sampFn:S.note1_dry },
+            { key:'ap_ctrl', name:'제어함 구조 및 외관검사', ref:'7.2.23', crit:'5·6항 만족', sampFn:S.note1_dry },
+          ]},
+          { key:'insul', title:'절연·가스시험', items:[
+            { key:'ac_wv', name:'상용주파 내전압시험', ref:'7.2.2.1', crit:'48kV·1분(절연캡 접지)', full:true },
+            { key:'imp_wv', name:'충격파 내전압시험', ref:'7.2.2.2', crit:'주회로 125·단로기극간 138kV(1.2×50㎲)', sampFn:S.note1_dry, exemptSA:true },
+            { key:'pd', name:'부분방전시험', ref:'7.2.2.3', crit:'20pC 이하(상간28.4/대지16.4kV)', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, sampFn:S.per(10) },
+            { key:'mr', name:'주회로 저항측정', ref:'7.2.3', crit:'단자쌍별 측정(µΩ, 무전압개폐 후 1.2배 이하)', resistance:'underground', sampFn:S.note1_dry },
+            { key:'tight', name:'기밀시험', ref:'7.2.7', crit:'연누기율 0.5% 이하(72h)', unit:'%/년', thr:{v:0.5,dir:'le'}, sampFn:S.note4_dry },
+            { key:'ir', name:'절연저항 측정(제어회로)', ref:'7.2.15', crit:'ES-5925-0001 5.6항', sampFn:S.note1_dry },
+            { key:'press', name:'압력시험', ref:'7.2.17', crit:'정격압력 1.3배(IEC 62271-200 8.103)', sampFn:S.note7_dry },
+            { key:'gaspurity', name:'가스순도시험', ref:'7.2.32', crit:'5.8.2 불순물 기준(CO/CO2/THC<1ppm)', cert:true, cycle:'성적서 대체' },
+            { key:'presslock', name:'압력저하표시·잠금시험', ref:'7.2.33', crit:'6.5.1항(분당 0.01MPa)', sampFn:S.note7_dry },
+          ]},
+          { key:'func', title:'동작·기능시험', items:[
+            { key:'novolt', name:'무전압 개폐시험', ref:'7.2.12', crit:'검수 20회 이상없음', full:true },
+            { key:'gasrelief', name:'가스방출장치 동작시험', ref:'7.2.21', crit:'동작압력(도면승인)', sampFn:S.per(100) },
+            { key:'ctrlfunc', name:'제어기능 확인시험', ref:'7.2.26', crit:'5.10.5·6항(현장/원격)', full:true },
+            { key:'sys', name:'시스템연결 동작시험', ref:'7.2.27', crit:'6.5항(모의시험장치)', sampFn:S.note1_dry },
+            { key:'ctrl_ac', name:'제어회로 상용주파 내전압', ref:'7.2.24.1', crit:'2kV·1분', sampFn:S.fixed(1), sampNote:'개발성적서 대체' },
+          ]},
+          { key:'meas', title:'계측·기타', items:[
+            { key:'av', name:'전압계측 정밀도시험', ref:'7.2.28', crit:'±1%·±5°(80~120%,50%)', sampFn:S.note1_dry, exemptSA:true },
+            { key:'ai', name:'전류계측 정밀도시험', ref:'7.2.29', crit:'1.0급·10P20(5~120%)', sampFn:S.note1_dry, exemptSA:true },
+            { key:'bushingvolt', name:'부싱단자 전압시험', ref:'7.2.38', crit:'유기전압 50V·누설 0.5mA 이하', sampFn:S.per(10) },
+            // 도장시험 — 두께(일반형 60㎛↑ / 광고물 부착방지 P형 120㎛↑)·밀착성·충돌·부착력을 한 항목에서 확인
+            { key:'paint', name:'도장시험', ref:'7.2.34', crit:'두께 60㎛ 이상 · 밀착성·충돌·부착력 이상없음', critP:'광고물 부착방지(P)형 — 두께 120㎛ 이상 · 밀착성·충돌·부착력 이상없음', unit:'㎛', paintTest:true, thr:{v:60,dir:'ge'}, thrP:{v:120,dir:'ge'}, sampFn:S.note15_dry },
+            { key:'pt', name:'전압변성장치(PT) 시험', ref:'7.2.20', crit:'IEC 61869-3/원제조사 성적서(검수 매50대)', cert:true, cycle:'성적서 대체' },
+            { key:'oring', name:'밀봉재(O-링) 재질시험', ref:'7.2.19', crit:'KS B 2805 3종/4종C(성적서)', cert:true, cycle:'성적서 대체' },
+            { key:'solid', name:'고체절연물 물성시험(에폭시/PC)', ref:'7.2.39', crit:'표5 전항목(원제조사 성적서)', cert:true, cycle:'성적서 대체' },
+            { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.2.31', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'Mill Sheet 대체' },
+            { key:'steel_t', name:'강판두께 측정', ref:'7.2.31', crit:'외함 2.0㎜↑·베이스 3.0㎜↑', full:true },
+          ]},
+        ],
+        exemptKeys:['imp_wv','av','ai'],
+      },
+      {
+        id:'REC', gsNo:'ES-5925-0009', name:'25.8kV 폴리머 Recloser',
+        install:'가공', unit:'대', keywords:['recloser','리클로저','폴리머','재폐로','자동','차단기','가공','108117','126903'],
+        variants:[ {value:'25.8kV 630A 일반선로(108117)',mode:'자동'}, {value:'25.8kV 630A 대용량선로(126903)',mode:'자동'} ],
+        steps:[
+          { key:'appear', title:'외관·구조검사', items:[
+            { key:'ap_body', name:'구조 및 외관검사(본체)', ref:'IEC 62271-111 6.1', crit:'5항 만족(외관 전량)', full:true },
+            { key:'ap_ctrl', name:'제어회로 구조 및 외관검사', ref:'5.5항', crit:'5.5항 만족(외관 전량)', full:true },
+          ]},
+          { key:'insul', title:'절연·저항시험', items:[
+            { key:'ac_wv', name:'상용주파 내전압시험', ref:'IEC 62271-111 6.2', crit:'건조 60kV·1분(검수 건조만)', full:true },
+            { key:'mr', name:'주회로 저항측정', ref:'IEC 62271-111 6.4', crit:'상별 측정(µΩ)', resistance:'overhead', sampFn:S.per(20) },
+            { key:'ir', name:'절연저항 측정(제어회로)', ref:'ES-5925-0001 6.6항(원문)/5.6항', crit:'제어회로만 적용(주5 발취)', sampFn:S.per(50) },
+          ]},
+          { key:'func', title:'동작·특성시험', items:[
+            { key:'mintrip', name:'최소동작전류시험', ref:'IEC 62271-111 6.105', crit:'정정치 ±10%(검수 1상)', unit:'A', minTrip:true, sampFn:S.per(20) },
+            { key:'tc', name:'T-C 특성시험', ref:'IEC 62271-111 6.108', crit:'150%,300%,600%,1000% 단락요소·지락요소 이상없음', unit:'ms', tcTest:true, simpleJdg:true, tcTol:'rc', sampFn:S.per(20) },
+            { key:'seqtest', name:'Sequence Test', ref:'6.1.1항', crit:'1000% 단락·지락요소, 재폐로·복귀시간 이상없음', unit:'ms', seqTest:true, simpleJdg:true, tcTol:'rc', sampFn:S.per(20) },
+            { key:'novolt', name:'무전압 개폐시험', ref:'IEC 62271-111 6.109', crit:'검수 10회 연속 이상없음', full:true },
+          ]},
+          { key:'ctrl', title:'제어·계측시험', items:[
+            { key:'ctrl_ac', name:'제어회로 상용주파 내전압', ref:'IEC 62271-1 6.10.6', crit:'2kV·1분', sampFn:S.per(20) },
+            { key:'sys', name:'시스템 연결 동작시험', ref:'6.11항', crit:'모의주장치 동작·신호전송', sampFn:S.per(20) },
+            { key:'ai', name:'전류계측 정밀도 시험', ref:'KS C IEC 60044-1', crit:'1.0급·10P20(5~120%)', sampFn:S.per(20), exemptSA:true },
+            { key:'av', name:'전압계측 정밀도 시험', ref:'KS C IEC 60044-2', crit:'±1%·±40분(80~120%)', sampFn:S.per(20), exemptSA:true },
+          ]},
+          { key:'etc', title:'재질·부품시험(별첨)', items:[
+            { key:'steel', name:'강판 재질시험(기계·화학)', ref:'KS D 3705 11항', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
+            { key:'plate', name:'취부금구 도금시험', ref:'ES-0000-0003', crit:'취부금구 70㎛↑ · 볼트·너트 50㎛↑', plating:true, unit:'㎛', sampFn:S.per(50) },
+            { key:'cover', name:'부싱단자 절연커버 시험', ref:'ES-5970-0042', crit:'ES-5970-0042(성적서)', cert:true, noDate:true, cycle:'성적서 대체' },
+          ]},
+        ],
+        exemptKeys:['av','ai'],
+      },
+      {
+        id:'PREC', gsNo:'GS-5925-0155', name:'25.8kV 폴리머 Recloser(Pulse기능부)',
+        install:'가공', unit:'대', keywords:['recloser','리클로저','폴리머','펄스','pulse','p-rec','재폐로','자동','차단기','가공','126619','127546'],
+        variants:[ {value:'25.8kV 630A 일반선로(126619)',mode:'자동'}, {value:'25.8kV 630A 대용량선로(127546)',mode:'자동'} ],
+        steps:[
+          { key:'appear', title:'외관·구조검사', items:[
+            { key:'ap_body', name:'구조 및 외관검사(본체)', ref:'7.3.1', crit:'5항 만족(외관 전량)', full:true },
+            { key:'ap_ctrl', name:'제어회로 구조 및 외관검사', ref:'7.3.24', crit:'5.5항 만족(외관 전량)', full:true },
+          ]},
+          { key:'insul', title:'절연·저항시험', items:[
+            { key:'ac_wv', name:'상용주파 내전압시험', ref:'7.3.2', crit:'건조 60kV·1분(검수 주수생략)', full:true },
+            { key:'imp_wv', name:'충격파 내전압시험', ref:'7.3.2', crit:'150kV(1.2×50㎲)', sampFn:S.per(50), exemptSA:true },
+            // 부분방전시험(7.3.14)은 GS-5925-0155 표7상 인정시험 전용이므로 검수 항목에서 제외
+            { key:'mr', name:'주회로 저항측정', ref:'7.3.3', crit:'상별 측정(µΩ)', resistance:'overhead', sampFn:S.per(20) },
+            { key:'ir', name:'절연저항 측정(제어회로)', ref:'7.3.20', crit:'ES-5925-0001 5.6항(제어회로)', full:true },
+          ]},
+          { key:'func', title:'동작·특성시험', items:[
+            { key:'mintrip', name:'최소동작전류시험', ref:'7.3.13', crit:'정정치 ±10%(검수 1상)', unit:'A', minTrip:true, sampFn:S.per(20) },
+            { key:'tc', name:'T-C 특성시험', ref:'7.3.16', crit:'150%,300%,600%,1000% 단락요소·지락요소 이상없음', unit:'ms', tcTest:true, simpleJdg:true, tcTol:'rc', sampFn:S.per(20) },
+            { key:'seqtest', name:'Sequence Test', ref:'7.3.28', crit:'1000% 단락·지락요소, 재폐로·복귀시간 이상없음', unit:'ms', seqTest:true, simpleJdg:true, tcTol:'rc', sampFn:S.per(20) },
+            { key:'novolt', name:'무전압 개폐시험', ref:'7.3.17', crit:'검수 10회 연속 이상없음', full:true },
+            { key:'pulse_novolt', name:'펄스무전압 개폐시험', ref:'7.3.27.2', crit:'O-Pulse(A,B,C)·검수 3회(주8) 이상없음', sampFn:S.per(20) },
+            { key:'pulse_mintrip', name:'펄스최소동작전류시험', ref:'7.3.27.4', crit:'315°·2ms 80%부동작/120%동작(FI확인, 검수 1회) 이상없음', sampFn:S.per(20) },
+          ]},
+          { key:'ctrl', title:'제어·계측시험', items:[
+            { key:'ctrl_ac', name:'제어회로 상용주파 내전압', ref:'7.3.25', crit:'2kV·1분(IEC 62271-1 a조건)', sampFn:S.per(20) },
+            { key:'sys', name:'시스템 연결 동작시험', ref:'7.3.31', crit:'모의주장치 동작·신호전송(검수 H/W포인트)', sampFn:S.per(20) },
+            { key:'ai', name:'전류계측 정밀도 시험', ref:'7.3.32', crit:'1.0급·5P20(5~120%)', sampFn:S.per(20), exemptSA:true },
+            { key:'av', name:'전압계측 정밀도 시험', ref:'7.3.33', crit:'±1%·±40분(80~120%)', sampFn:S.per(20), exemptSA:true },
+          ]},
+          { key:'etc', title:'재질·부품시험(별첨)', items:[
+            { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.3.34', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
+            { key:'plate', name:'취부금구 도금시험', ref:'7.3.36', crit:'취부금구 70㎛↑ · 볼트·너트 50㎛↑', plating:true, unit:'㎛', sampFn:S.per(50) },
+            { key:'bushing', name:'폴리머 부싱시험', ref:'7.3.21', crit:'KS/IEC/ANSI 전14항목(성적서)', cert:true, cycle:'성적서 대체' },
+            { key:'cover', name:'부싱단자 절연커버 시험', ref:'7.3.23', crit:'ES-5970-0042(성적서)', cert:true, noDate:true, cycle:'성적서 대체' },
+            { key:'downline', name:'특고압 인하용 전선 성능시험', ref:'ES-6145-0022', crit:'ES-6145-0022/ES-5925-0003(성적서)', cert:true, cycle:'성적서 대체' },
+          ]},
+        ],
+        exemptKeys:['av','ai'],
+      },
+      {
+        id:'DREC', gsNo:'GS-5925-0139', name:'25.8kV 폴리머절연 방향성 Recloser',
+        install:'가공', unit:'대', keywords:['recloser','리클로저','폴리머','방향성','directional','재폐로','자동','차단기','가공','121623','126861'],
+        variants:[ {value:'25.8kV 630A 일반선로(121623)',mode:'자동'}, {value:'25.8kV 630A 대용량선로(126861)',mode:'자동'} ],
+        steps:[
+          { key:'appear', title:'외관·구조검사', items:[
+            { key:'ap_body', name:'구조 및 외관검사(본체)', ref:'7.3.1', crit:'5항 만족(외관 전량)', full:true },
+            { key:'ap_ctrl', name:'제어회로 구조 및 외관검사', ref:'7.3.19', crit:'5.5항 만족(외관 전량)', full:true },
+          ]},
+          { key:'insul', title:'절연·저항시험', items:[
+            { key:'ac_wv', name:'상용주파 내전압시험', ref:'7.3.2.1', crit:'건조 60kV·1분(검수 주수생략)', full:true },
+            { key:'pd', name:'부분방전시험', ref:'7.3.12', crit:'20pC 이하(상간28.4/대지16.4kV)', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, fullSample:true },
+            { key:'mr', name:'주회로 저항측정', ref:'7.3.3', crit:'상별 측정(µΩ)', resistance:'overhead', sampFn:S.per(20) },
+            { key:'ir', name:'절연저항 측정(제어회로)', ref:'7.3.15', crit:'ES-5925-0001 5.6항(제어회로)', full:true },
+          ]},
+          { key:'func', title:'동작·특성시험', items:[
+            { key:'mintrip', name:'최소동작전류시험', ref:'7.3.11', crit:'정정치 ±10%(검수 1상)', unit:'A', minTrip:true, sampFn:S.per(20) },
+            { key:'tc', name:'T-C 특성시험', ref:'7.3.13', crit:'150%,300%,600%,1000% 단락요소·지락요소 이상없음', unit:'ms', tcTest:true, simpleJdg:true, tcTol:'rc', sampFn:S.per(20) },
+            { key:'seqtest', name:'Sequence Test', ref:'7.3.22', crit:'1000% 단락·지락요소, 재폐로·복귀시간 이상없음', unit:'ms', seqTest:true, simpleJdg:true, tcTol:'rc', sampFn:S.per(20) },
+            { key:'novolt', name:'무전압 개폐시험', ref:'7.3.14', crit:'검수 10회 연속 이상없음', full:true },
+          ]},
+          { key:'ctrl', title:'제어·계측시험', items:[
+            { key:'ctrl_ac', name:'제어회로 상용주파 내전압', ref:'7.3.20.1', crit:'2kV·1분(IEC 62271-1 a조건)', sampFn:S.per(20) },
+            { key:'sys', name:'시스템 연결 동작시험(방향성 포함)', ref:'7.3.25', crit:'모의주장치 동작·신호전송+방향성 보호(검수 H/W포인트)', sampFn:S.per(20) },
+            { key:'ai', name:'전류계측 정밀도 시험', ref:'7.3.26', crit:'1.0급·5P20(5~120%)', sampFn:S.per(20), exemptSA:true },
+            { key:'av', name:'전압계측 정밀도 시험', ref:'7.3.27', crit:'±1%·±40분(80~120%)', sampFn:S.per(20), exemptSA:true },
+          ]},
+          { key:'etc', title:'재질·부품시험(별첨)', items:[
+            { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.3.28', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
+            { key:'plate', name:'취부금구 도금시험', ref:'7.3.30', crit:'취부금구 70㎛↑ · 볼트·너트 50㎛↑', plating:true, unit:'㎛', sampFn:S.per(50) },
+            { key:'cover', name:'부싱단자 절연커버 시험', ref:'7.3.18', crit:'ES-5970-0042(성적서)', cert:true, noDate:true, cycle:'성적서 대체' },
+          ]},
+        ],
+        exemptKeys:['av','ai'],
+      },
+    ];
+
+    // 제어회로 상용주파 내전압은 절연 성능 시험이므로 전 품목에서 절연·부분방전 카테고리로 통일
+    SPECS.forEach(sp=>{
+      const insul=sp.steps.find(s=>s.key==='insul'); if(!insul) return;
+      sp.steps.forEach(st=>{
+        if(st===insul) return;
+        const i=st.items.findIndex(x=>x.key==='ctrl_ac');
+        if(i>=0) insul.items.push(st.items.splice(i,1)[0]);
+      });
+    });
+
+    // 핵심부품 등록서 및 사용부품 확인서 — 전 품목 공통(마지막 시험 스텝 맨 아래)
+    // 시험항목이 아닌 제출서류이므로 갑지·을지에는 표시하지 않고(noGapji) 별첨 시트로만 출력
+    SPECS.forEach(sp=>{
+      const last=sp.steps[sp.steps.length-1];
+      if(!last.items.some(i=>i.key==='partsdoc')){
+        last.items.push({ key:'partsdoc', name:'핵심부품 등록서 및 사용부품 확인서', ref:'-', crit:'',
+          cert:true, docOnly:true, cycle:'필수 제출', noGapji:true });
+      }
+    });
+
+    const MCR_LIMITS = {"인텍전기전자 주식회사":{"POLE":[{"label":"ECODS절연부하개폐기","circuits":0,"vals":{"A상(R)":118.4,"B상(S)":120.7,"C상(T)":110.7}}],"PREC":[{"label":"배전자동화용펄스기능부폴리머RECLOSER","circuits":0,"vals":{"A상(R)":88.9,"B상(S)":86.9,"C상(T)":97.9}}],"EFI":[{"label":"에폭시절연고장구간차단기 · 자동","circuits":0,"vals":{"A상(R)":53.6,"B상(S)":53.6,"C상(T)":58.7}}],"REC":[{"label":"폴리머리클로져,배전자동화용","circuits":0,"vals":{"A상(R)":85.4,"B상(S)":82.9,"C상(T)":87.4}}],"DREC":[{"label":"배전자동화용폴리머절연방향성RECLOSER","circuits":0,"vals":{"A상(R)":85.4,"B상(S)":82.9,"C상(T)":87.4}}],"DRYAIR":[{"label":"DryAir절연부하개폐기 · 3회로","circuits":3,"vals":{"A1-A2":290.4,"A1-A3":321.0,"A2-A3":303.0,"B1-B2":288.0,"B1-B3":324.0,"B2-B3":290.0,"C1-C2":295.0,"C1-C3":331.0,"C2-C3":298.0}},{"label":"4회로","circuits":4,"vals":{"A1-A2":288.0,"A1-A3":319.0,"A1-A4":331.0,"A2-A3":301.0,"A2-A4":320.0,"A3-A4":291.0,"B1-B2":300.0,"B1-B3":320.0,"B1-B4":351.0,"B2-B3":289.0,"B2-B4":321.0,"B3-B4":292.0,"C1-C2":285.0,"C1-C3":301.0,"C1-C4":336.0,"C2-C3":283.0,"C2-C4":316.0,"C3-C4":285.0}}],"EPOXY":[{"label":"3회로 · 자동","circuits":3,"vals":{"A1-A2":198.0,"A1-A3":213.0,"A2-A3":189.0,"B1-B2":222.0,"B1-B3":220.0,"B2-B3":200.0,"C1-C2":193.0,"C1-C3":207.0,"C2-C3":200.0}},{"label":"수동","circuits":3,"vals":{"A1-A2":179.0,"A1-A3":199.0,"A2-A3":170.0,"B1-B2":176.0,"B1-B3":198.0,"B2-B3":182.0,"C1-C2":172.0,"C1-C3":196.0,"C2-C3":172.0}},{"label":"4회로 · 자동,수동(대표개발성적서받음)","circuits":4,"vals":{"A1-A2":178.8,"A1-A3":199.2,"A1-A4":229.2,"A2-A3":170.4,"A2-A4":201.6,"A3-A4":183.6,"B1-B2":176.4,"B1-B3":198.0,"B1-B4":212.4,"B2-B3":182.4,"B2-B4":193.2,"B3-B4":178.8,"C1-C2":171.6,"C1-C3":195.6,"C1-C4":208.8,"C2-C3":171.6,"C2-C4":186.0,"C3-C4":165.6}}],"EMCB":[{"label":"에폭시절연다회로차단기 · 1S2B(3회로)","circuits":3,"vals":{"A1-A2":199.2,"A1-A3":213.6,"A2-A3":192.0,"B1-B2":229.2,"B1-B3":266.4,"B2-B3":214.8,"C1-C2":228.0,"C1-C3":253.2,"C2-C3":190.8}},{"label":"2S1B(3회로)","circuits":3,"vals":{"A1-A2":180.0,"A1-A3":188.4,"A2-A3":186.0,"B1-B2":176.4,"B1-B3":200.4,"B2-B3":184.8,"C1-C2":170.4,"C1-C3":196.8,"C2-C3":178.8}},{"label":"2S2B(4회로)","circuits":4,"vals":{"A1-A2":300.0,"A1-A3":309.6,"A1-A4":339.6,"A2-A3":218.4,"A2-A4":255.6,"A3-A4":218.4,"B1-B2":205.2,"B1-B3":210.0,"B1-B4":243.6,"B2-B3":219.6,"B2-B4":231.6,"B3-B4":201.6,"C1-C2":283.2,"C1-C3":349.2,"C1-C4":303.6,"C2-C3":274.8,"C2-C4":238.8,"C3-C4":267.6}},{"label":"1S3B(4회로)","circuits":4,"vals":{"A1-A2":206.4,"A1-A3":246.0,"A1-A4":261.6,"A2-A3":196.8,"A2-A4":213.6,"A3-A4":234.0,"B1-B2":224.4,"B1-B3":228.0,"B1-B4":253.2,"B2-B3":262.8,"B2-B4":283.2,"B3-B4":222.0,"C1-C2":171.6,"C1-C3":216.0,"C1-C4":241.2,"C2-C3":208.8,"C2-C4":229.2,"C3-C4":234.0}}],"DEMCB":[{"label":"에폭시절연다회로차단기방향성 · 1S2B(3회로)","circuits":3,"vals":{"A1-A2":214.8,"A1-A3":250.8,"A2-A3":256.8,"B1-B2":223.2,"B1-B3":225.6,"B2-B3":237.6,"C1-C2":192.0,"C1-C3":226.8,"C2-C3":216.0}},{"label":"2S1B(3회로)","circuits":3,"vals":{"A1-A2":180.0,"A1-A3":188.4,"A2-A3":186.0,"B1-B2":176.4,"B1-B3":200.4,"B2-B3":184.8,"C1-C2":170.4,"C1-C3":196.8,"C2-C3":178.8}},{"label":"2S2B(4회로)","circuits":4,"vals":{"A1-A2":300.0,"A1-A3":309.6,"A1-A4":339.6,"A2-A3":218.4,"A2-A4":255.6,"A3-A4":218.4,"B1-B2":205.2,"B1-B3":210.0,"B1-B4":243.6,"B2-B3":219.6,"B2-B4":231.6,"B3-B4":201.6,"C1-C2":283.2,"C1-C3":349.2,"C1-C4":303.6,"C2-C3":274.8,"C2-C4":238.8,"C3-C4":267.6}},{"label":"1S3B(4회로)","circuits":4,"vals":{"A1-A2":226.8,"A1-A3":217.2,"A1-A4":232.8,"A2-A3":242.4,"A2-A4":255.6,"A3-A4":207.6,"B1-B2":228.0,"B1-B3":222.0,"B1-B4":268.8,"B2-B3":229.2,"B2-B4":273.6,"B3-B4":264.0,"C1-C2":222.0,"C1-C3":238.8,"C1-C4":237.6,"C2-C3":234.0,"C2-C4":236.4,"C3-C4":207.6}}]},"(주)이페스":{"POLE":[{"label":"기본","circuits":0,"vals":{"A상(R)":133.0,"B상(S)":133.0,"C상(T)":132.0}}]},"주식회사 이피이":{"POLE":[{"label":"기본","circuits":0,"vals":{"A상(R)":96.0,"B상(S)":100.8,"C상(T)":99.6}}]},"주식회사 광명전기":{"POLE":[{"label":"기본","circuits":0,"vals":{"A상(R)":86.0,"B상(S)":85.2,"C상(T)":90.4}}],"REC":[{"label":"기본","circuits":0,"vals":{"A상(R)":121.2,"B상(S)":116.4,"C상(T)":126.0}}],"DREC":[{"label":"기본","circuits":0,"vals":{"A상(R)":121.2,"B상(S)":116.4,"C상(T)":126.0}}],"EFI":[{"label":"기본","circuits":0,"vals":{"A상(R)":91.2,"B상(S)":91.2,"C상(T)":92.4}}]},"주식회사 동양이이씨":{"EPOXY":[{"label":"3회로-수동","circuits":3,"vals":{"A1-A2":198.0,"A1-A3":213.6,"A2-A3":189.6,"B1-B2":222.0,"B1-B3":220.8,"B2-B3":200.4,"C1-C2":193.2,"C1-C3":207.6,"C2-C3":200.4}},{"label":"4회로-자동","circuits":4,"vals":{"A1-A2":211.2,"A1-A3":225.6,"A1-A4":230.4,"A2-A3":220.8,"A2-A4":225.6,"A3-A4":218.4,"B1-B2":190.8,"B1-B3":223.2,"B1-B4":231.6,"B2-B3":226.8,"B2-B4":225.6,"B3-B4":214.8,"C1-C2":194.4,"C1-C3":228.0,"C1-C4":231.6,"C2-C3":194.4,"C2-C4":214.8,"C3-C4":210.0}},{"label":"4회로-수동","circuits":4,"vals":{"A1-A2":268.8,"A1-A3":260.4,"A1-A4":300.0,"A2-A3":247.2,"A2-A4":297.6,"A3-A4":249.6,"B1-B2":279.6,"B1-B3":304.8,"B1-B4":309.6,"B2-B3":223.2,"B2-B4":266.4,"B3-B4":216.0,"C1-C2":270.0,"C1-C3":297.6,"C1-C4":307.2,"C2-C3":261.6,"C2-C4":217.2,"C3-C4":247.2}}],"EFI":[{"label":"기본","circuits":0,"vals":{"A상(R)":63.6,"B상(S)":66.0,"C상(T)":63.6}}],"DRYAIR":[{"label":"4회로","circuits":4,"vals":{"A1-A2":0.0,"A1-A3":0.0,"A1-A4":0.0,"A2-A3":0.0,"A2-A4":0.0,"A3-A4":0.0,"B1-B2":0.0,"B1-B3":0.0,"B1-B4":0.0,"B2-B3":0.0,"B2-B4":0.0,"B3-B4":0.0,"C1-C2":0.0,"C1-C3":0.0,"C1-C4":0.0,"C2-C3":0.0,"C2-C4":0.0,"C3-C4":0.0}}],"AIRPAD":[{"label":"4회로","circuits":4,"vals":{"A1-A2":0.0,"A1-A3":0.0,"A1-A4":0.0,"A2-A3":0.0,"A2-A4":0.0,"A3-A4":0.0,"B1-B2":0.0,"B1-B3":0.0,"B1-B4":0.0,"B2-B3":0.0,"B2-B4":0.0,"B3-B4":0.0,"C1-C2":0.0,"C1-C3":0.0,"C1-C4":0.0,"C2-C3":0.0,"C2-C4":0.0,"C3-C4":0.0}}],"EMCB":[{"label":"4회로","circuits":4,"vals":{"A1-A2":0.0,"A1-A3":0.0,"A1-A4":0.0,"A2-A3":0.0,"A2-A4":0.0,"A3-A4":0.0,"B1-B2":0.0,"B1-B3":0.0,"B1-B4":0.0,"B2-B3":0.0,"B2-B4":0.0,"B3-B4":0.0,"C1-C2":0.0,"C1-C3":0.0,"C1-C4":0.0,"C2-C3":0.0,"C2-C4":0.0,"C3-C4":0.0}}]},"주식회사 알텍시스템":{"EPOXY":[{"label":"3회로","circuits":3,"vals":{"A1-A2":186.0,"A1-A3":217.0,"A2-A3":198.0,"B1-B2":196.8,"B1-B3":218.4,"B2-B3":202.8,"C1-C2":202.8,"C1-C3":232.8,"C2-C3":205.2}},{"label":"4회로","circuits":4,"vals":{"A1-A2":193.2,"A1-A3":217.2,"A1-A4":241.2,"A2-A3":190.8,"A2-A4":217.2,"A3-A4":192.0,"B1-B2":199.2,"B1-B3":224.4,"B1-B4":244.8,"B2-B3":193.2,"B2-B4":217.2,"B3-B4":201.6,"C1-C2":194.4,"C1-C3":225.6,"C1-C4":252.0,"C2-C3":200.4,"C2-C4":217.2,"C3-C4":200.4}}]},"(주)이엔에스일렉트릭":{"EPOXY":[{"label":"3회로(4회로 기준치 산출)","circuits":3,"vals":{"A1-A2":184.0,"A1-A3":212.0,"A2-A3":182.0,"B1-B2":187.0,"B1-B3":223.0,"B2-B3":199.0,"C1-C2":194.0,"C1-C3":211.0,"C2-C3":184.0}},{"label":"4회로","circuits":4,"vals":{"A1-A2":184.0,"A1-A3":212.0,"A1-A4":244.0,"A2-A3":182.0,"A2-A4":219.0,"A3-A4":200.0,"B1-B2":187.0,"B1-B3":223.0,"B1-B4":229.0,"B2-B3":199.0,"B2-B4":206.0,"B3-B4":196.0,"C1-C2":194.0,"C1-C3":211.0,"C1-C4":241.0,"C2-C3":184.0,"C2-C4":216.0,"C3-C4":190.0}}],"POLE":[{"label":"기본","circuits":0,"vals":{"A상(R)":196.0,"B상(S)":213.0,"C상(T)":200.0}}],"REC":[{"label":"기본","circuits":0,"vals":{"A상(R)":196.0,"B상(S)":213.0,"C상(T)":200.0}}],"EFI":[{"label":"기본","circuits":0,"vals":{"A상(R)":196.0,"B상(S)":213.0,"C상(T)":200.0}}],"DRYAIR":[{"label":"3회로","circuits":3,"vals":{"A1-A2":196.0,"A1-A3":213.0,"A2-A3":200.0,"B1-B2":195.0,"B1-B3":212.0,"B2-B3":199.0,"C1-C2":196.0,"C1-C3":213.0,"C2-C3":199.0}},{"label":"4회로","circuits":4,"vals":{"A1-A2":193.2,"A1-A3":202.8,"A1-A4":202.8,"A2-A3":199.2,"A2-A4":208.8,"A3-A4":194.4,"B1-B2":193.2,"B1-B3":205.2,"B1-B4":213.6,"B2-B3":199.2,"B2-B4":206.4,"B3-B4":198.0,"C1-C2":201.6,"C1-C3":208.8,"C1-C4":211.2,"C2-C3":201.6,"C2-C4":208.8,"C3-C4":207.6}}],"AIRPAD":[{"label":"3회로","circuits":3,"vals":{"A1-A2":196.0,"A1-A3":213.0,"A2-A3":200.0,"B1-B2":195.0,"B1-B3":212.0,"B2-B3":199.0,"C1-C2":196.0,"C1-C3":213.0,"C2-C3":199.0}},{"label":"4회로","circuits":4,"vals":{"A1-A2":193.2,"A1-A3":202.8,"A1-A4":202.8,"A2-A3":199.2,"A2-A4":208.8,"A3-A4":194.4,"B1-B2":193.2,"B1-B3":205.2,"B1-B4":213.6,"B2-B3":199.2,"B2-B4":206.4,"B3-B4":198.0,"C1-C2":201.6,"C1-C3":208.8,"C1-C4":211.2,"C2-C3":201.6,"C2-C4":208.8,"C3-C4":207.6}}],"EMCB":[{"label":"3회로","circuits":3,"vals":{"A1-A2":196.0,"A1-A3":213.0,"A2-A3":200.0,"B1-B2":195.0,"B1-B3":212.0,"B2-B3":199.0,"C1-C2":196.0,"C1-C3":213.0,"C2-C3":199.0}},{"label":"4회로","circuits":4,"vals":{"A1-A2":193.2,"A1-A3":202.8,"A1-A4":202.8,"A2-A3":199.2,"A2-A4":208.8,"A3-A4":194.4,"B1-B2":193.2,"B1-B3":205.2,"B1-B4":213.6,"B2-B3":199.2,"B2-B4":206.4,"B3-B4":198.0,"C1-C2":201.6,"C1-C3":208.8,"C1-C4":211.2,"C2-C3":201.6,"C2-C4":208.8,"C3-C4":207.6}}]},"(주)이플전기":{"EPOXY":[{"label":"3회로","circuits":3,"vals":{"A1-A2":213.6,"A1-A3":231.6,"A2-A3":217.2,"B1-B2":234.0,"B1-B3":255.6,"B2-B3":238.8,"C1-C2":240.0,"C1-C3":235.2,"C2-C3":237.6}},{"label":"4회로","circuits":4,"vals":{"A1-A2":220.0,"A1-A3":242.0,"A1-A4":258.0,"A2-A3":224.0,"A2-A4":241.0,"A3-A4":224.0,"B1-B2":225.0,"B1-B3":241.0,"B1-B4":255.0,"B2-B3":223.0,"B2-B4":236.0,"B3-B4":212.0,"C1-C2":232.0,"C1-C3":246.0,"C1-C4":261.0,"C2-C3":231.0,"C2-C4":246.0,"C3-C4":223.0}}]},"주식회사 정인시스템":{"EPOXY":[{"label":"3회로","circuits":3,"vals":{"A1-A2":219.6,"A1-A3":223.2,"A2-A3":230.4,"B1-B2":220.8,"B1-B3":234.0,"B2-B3":242.4,"C1-C2":223.2,"C1-C3":228.0,"C2-C3":219.6}},{"label":"3회로(수동)","circuits":3,"vals":{"A1-A2":226.8,"A1-A3":236.4,"A2-A3":237.6,"B1-B2":219.6,"B1-B3":236.4,"B2-B3":243.6,"C1-C2":237.6,"C1-C3":244.8,"C2-C3":230.4}},{"label":"4회로(하우징_에스제이그리드)","circuits":4,"vals":{"A1-A2":194.0,"A1-A3":203.6,"A1-A4":203.2,"A2-A3":200.0,"A2-A4":209.2,"A3-A4":195.2,"B1-B2":193.2,"B1-B3":206.0,"B1-B4":213.6,"B2-B3":199.2,"B2-B4":206.8,"B3-B4":198.8,"C1-C2":201.6,"C1-C3":209.2,"C1-C4":211.6,"C2-C3":202.0,"C2-C4":208.8,"C3-C4":207.6}},{"label":"4회로(하우징_동우전기)","circuits":4,"vals":{"A1-A2":210.0,"A1-A3":217.2,"A1-A4":261.6,"A2-A3":201.6,"A2-A4":244.8,"A3-A4":226.8,"B1-B2":202.8,"B1-B3":235.2,"B1-B4":225.6,"B2-B3":234.0,"B2-B4":222.0,"B3-B4":211.2,"C1-C2":194.4,"C1-C3":216.0,"C1-C4":223.2,"C2-C3":210.0,"C2-C4":211.2,"C3-C4":224.4}},{"label":"4회로(수동)","circuits":4,"vals":{"A1-A2":232.8,"A1-A3":241.2,"A1-A4":244.8,"A2-A3":237.6,"A2-A4":232.8,"A3-A4":235.2,"B1-B2":222.0,"B1-B3":236.4,"B1-B4":249.6,"B2-B3":223.2,"B2-B4":256.8,"B3-B4":235.2,"C1-C2":228.0,"C1-C3":240.0,"C1-C4":255.6,"C2-C3":226.8,"C2-C4":241.2,"C3-C4":236.4}}],"POLE":[{"label":"기본","circuits":0,"vals":{"A상(R)":130.8,"B상(S)":130.0,"C상(T)":139.9}}]},"(주)테크프로":{"EPOXY":[{"label":"3회로","circuits":3,"vals":{"A1-A2":196.8,"A1-A3":213.6,"A2-A3":200.4,"B1-B2":195.6,"B1-B3":212.4,"B2-B3":199.2,"C1-C2":196.8,"C1-C3":213.6,"C2-C3":199.2}},{"label":"4회로","circuits":4,"vals":{"A1-A2":193.2,"A1-A3":202.8,"A1-A4":202.8,"A2-A3":199.2,"A2-A4":208.8,"A3-A4":194.4,"B1-B2":193.2,"B1-B3":205.2,"B1-B4":213.6,"B2-B3":199.2,"B2-B4":206.4,"B3-B4":198.0,"C1-C2":201.6,"C1-C3":208.8,"C1-C4":211.2,"C2-C3":201.6,"C2-C4":208.8,"C3-C4":207.6}}]},"주식회사 에스지이엠":{"EPOXY":[{"label":"3회로(4회로 기준치 산출)","circuits":3,"vals":{"A1-A2":218.4,"A1-A3":235.2,"A2-A3":241.2,"B1-B2":195.6,"B1-B3":226.8,"B2-B3":219.6,"C1-C2":224.4,"C1-C3":235.2,"C2-C3":238.8}},{"label":"4회로","circuits":4,"vals":{"A1-A2":218.4,"A1-A3":235.2,"A1-A4":248.4,"A2-A3":241.2,"A2-A4":217.2,"A3-A4":222.0,"B1-B2":195.6,"B1-B3":226.8,"B1-B4":236.4,"B2-B3":219.6,"B2-B4":205.2,"B3-B4":212.4,"C1-C2":224.4,"C1-C3":235.2,"C1-C4":247.2,"C2-C3":238.8,"C2-C4":217.2,"C3-C4":223.2}}]},"경동중전기(주)":{"EPOXY":[{"label":"3회로(4회로 기준치 산출)","circuits":3,"vals":{"A1-A2":201.6,"A1-A3":194.4,"A2-A3":195.6,"B1-B2":202.8,"B1-B3":181.2,"B2-B3":192.0,"C1-C2":226.8,"C1-C3":206.4,"C2-C3":193.2}},{"label":"4회로","circuits":4,"vals":{"A1-A2":201.6,"A1-A3":194.4,"A1-A4":220.8,"A2-A3":195.6,"A2-A4":195.6,"A3-A4":181.2,"B1-B2":202.8,"B1-B3":181.2,"B1-B4":200.4,"B2-B3":192.0,"B2-B4":194.4,"B3-B4":180.0,"C1-C2":226.8,"C1-C3":206.4,"C1-C4":220.8,"C2-C3":193.2,"C2-C4":194.4,"C3-C4":192.0}}]},"구주진광 주식회사":{"EPOXY":[{"label":"3회로","circuits":3,"vals":{"A1-A2":196.8,"A1-A3":213.6,"A2-A3":200.4,"B1-B2":195.6,"B1-B3":212.4,"B2-B3":199.2,"C1-C2":196.8,"C1-C3":213.6,"C2-C3":199.2}},{"label":"4회로","circuits":4,"vals":{"A1-A2":178.0,"A1-A3":193.0,"A1-A4":217.0,"A2-A3":179.0,"A2-A4":206.0,"A3-A4":175.0,"B1-B2":174.0,"B1-B3":203.0,"B1-B4":215.0,"B2-B3":192.0,"B2-B4":215.0,"B3-B4":193.0,"C1-C2":184.0,"C1-C3":203.0,"C1-C4":226.0,"C2-C3":194.0,"C2-C4":215.0,"C3-C4":206.0}}],"POLE":[{"label":"기본","circuits":0,"vals":{"A상(R)":196.0,"B상(S)":213.0,"C상(T)":200.0}}],"REC":[{"label":"기본","circuits":0,"vals":{"A상(R)":196.0,"B상(S)":213.0,"C상(T)":200.0}}],"EFI":[{"label":"기본","circuits":0,"vals":{"A상(R)":196.0,"B상(S)":213.0,"C상(T)":200.0}}],"DRYAIR":[{"label":"3회로","circuits":3,"vals":{"A1-A2":196.0,"A1-A3":213.0,"A2-A3":200.0,"B1-B2":195.0,"B1-B3":212.0,"B2-B3":199.0,"C1-C2":196.0,"C1-C3":213.0,"C2-C3":199.0}},{"label":"4회로","circuits":4,"vals":{"A1-A2":193.2,"A1-A3":202.8,"A1-A4":202.8,"A2-A3":199.2,"A2-A4":208.8,"A3-A4":194.4,"B1-B2":193.2,"B1-B3":205.2,"B1-B4":213.6,"B2-B3":199.2,"B2-B4":206.4,"B3-B4":198.0,"C1-C2":201.6,"C1-C3":208.8,"C1-C4":211.2,"C2-C3":201.6,"C2-C4":208.8,"C3-C4":207.6}}],"AIRPAD":[{"label":"3회로","circuits":3,"vals":{"A1-A2":196.0,"A1-A3":213.0,"A2-A3":200.0,"B1-B2":195.0,"B1-B3":212.0,"B2-B3":199.0,"C1-C2":196.0,"C1-C3":213.0,"C2-C3":199.0}},{"label":"4회로","circuits":4,"vals":{"A1-A2":193.2,"A1-A3":202.8,"A1-A4":202.8,"A2-A3":199.2,"A2-A4":208.8,"A3-A4":194.4,"B1-B2":193.2,"B1-B3":205.2,"B1-B4":213.6,"B2-B3":199.2,"B2-B4":206.4,"B3-B4":198.0,"C1-C2":201.6,"C1-C3":208.8,"C1-C4":211.2,"C2-C3":201.6,"C2-C4":208.8,"C3-C4":207.6}}],"EMCB":[{"label":"3회로","circuits":3,"vals":{"A1-A2":196.0,"A1-A3":213.0,"A2-A3":200.0,"B1-B2":195.0,"B1-B3":212.0,"B2-B3":199.0,"C1-C2":196.0,"C1-C3":213.0,"C2-C3":199.0}},{"label":"4회로","circuits":4,"vals":{"A1-A2":193.2,"A1-A3":202.8,"A1-A4":202.8,"A2-A3":199.2,"A2-A4":208.8,"A3-A4":194.4,"B1-B2":193.2,"B1-B3":205.2,"B1-B4":213.6,"B2-B3":199.2,"B2-B4":206.4,"B3-B4":198.0,"C1-C2":201.6,"C1-C3":208.8,"C1-C4":211.2,"C2-C3":201.6,"C2-C4":208.8,"C3-C4":207.6}}]},"주식회사 두레콤":{"EPOXY":[{"label":"3회로","circuits":3,"vals":{"A1-A2":163.0,"A1-A3":181.0,"A2-A3":160.0,"B1-B2":168.0,"B1-B3":188.0,"B2-B3":157.0,"C1-C2":170.0,"C1-C3":185.0,"C2-C3":163.0}},{"label":"4회로","circuits":4,"vals":{"A1-A2":186.0,"A1-A3":203.0,"A1-A4":232.0,"A2-A3":174.0,"A2-A4":204.0,"A3-A4":174.0,"B1-B2":191.0,"B1-B3":208.0,"B1-B4":235.0,"B2-B3":178.0,"B2-B4":208.0,"B3-B4":176.0,"C1-C2":185.0,"C1-C3":208.0,"C1-C4":225.0,"C2-C3":186.0,"C2-C4":205.0,"C3-C4":182.0}}],"POLE":[{"label":"기본","circuits":0,"vals":{"A상(R)":138.7,"B상(S)":138.0,"C상(T)":133.2}}],"REC":[{"label":"기본","circuits":0,"vals":{"A상(R)":196.0,"B상(S)":213.0,"C상(T)":200.0}}],"EFI":[{"label":"기본","circuits":0,"vals":{"A상(R)":196.0,"B상(S)":213.0,"C상(T)":200.0}}],"DRYAIR":[{"label":"3회로","circuits":3,"vals":{"A1-A2":196.0,"A1-A3":213.0,"A2-A3":200.0,"B1-B2":195.0,"B1-B3":212.0,"B2-B3":199.0,"C1-C2":196.0,"C1-C3":213.0,"C2-C3":199.0}},{"label":"4회로","circuits":4,"vals":{"A1-A2":193.2,"A1-A3":202.8,"A1-A4":202.8,"A2-A3":199.2,"A2-A4":208.8,"A3-A4":194.4,"B1-B2":193.2,"B1-B3":205.2,"B1-B4":213.6,"B2-B3":199.2,"B2-B4":206.4,"B3-B4":198.0,"C1-C2":201.6,"C1-C3":208.8,"C1-C4":211.2,"C2-C3":201.6,"C2-C4":208.8,"C3-C4":207.6}}],"AIRPAD":[{"label":"3회로","circuits":3,"vals":{"A1-A2":196.0,"A1-A3":213.0,"A2-A3":200.0,"B1-B2":195.0,"B1-B3":212.0,"B2-B3":199.0,"C1-C2":196.0,"C1-C3":213.0,"C2-C3":199.0}},{"label":"4회로","circuits":4,"vals":{"A1-A2":193.2,"A1-A3":202.8,"A1-A4":202.8,"A2-A3":199.2,"A2-A4":208.8,"A3-A4":194.4,"B1-B2":193.2,"B1-B3":205.2,"B1-B4":213.6,"B2-B3":199.2,"B2-B4":206.4,"B3-B4":198.0,"C1-C2":201.6,"C1-C3":208.8,"C1-C4":211.2,"C2-C3":201.6,"C2-C4":208.8,"C3-C4":207.6}}],"EMCB":[{"label":"3회로","circuits":3,"vals":{"A1-A2":196.0,"A1-A3":213.0,"A2-A3":200.0,"B1-B2":195.0,"B1-B3":212.0,"B2-B3":199.0,"C1-C2":196.0,"C1-C3":213.0,"C2-C3":199.0}},{"label":"4회로","circuits":4,"vals":{"A1-A2":193.2,"A1-A3":202.8,"A1-A4":202.8,"A2-A3":199.2,"A2-A4":208.8,"A3-A4":194.4,"B1-B2":193.2,"B1-B3":205.2,"B1-B4":213.6,"B2-B3":199.2,"B2-B4":206.4,"B3-B4":198.0,"C1-C2":201.6,"C1-C3":208.8,"C1-C4":211.2,"C2-C3":201.6,"C2-C4":208.8,"C3-C4":207.6}}]},"리파워솔루션(주)":{"POLE":[{"label":"기본","circuits":0,"vals":{"A상(R)":106.0,"B상(S)":111.0,"C상(T)":108.0}}]},"보성파워텍(주)":{"EPOXY":[{"label":"3회로","circuits":3,"vals":{"A1-A2":356.4,"A1-A3":427.2,"A2-A3":405.6,"B1-B2":376.8,"B1-B3":396.0,"B2-B3":351.6,"C1-C2":337.2,"C1-C3":364.8,"C2-C3":345.6}},{"label":"4회로","circuits":4,"vals":{"A1-A2":385.2,"A1-A3":400.8,"A1-A4":399.6,"A2-A3":363.6,"A2-A4":361.2,"A3-A4":348.0,"B1-B2":343.2,"B1-B3":340.8,"B1-B4":332.4,"B2-B3":363.6,"B2-B4":349.2,"B3-B4":320.4,"C1-C2":300.0,"C1-C3":314.4,"C1-C4":330.0,"C2-C3":314.4,"C2-C4":325.2,"C3-C4":315.6}}],"POLE":[{"label":"기본","circuits":0,"vals":{"A상(R)":122.0,"B상(S)":112.0,"C상(T)":119.0}}],"REC":[{"label":"기본","circuits":0,"vals":{"A상(R)":196.0,"B상(S)":213.0,"C상(T)":200.0}}],"EFI":[{"label":"기본","circuits":0,"vals":{"A상(R)":196.0,"B상(S)":213.0,"C상(T)":200.0}}],"DRYAIR":[{"label":"3회로","circuits":3,"vals":{"A1-A2":196.0,"A1-A3":213.0,"A2-A3":200.0,"B1-B2":195.0,"B1-B3":212.0,"B2-B3":199.0,"C1-C2":196.0,"C1-C3":213.0,"C2-C3":199.0}},{"label":"4회로","circuits":4,"vals":{"A1-A2":193.2,"A1-A3":202.8,"A1-A4":202.8,"A2-A3":199.2,"A2-A4":208.8,"A3-A4":194.4,"B1-B2":193.2,"B1-B3":205.2,"B1-B4":213.6,"B2-B3":199.2,"B2-B4":206.4,"B3-B4":198.0,"C1-C2":201.6,"C1-C3":208.8,"C1-C4":211.2,"C2-C3":201.6,"C2-C4":208.8,"C3-C4":207.6}}],"AIRPAD":[{"label":"3회로","circuits":3,"vals":{"A1-A2":196.0,"A1-A3":213.0,"A2-A3":200.0,"B1-B2":195.0,"B1-B3":212.0,"B2-B3":199.0,"C1-C2":196.0,"C1-C3":213.0,"C2-C3":199.0}},{"label":"4회로","circuits":4,"vals":{"A1-A2":193.2,"A1-A3":202.8,"A1-A4":202.8,"A2-A3":199.2,"A2-A4":208.8,"A3-A4":194.4,"B1-B2":193.2,"B1-B3":205.2,"B1-B4":213.6,"B2-B3":199.2,"B2-B4":206.4,"B3-B4":198.0,"C1-C2":201.6,"C1-C3":208.8,"C1-C4":211.2,"C2-C3":201.6,"C2-C4":208.8,"C3-C4":207.6}}],"EMCB":[{"label":"3회로","circuits":3,"vals":{"A1-A2":196.0,"A1-A3":213.0,"A2-A3":200.0,"B1-B2":195.0,"B1-B3":212.0,"B2-B3":199.0,"C1-C2":196.0,"C1-C3":213.0,"C2-C3":199.0}},{"label":"4회로","circuits":4,"vals":{"A1-A2":193.2,"A1-A3":202.8,"A1-A4":202.8,"A2-A3":199.2,"A2-A4":208.8,"A3-A4":194.4,"B1-B2":193.2,"B1-B3":205.2,"B1-B4":213.6,"B2-B3":199.2,"B2-B4":206.4,"B3-B4":198.0,"C1-C2":201.6,"C1-C3":208.8,"C1-C4":211.2,"C2-C3":201.6,"C2-C4":208.8,"C3-C4":207.6}}]},"부흥시스템 주식회사":{"EPOXY":[{"label":"3회로(4회로 기준치 산출)","circuits":3,"vals":{"A1-A2":194.4,"A1-A3":216.0,"A2-A3":187.2,"B1-B2":195.6,"B1-B3":214.8,"B2-B3":190.8,"C1-C2":193.2,"C1-C3":213.6,"C2-C3":193.2}},{"label":"4회로","circuits":4,"vals":{"A1-A2":194.4,"A1-A3":216.0,"A1-A4":226.8,"A2-A3":187.2,"A2-A4":206.4,"A3-A4":204.0,"B1-B2":195.6,"B1-B3":214.8,"B1-B4":225.6,"B2-B3":190.8,"B2-B4":210.0,"B3-B4":202.8,"C1-C2":193.2,"C1-C3":213.6,"C1-C4":226.8,"C2-C3":193.2,"C2-C4":212.4,"C3-C4":205.2}}],"DREC":[{"label":"기본","circuits":0,"vals":{"A상(R)":91.2,"B상(S)":90.0,"C상(T)":94.8}}]},"(주)비츠로일렉트릭":{"REC":[{"label":"기본","circuits":0,"vals":{"A상(R)":150.0,"B상(S)":148.8,"C상(T)":153.6}}],"EPOXY":[{"label":"3회로","circuits":3,"vals":{"A1-A2":196.8,"A1-A3":213.6,"A2-A3":200.4,"B1-B2":195.6,"B1-B3":212.4,"B2-B3":199.2,"C1-C2":196.8,"C1-C3":213.6,"C2-C3":199.2}},{"label":"4회로","circuits":4,"vals":{"A1-A2":193.2,"A1-A3":202.8,"A1-A4":202.8,"A2-A3":199.2,"A2-A4":208.8,"A3-A4":194.4,"B1-B2":193.2,"B1-B3":205.2,"B1-B4":213.6,"B2-B3":199.2,"B2-B4":206.4,"B3-B4":198.0,"C1-C2":201.6,"C1-C3":208.8,"C1-C4":211.2,"C2-C3":201.6,"C2-C4":208.8,"C3-C4":207.6}}],"POLE":[{"label":"기본","circuits":0,"vals":{"A상(R)":196.0,"B상(S)":213.0,"C상(T)":200.0}}],"EFI":[{"label":"기본","circuits":0,"vals":{"A상(R)":196.0,"B상(S)":213.0,"C상(T)":200.0}}],"DRYAIR":[{"label":"3회로","circuits":3,"vals":{"A1-A2":196.0,"A1-A3":213.0,"A2-A3":200.0,"B1-B2":195.0,"B1-B3":212.0,"B2-B3":199.0,"C1-C2":196.0,"C1-C3":213.0,"C2-C3":199.0}},{"label":"4회로","circuits":4,"vals":{"A1-A2":193.2,"A1-A3":202.8,"A1-A4":202.8,"A2-A3":199.2,"A2-A4":208.8,"A3-A4":194.4,"B1-B2":193.2,"B1-B3":205.2,"B1-B4":213.6,"B2-B3":199.2,"B2-B4":206.4,"B3-B4":198.0,"C1-C2":201.6,"C1-C3":208.8,"C1-C4":211.2,"C2-C3":201.6,"C2-C4":208.8,"C3-C4":207.6}}],"AIRPAD":[{"label":"3회로","circuits":3,"vals":{"A1-A2":196.0,"A1-A3":213.0,"A2-A3":200.0,"B1-B2":195.0,"B1-B3":212.0,"B2-B3":199.0,"C1-C2":196.0,"C1-C3":213.0,"C2-C3":199.0}},{"label":"4회로","circuits":4,"vals":{"A1-A2":193.2,"A1-A3":202.8,"A1-A4":202.8,"A2-A3":199.2,"A2-A4":208.8,"A3-A4":194.4,"B1-B2":193.2,"B1-B3":205.2,"B1-B4":213.6,"B2-B3":199.2,"B2-B4":206.4,"B3-B4":198.0,"C1-C2":201.6,"C1-C3":208.8,"C1-C4":211.2,"C2-C3":201.6,"C2-C4":208.8,"C3-C4":207.6}}],"EMCB":[{"label":"3회로","circuits":3,"vals":{"A1-A2":196.0,"A1-A3":213.0,"A2-A3":200.0,"B1-B2":195.0,"B1-B3":212.0,"B2-B3":199.0,"C1-C2":196.0,"C1-C3":213.0,"C2-C3":199.0}},{"label":"4회로","circuits":4,"vals":{"A1-A2":193.2,"A1-A3":202.8,"A1-A4":202.8,"A2-A3":199.2,"A2-A4":208.8,"A3-A4":194.4,"B1-B2":193.2,"B1-B3":205.2,"B1-B4":213.6,"B2-B3":199.2,"B2-B4":206.4,"B3-B4":198.0,"C1-C2":201.6,"C1-C3":208.8,"C1-C4":211.2,"C2-C3":201.6,"C2-C4":208.8,"C3-C4":207.6}}]},"선일전기공업(주)":{"EPOXY":[{"label":"3회로","circuits":3,"vals":{"A1-A2":196.0,"A1-A3":213.0,"A2-A3":200.4,"B1-B2":195.0,"B1-B3":212.4,"B2-B3":199.2,"C1-C2":196.0,"C1-C3":213.0,"C2-C3":199.2}},{"label":"4회로","circuits":4,"vals":{"A1-A2":208.0,"A1-A3":226.0,"A1-A4":247.2,"A2-A3":212.4,"A2-A4":226.0,"A3-A4":207.0,"B1-B2":207.0,"B1-B3":224.4,"B1-B4":247.2,"B2-B3":211.2,"B2-B4":231.0,"B3-B4":211.2,"C1-C2":212.4,"C1-C3":225.0,"C1-C4":242.4,"C2-C3":210.0,"C2-C4":232.0,"C3-C4":204.0}}],"POLE":[{"label":"기본","circuits":0,"vals":{"A상(R)":196.0,"B상(S)":213.0,"C상(T)":200.0}}],"REC":[{"label":"기본","circuits":0,"vals":{"A상(R)":196.0,"B상(S)":213.0,"C상(T)":200.0}}],"EFI":[{"label":"기본","circuits":0,"vals":{"A상(R)":196.0,"B상(S)":213.0,"C상(T)":200.0}}],"DRYAIR":[{"label":"3회로","circuits":3,"vals":{"A1-A2":196.0,"A1-A3":213.0,"A2-A3":200.0,"B1-B2":195.0,"B1-B3":212.0,"B2-B3":199.0,"C1-C2":196.0,"C1-C3":213.0,"C2-C3":199.0}},{"label":"4회로","circuits":4,"vals":{"A1-A2":193.2,"A1-A3":202.8,"A1-A4":202.8,"A2-A3":199.2,"A2-A4":208.8,"A3-A4":194.4,"B1-B2":193.2,"B1-B3":205.2,"B1-B4":213.6,"B2-B3":199.2,"B2-B4":206.4,"B3-B4":198.0,"C1-C2":201.6,"C1-C3":208.8,"C1-C4":211.2,"C2-C3":201.6,"C2-C4":208.8,"C3-C4":207.6}}],"AIRPAD":[{"label":"3회로","circuits":3,"vals":{"A1-A2":196.0,"A1-A3":213.0,"A2-A3":200.0,"B1-B2":195.0,"B1-B3":212.0,"B2-B3":199.0,"C1-C2":196.0,"C1-C3":213.0,"C2-C3":199.0}},{"label":"4회로","circuits":4,"vals":{"A1-A2":193.2,"A1-A3":202.8,"A1-A4":202.8,"A2-A3":199.2,"A2-A4":208.8,"A3-A4":194.4,"B1-B2":193.2,"B1-B3":205.2,"B1-B4":213.6,"B2-B3":199.2,"B2-B4":206.4,"B3-B4":198.0,"C1-C2":201.6,"C1-C3":208.8,"C1-C4":211.2,"C2-C3":201.6,"C2-C4":208.8,"C3-C4":207.6}}],"EMCB":[{"label":"3회로","circuits":3,"vals":{"A1-A2":196.0,"A1-A3":213.0,"A2-A3":200.0,"B1-B2":195.0,"B1-B3":212.0,"B2-B3":199.0,"C1-C2":196.0,"C1-C3":213.0,"C2-C3":199.0}},{"label":"4회로","circuits":4,"vals":{"A1-A2":193.2,"A1-A3":202.8,"A1-A4":202.8,"A2-A3":199.2,"A2-A4":208.8,"A3-A4":194.4,"B1-B2":193.2,"B1-B3":205.2,"B1-B4":213.6,"B2-B3":199.2,"B2-B4":206.4,"B3-B4":198.0,"C1-C2":201.6,"C1-C3":208.8,"C1-C4":211.2,"C2-C3":201.6,"C2-C4":208.8,"C3-C4":207.6}}]},"신성산전(주)":{"EPOXY":[{"label":"3회로수동","circuits":3,"vals":{"A1-A2":304.0,"A1-A3":360.0,"A2-A3":336.0,"B1-B2":280.0,"B1-B3":320.0,"B2-B3":283.0,"C1-C2":301.0,"C1-C3":297.0,"C2-C3":284.0}},{"label":"4회로수동","circuits":4,"vals":{"A1-A2":303.0,"A1-A3":337.0,"A1-A4":356.0,"A2-A3":309.0,"A2-A4":331.0,"A3-A4":312.0,"B1-B2":297.0,"B1-B3":319.0,"B1-B4":340.0,"B2-B3":297.0,"B2-B4":314.0,"B3-B4":294.0,"C1-C2":288.0,"C1-C3":312.0,"C1-C4":327.0,"C2-C3":286.0,"C2-C4":303.0,"C3-C4":260.0}},{"label":"3회로자동","circuits":3,"vals":{"A1-A2":265.0,"A1-A3":290.0,"A2-A3":282.0,"B1-B2":297.0,"B1-B3":290.0,"B2-B3":284.0,"C1-C2":248.0,"C1-C3":266.0,"C2-C3":250.0}},{"label":"4회로자동","circuits":4,"vals":{"A1-A2":304.0,"A1-A3":324.0,"A1-A4":346.0,"A2-A3":301.0,"A2-A4":326.0,"A3-A4":302.0,"B1-B2":295.0,"B1-B3":313.0,"B1-B4":336.0,"B2-B3":296.0,"B2-B4":321.0,"B3-B4":282.0,"C1-C2":278.0,"C1-C3":300.0,"C1-C4":315.0,"C2-C3":268.0,"C2-C4":289.0,"C3-C4":261.0}}],"EMCB":[{"label":"3회로(33-1B)","circuits":3,"vals":{"A1-A2":368.0,"A1-A3":398.0,"A2-A3":422.0,"B1-B2":299.0,"B1-B3":323.0,"B2-B3":324.0,"C1-C2":289.0,"C1-C3":333.0,"C2-C3":299.0}},{"label":"3회로(33-2B)","circuits":3,"vals":{"A1-A2":351.0,"A1-A3":363.0,"A2-A3":354.0,"B1-B2":312.0,"B1-B3":322.0,"B2-B3":308.0,"C1-C2":330.0,"C1-C3":374.0,"C2-C3":344.0}},{"label":"4회로(44-3B)","circuits":4,"vals":{"A1-A2":282.0,"A1-A3":282.0,"A1-A4":299.0,"A2-A3":282.0,"A2-A4":300.0,"A3-A4":276.0,"B1-B2":271.0,"B1-B3":278.0,"B1-B4":319.0,"B2-B3":273.0,"B2-B4":308.0,"B3-B4":300.0,"C1-C2":276.0,"C1-C3":278.0,"C1-C4":297.0,"C2-C3":268.0,"C2-C4":275.0,"C3-C4":280.0}},{"label":"4회로(44-2B)","circuits":4,"vals":{"A1-A2":307.0,"A1-A3":320.0,"A1-A4":354.0,"A2-A3":307.0,"A2-A4":341.0,"A3-A4":321.0,"B1-B2":335.0,"B1-B3":321.0,"B1-B4":284.0,"B2-B3":354.0,"B2-B4":339.0,"B3-B4":306.0,"C1-C2":328.0,"C1-C3":346.0,"C1-C4":360.0,"C2-C3":290.0,"C2-C4":307.0,"C3-C4":292.0}}],"POLE":[{"label":"자동","circuits":0,"vals":{"A상(R)":108.0,"B상(S)":107.0,"C상(T)":108.0}},{"label":"수동","circuits":0,"vals":{"A상(R)":101.5,"B상(S)":102.4,"C상(T)":99.1}}],"REC":[{"label":"기본","circuits":0,"vals":{"A상(R)":63.6,"B상(S)":70.8,"C상(T)":68.4}}]},"유호전기공업(주)":{"EPOXY":[{"label":"3회로","circuits":3,"vals":{"A1-A2":207.0,"A1-A3":225.6,"A2-A3":206.0,"B1-B2":209.0,"B1-B3":213.7,"B2-B3":210.4,"C1-C2":202.8,"C1-C3":212.5,"C2-C3":189.2}},{"label":"4회로","circuits":4,"vals":{"A1-A2":194.4,"A1-A3":214.8,"A1-A4":216.8,"A2-A3":202.8,"A2-A4":202.5,"A3-A4":186.8,"B1-B2":208.6,"B1-B3":202.3,"B1-B4":223.6,"B2-B3":200.0,"B2-B4":230.7,"B3-B4":192.8,"C1-C2":198.4,"C1-C3":191.5,"C1-C4":208.5,"C2-C3":189.2,"C2-C4":211.8,"C3-C4":172.1}}],"EFI":[{"label":"기본","circuits":0,"vals":{"A상(R)":76.0,"B상(S)":69.0,"C상(T)":72.0}}]},"이화산업전력(주)":{"EPOXY":[{"label":"3회로(4회로 기준치 산출)","circuits":3,"vals":{"A1-A2":184.8,"A1-A3":218.4,"A2-A3":213.6,"B1-B2":175.2,"B1-B3":193.2,"B2-B3":187.2,"C1-C2":180.0,"C1-C3":199.2,"C2-C3":182.4}},{"label":"4회로","circuits":4,"vals":{"A1-A2":184.8,"A1-A3":218.4,"A1-A4":208.8,"A2-A3":213.6,"A2-A4":200.4,"A3-A4":199.2,"B1-B2":175.2,"B1-B3":193.2,"B1-B4":204.0,"B2-B3":187.2,"B2-B4":194.4,"B3-B4":168.0,"C1-C2":180.0,"C1-C3":199.2,"C1-C4":211.2,"C2-C3":182.4,"C2-C4":188.4,"C3-C4":170.4}}]},"중원 주식회사":{"EPOXY":[{"label":"3회로","circuits":3,"vals":{"A1-A2":225.6,"A1-A3":237.6,"A2-A3":231.6,"B1-B2":225.6,"B1-B3":237.6,"B2-B3":225.6,"C1-C2":225.6,"C1-C3":238.8,"C2-C3":228.0}},{"label":"4회로","circuits":4,"vals":{"A1-A2":226.8,"A1-A3":237.6,"A1-A4":238.8,"A2-A3":236.4,"A2-A4":236.4,"A3-A4":230.4,"B1-B2":225.6,"B1-B3":241.2,"B1-B4":234.0,"B2-B3":234.0,"B2-B4":231.6,"B3-B4":218.4,"C1-C2":218.4,"C1-C3":226.8,"C1-C4":237.6,"C2-C3":236.4,"C2-C4":230.4,"C3-C4":218.4}}],"POLE":[{"label":"기본","circuits":0,"vals":{"A상(R)":121.6,"B상(S)":128.8,"C상(T)":117.1}}],"REC":[{"label":"기본","circuits":0,"vals":{"A상(R)":117.7,"B상(S)":115.6,"C상(T)":114.1}}],"EFI":[{"label":"기본","circuits":0,"vals":{"A상(R)":105.2,"B상(S)":113.2,"C상(T)":114.4}}]},"시앤파워텍":{"EPOXY":[{"label":"3회로(4회로 기준치 산출)","circuits":3,"vals":{"A1-A2":201.6,"A1-A3":194.4,"A2-A3":195.6,"B1-B2":202.8,"B1-B3":181.2,"B2-B3":192.0,"C1-C2":226.8,"C1-C3":206.4,"C2-C3":193.2}},{"label":"4회로","circuits":4,"vals":{"A1-A2":201.6,"A1-A3":194.4,"A1-A4":196.8,"A2-A3":195.6,"A2-A4":195.6,"A3-A4":181.2,"B1-B2":202.8,"B1-B3":181.2,"B1-B4":224.4,"B2-B3":192.0,"B2-B4":194.4,"B3-B4":180.0,"C1-C2":226.8,"C1-C3":206.4,"C1-C4":220.8,"C2-C3":193.2,"C2-C4":194.4,"C3-C4":192.0}}],"POLE":[{"label":"기본","circuits":0,"vals":{"A상(R)":114.0,"B상(S)":113.0,"C상(T)":115.0}}]},"주식회사 삼성파워텍":{"EPOXY":[{"label":"3회로(4회로 기준치 산출)","circuits":3,"vals":{"A1-A2":189.6,"A1-A3":218.4,"A2-A3":194.4,"B1-B2":192.0,"B1-B3":214.8,"B2-B3":198.0,"C1-C2":194.4,"C1-C3":213.6,"C2-C3":199.2}},{"label":"4회로","circuits":4,"vals":{"A1-A2":189.6,"A1-A3":218.4,"A1-A4":240.0,"A2-A3":194.4,"A2-A4":226.8,"A3-A4":188.4,"B1-B2":192.0,"B1-B3":214.8,"B1-B4":243.6,"B2-B3":198.0,"B2-B4":225.6,"B3-B4":195.6,"C1-C2":194.4,"C1-C3":213.6,"C1-C4":237.6,"C2-C3":199.2,"C2-C4":228.0,"C3-C4":188.4}}]},"피앤에이파워시스템 주식회사":{"EPOXY":[{"label":"3회로(4회로 기준치 산출)","circuits":3,"vals":{"A1-A2":202.0,"A1-A3":226.0,"A2-A3":204.0,"B1-B2":207.0,"B1-B3":225.0,"B2-B3":212.0,"C1-C2":205.0,"C1-C3":222.0,"C2-C3":206.0}},{"label":"4회로","circuits":4,"vals":{"A1-A2":202.0,"A1-A3":226.0,"A1-A4":254.0,"A2-A3":204.0,"A2-A4":232.0,"A3-A4":208.0,"B1-B2":207.0,"B1-B3":225.0,"B1-B4":246.0,"B2-B3":212.0,"B2-B4":235.0,"B3-B4":211.0,"C1-C2":205.0,"C1-C3":222.0,"C1-C4":246.0,"C2-C3":206.0,"C2-C4":230.0,"C3-C4":202.0}}],"POLE":[{"label":"기본","circuits":0,"vals":{"A상(R)":102.1,"B상(S)":96.5,"C상(T)":104.3}}]},"주식회사 델코코(Delcoco Co.Ltd)":{"EPOXY":[{"label":"3회로(4회로 기준치 산출)","circuits":3,"vals":{"A1-A2":204.0,"A1-A3":211.0,"A2-A3":198.0,"B1-B2":198.0,"B1-B3":214.0,"B2-B3":198.0,"C1-C2":200.0,"C1-C3":222.0,"C2-C3":204.0}},{"label":"4회로","circuits":4,"vals":{"A1-A2":204.0,"A1-A3":211.0,"A1-A4":238.0,"A2-A3":198.0,"A2-A4":226.0,"A3-A4":198.0,"B1-B2":198.0,"B1-B3":214.0,"B1-B4":236.0,"B2-B3":198.0,"B2-B4":212.0,"B3-B4":195.0,"C1-C2":200.0,"C1-C3":222.0,"C1-C4":236.0,"C2-C3":204.0,"C2-C4":218.0,"C3-C4":201.0}}],"POLE":[{"label":"기본","circuits":0,"vals":{"A상(R)":107.7,"B상(S)":114.2,"C상(T)":110.8}}]}};
+  </script>
+
+  <script>
+    /* =========================================================================
+       개폐기류 제조사 자체검사 기록 프로그램
+       - 한전 검수 프로그램(개폐기류 성적서 작성프로그램)의 품목·시험항목 정의를 그대로 사용하되,
+         검수 전용 요소(품질등급 / 발취수량 자동산출 / 검수자·입회자 서명 / 시험사진 / 첨부파일)는 제외.
+       - 제조사는 자체 검사수량(기본 전수)과 불량수량을 입력하고, 불량 판정 시 상세사유를 기록한다.
+       ========================================================================= */
+
+    const $ = id => document.getElementById(id);
+    const fmtToday = () => new Date().toISOString().slice(0, 10);
+    const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const num = v => { const n = Number(String(v == null ? '' : v).trim()); return isFinite(n) && String(v).trim() !== '' ? n : NaN; };
+
+    // 버전은 파일 최종 수정일로 자동 표기
+    (() => {
+      const d = new Date(document.lastModified);
+      if (isNaN(d)) return;
+      const p = n => String(n).padStart(2, '0');
+      const v = 'ver.' + String(d.getFullYear()).slice(2) + p(d.getMonth() + 1) + p(d.getDate());
+      const el = $('appVer'); if (el) el.textContent = v;
+      document.title = document.title.replace(/\s*ver\.\d+\s*$/, '') + ' ' + v;
+    })();
+    $('pillDate').textContent = '오늘 ' + fmtToday();
+    $('btnTheme').onclick = () => {
+      const cur = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = cur;
+      try { localStorage.setItem('mfr_ui_theme_v1', cur); } catch (e) { }
+    };
+
+    // ===== 불량유형 분류 (대시보드 집계 기준) =====
+    const DEFECT_TYPES = ['자재불량', '가공불량', '조립불량', '용접불량', '도장·도금불량',
+      '절연물 불량', '기밀·누설', '전장·배선불량', '제어·소프트웨어', '설정·조정불량',
+      '작업자 실수', '설계문제', '외주품 불량', '기타'];
+
+    // ===== 상태 =====
+    // M = { base:{...}, items:{ itemKey:{ checked, defects, jdg, vals:{}, sub, date, dfType, dfPhenom, dfCause, dfAction, dfPrevent, note } } }
+    let CUR = null;           // { spec, variant, mode }
+    let M = { base: {}, items: {} };
+    let activeStep = 0;
+
+    // ===== 검수 전용 로직 대체 유틸 =====
+    function circuits() { return (CUR && CUR.spec.variants.find(v => v.value === CUR.variant) || {}).circuits || 0; }
+    function isAuto() { return CUR && CUR.mode === '자동'; }
+    function isPType() { const v = String((CUR || {}).variant || ''); return /-P(?![A-Za-z0-9])/.test(v) || v.includes('광고물'); }
+    function effThr(it) { return (it.thrP && isPType()) ? it.thrP : it.thr; }
+    function effCrit(it) { return (it.critP && isPType()) ? it.critP : it.crit; }
+    function isNA(it) { return (it.autoOnly === true && !isAuto()) || (it.pOnly === true && !isPType()); }
+    function resFields(item) {
+      if (item.resistance === 'overhead') return [{ lab: 'A상(R)' }, { lab: 'B상(S)' }, { lab: 'C상(T)' }];
+      const n = circuits() || 4; const terms = [];
+      for (let i = 1; i <= n; i++) terms.push(i);
+      const pairs = []; for (let i = 0; i < terms.length; i++) for (let j = i + 1; j < terms.length; j++) pairs.push([terms[i], terms[j]]);
+      const fields = []; ['A', 'B', 'C'].forEach(ph => pairs.forEach(p => fields.push({ lab: `${ph}${p[0]}-${ph}${p[1]}` })));
+      return fields;
+    }
+    // 업체별 주회로 저항 기준치 세트
+    function mcrSets() {
+      const mk = M.base.maker, sp = (CUR || {}).spec;
+      if (!mk || !sp) return [];
+      const byspec = (MCR_LIMITS[mk] || {})[sp.id] || [];
+      const n = circuits() || 0;
+      return n ? byspec.filter(e => e.circuits === n) : byspec.filter(e => !e.circuits);
+    }
+    function mcrPick(it) {
+      const sets = mcrSets(); if (!sets.length) return null;
+      const i = Math.min(Math.max(Number((M.items[it.key] || {}).mcrSet) || 0, 0), sets.length - 1);
+      return { sets, idx: i, set: sets[i] };
+    }
+
+    // ===== 항목별 측정 필드 정의 =====
+    // 제조사 자체검사에서는 항목당 '대표 측정값'을 입력한다(검수처럼 발취 호기별 표를 만들지 않는다).
+    function measFields(it) {
+      if (it.resistance) return resFields(it).map(f => ({ lab: f.lab, unit: 'µΩ', kind: 'mcr' }));
+      if (it.plating) return [{ lab: '취부금구', unit: '㎛', kind: 'num', thr: { v: 70, dir: 'ge' } },
+                              { lab: '볼트·너트', unit: '㎛', kind: 'num', thr: { v: 50, dir: 'ge' } }];
+      if (it.paintTest) {
+        const t = isPType() ? 120 : 60;
+        return [{ lab: '도장두께', unit: '㎛', kind: 'num', thr: { v: t, dir: 'ge' } },
+                { lab: '밀착성', kind: 'jdg' }, { lab: '충돌시험', kind: 'jdg' }, { lab: '부착력시험', kind: 'jdg' }];
+      }
+      if (it.pdPhase) return ['A상', 'B상', 'C상'].map(p => ({ lab: p, unit: it.unit || 'pC', kind: 'num', thr: effThr(it) }));
+      if (it.phaseConn) return ['A상', 'B상', 'C상'].map(p => ({ lab: p, unit: it.unit || 'mm', kind: 'num', thr: effThr(it), range: it.range }));
+      if (it.minTrip) return [{ lab: '동작전류', unit: it.unit || 'A', kind: 'num' }, { lab: '90% 부동작', kind: 'jdg' }];
+      if (it.tcTest || it.seqTest) return [];   // 판정만
+      if (it.thr || it.range || it.measureAuto || it.measureManual || (it.unit && !it.cert))
+        return [{ lab: '측정값', unit: it.unit || '', kind: 'num', thr: effThr(it), range: it.range }];
+      return [];
+    }
+    // 측정값 하나의 기준 초과 여부
+    function overLimit(f, v, it) {
+      if (!isFinite(v)) return false;
+      if (f.kind === 'mcr') {
+        const pick = mcrPick(it); if (!pick) return false;
+        const lim = pick.set.vals[f.lab];
+        return lim !== undefined && v > Number(lim);
+      }
+      if (f.range) return v < f.range.min || v > f.range.max;
+      if (f.thr) return f.thr.dir === 'le' ? v > f.thr.v : v < f.thr.v;
+      return false;
+    }
+    function limitText(f, it) {
+      if (f.kind === 'mcr') {
+        const pick = mcrPick(it); if (!pick) return '';
+        const lim = pick.set.vals[f.lab];
+        return lim === undefined ? '' : '≤ ' + lim;
+      }
+      if (f.range) return `${f.range.min} ~ ${f.range.max}`;
+      if (f.thr) return (f.thr.dir === 'le' ? '≤ ' : '≥ ') + f.thr.v;
+      return '';
+    }
+    // 측정값 기반 자동 판정 (하나라도 기준 밖 → 불량, 전부 입력·기준 내 → 양호)
+    function autoJdg(it) {
+      const fs = measFields(it); if (!fs.length) return '';
+      const st = M.items[it.key] || {}; const vals = st.vals || {};
+      let filled = 0, bad = false;
+      for (const f of fs) {
+        const raw = vals[f.lab];
+        if (f.kind === 'jdg') { if (raw) { filled++; if (raw === '불량') bad = true; } continue; }
+        const v = num(raw);
+        if (!isFinite(v)) continue;
+        filled++;
+        if (overLimit(f, v, it)) bad = true;
+      }
+      if (!filled) return '';
+      if (bad) return '불량';
+      return filled === fs.length ? '양호' : '';
+    }
+
+    // ===== 화면 구성 =====
+    function stepDefs() { return CUR ? CUR.spec.steps : []; }
+
+    function fillSpecSelect() {
+      $('fSpec').innerHTML = SPECS.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+    }
+    function fillMakerSelect() {
+      $('fMaker').innerHTML = '<option value="">-- 업체 선택 --</option>'
+        + MAKERS.map(m => `<option value="${esc(m.name)}">${esc(m.name)}</option>`).join('')
+        + '<option value="__etc">기타(직접입력)</option>';
+    }
+    function fillVariantSelect() {
+      const sp = SPECS.find(s => s.id === $('fSpec').value) || SPECS[0];
+      $('fVariant').innerHTML = sp.variants.map(v =>
+        `<option value="${esc(v.value)}">${esc(v.value)}${v.mode ? ' · ' + v.mode : ''}</option>`).join('');
+    }
+    function readBase() {
+      const mkSel = $('fMaker').value;
+      const maker = mkSel === '__etc' ? ($('fMakerEtc').value || '').trim() : mkSel;
+      const sp = SPECS.find(s => s.id === $('fSpec').value) || SPECS[0];
+      const variant = $('fVariant').value;
+      const mode = (sp.variants.find(v => v.value === variant) || {}).mode || '';
+      return {
+        maker, spec_id: sp.id, material: sp.name, gsNo: sp.gsNo || '', install: sp.install || '',
+        variant, mode,
+        lot_no: ($('fLot').value || '').trim(),
+        qty: Number($('fQty').value) || 0,
+        d1: $('fD1').value, d2: $('fD2').value,
+        writer: ($('fWriter').value || '').trim(),
+        serial: ($('fSerial').value || '').trim(),
+        memo: ($('fMemo').value || '').trim(),
+      };
+    }
+    function writeBase(b) {
+      const known = MAKERS.some(m => m.name === b.maker);
+      $('fMaker').value = known ? b.maker : (b.maker ? '__etc' : '');
+      $('wrapMakerEtc').style.display = known || !b.maker ? 'none' : '';
+      $('fMakerEtc').value = known ? '' : (b.maker || '');
+      $('fSpec').value = b.spec_id; fillVariantSelect();
+      $('fVariant').value = b.variant;
+      $('fLot').value = b.lot_no || ''; $('fQty').value = b.qty || '';
+      $('fD1').value = b.d1 || ''; $('fD2').value = b.d2 || '';
+      $('fWriter').value = b.writer || ''; $('fSerial').value = b.serial || ''; $('fMemo').value = b.memo || '';
+    }
+
+    function startFlow() {
+      const b = readBase();
+      if (!b.maker) { alert('제조업체를 선택하세요.'); return; }
+      if (!b.lot_no) { alert('제조 로트번호를 입력하세요.'); return; }
+      if (!b.qty) { alert('생산(검사대상) 수량을 입력하세요.'); return; }
+      M.base = b;
+      CUR = { spec: SPECS.find(s => s.id === b.spec_id), variant: b.variant, mode: b.mode };
+      // 항목 상태 초기화(불러오기로 이미 값이 있으면 유지)
+      stepDefs().forEach(sd => sd.items.forEach(it => {
+        if (!M.items[it.key]) M.items[it.key] = { checked: b.qty, defects: 0, jdg: '', vals: {} };
+      }));
+      activeStep = 0;
+      $('secBase').classList.add('hidden');
+      $('secTest').classList.remove('hidden');
+      $('secSum').classList.add('hidden');
+      renderStep();
+      saveDraft();
+    }
+
+    function renderTabs() {
+      const sd = stepDefs();
+      $('stepTabs').innerHTML = sd.map((s, i) =>
+        `<button data-i="${i}" class="${i === activeStep ? 'on' : ''}">${i + 1}. ${esc(s.title)}</button>`).join('')
+        + `<button data-i="sum" class="${activeStep === 'sum' ? 'on' : ''}">요약</button>`;
+      $('stepTabs').querySelectorAll('button').forEach(b => b.onclick = () => {
+        const v = b.dataset.i;
+        if (v === 'sum') { showSummary(); return; }
+        activeStep = Number(v); $('secSum').classList.add('hidden'); $('secTest').classList.remove('hidden'); renderStep();
+      });
+    }
+
+    function renderStep() {
+      renderTabs();
+      const sd = stepDefs()[activeStep];
+      if (!sd) return;
+      const rows = sd.items.map(it => itemRowHTML(it)).join('');
+      $('stepBody').innerHTML = `
+        <h2>${activeStep + 1}. ${esc(sd.title)}</h2>
+        <div style="overflow-x:auto"><table>
+          <thead><tr>
+            <th class="l" style="min-width:210px">시험항목</th>
+            <th style="min-width:190px" class="l">판정기준</th>
+            <th style="width:92px">검사수량</th>
+            <th style="width:92px">불량수량</th>
+            <th style="width:88px">불량률</th>
+            <th style="min-width:186px">판정</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table></div>`;
+      bindStep();
+      $('btnBack').disabled = activeStep === 0;
+      $('btnNext').textContent = activeStep === stepDefs().length - 1 ? '요약으로' : '다음';
+    }
+
+    function itemRowHTML(it) {
+      const st = M.items[it.key] || {};
+      const na = isNA(it);
+      const jdg = na ? '해당없음' : (st.jdg || '');
+      const chk = na ? 0 : (st.checked == null ? M.base.qty : st.checked);
+      const df = na ? 0 : (Number(st.defects) || 0);
+      const rate = chk > 0 ? (df / chk * 100) : 0;
+      const cyc = it.cycle ? ` <span class="lim">· ${esc(it.cycle)}</span>` : '';
+      const detail = na ? '' : itemDetailHTML(it);
+      return `
+      <tr data-k="${it.key}" class="${jdg === '불량' ? 'rowbad' : ''}">
+        <td class="l"><b>${esc(it.name)}</b>${cyc}<div class="lim">${esc(it.ref || '')}</div></td>
+        <td class="l"><span class="lim">${esc(effCrit(it) || '')}</span></td>
+        <td>${na ? '-' : `<input type="number" min="0" step="1" data-f="checked" value="${chk}">`}</td>
+        <td>${na ? '-' : `<input type="number" min="0" step="1" data-f="defects" value="${df}">`}</td>
+        <td>${na ? '-' : `<span class="badge ${df > 0 ? 'bad' : 'good'}">${rate.toFixed(2)}%</span>`}</td>
+        <td>${na
+          ? '<span class="badge na">해당없음</span>'
+          : `<button class="jbtn ${jdg === '양호' ? 'on-good' : ''}" data-f="jdg" data-v="양호">양호</button>
+             <button class="jbtn ${jdg === '불량' ? 'on-bad' : ''}" data-f="jdg" data-v="불량">불량</button>`}</td>
+      </tr>
+      ${detail ? `<tr class="drow" data-k="${it.key}"><td colspan="6" class="l" style="padding:0 8px 10px">${detail}</td></tr>` : ''}`;
+    }
+
+    function itemDetailHTML(it) {
+      const st = M.items[it.key] || {};
+      let html = '';
+      // (1) 서류 대체 항목
+      if (it.cert) {
+        html += `<div class="panel"><div class="grid g3">
+          <div><label class="f">제출 여부</label>
+            <select data-f="sub">
+              <option value=""${!st.sub ? ' selected' : ''}>선택</option>
+              <option value="제출"${st.sub === '제출' ? ' selected' : ''}>제출</option>
+              <option value="미제출"${st.sub === '미제출' ? ' selected' : ''}>미제출</option>
+            </select></div>
+          ${it.noDate ? '' : `<div><label class="f">시험(발행) 일자</label><input type="date" data-f="date" value="${esc(st.date || '')}"></div>`}
+          <div><label class="f">성적서 번호 / 발행처</label><input data-f="note" value="${esc(st.note || '')}" placeholder="예: KTL 2026-0001"></div>
+        </div></div>`;
+      }
+      // (2) 측정값
+      const fs = measFields(it);
+      if (fs.length) {
+        const pick = it.resistance ? mcrPick(it) : null;
+        let head = '';
+        if (it.resistance) {
+          head = pick
+            ? `<div class="lim" style="margin-bottom:6px">업체 기준치 세트:
+                 <select data-f="mcrSet" style="width:auto;display:inline-block">
+                   ${pick.sets.map((s, i) => `<option value="${i}"${i === pick.idx ? ' selected' : ''}>${esc(s.label)}</option>`).join('')}
+                 </select> (기준치 초과 시 붉게 표시)</div>`
+            : `<div class="lim" style="margin-bottom:6px">등록된 업체 기준치가 없습니다 — 측정값만 기록되며 판정은 직접 선택하세요.</div>`;
+        }
+        html += `<div class="panel">${head}<div class="fitgrid">` + fs.map(f => {
+          const v = (st.vals || {})[f.lab] == null ? '' : (st.vals || {})[f.lab];
+          if (f.kind === 'jdg') {
+            return `<div class="cell"><label>${esc(f.lab)}</label>
+              <select data-f="val" data-lab="${esc(f.lab)}">
+                <option value=""${!v ? ' selected' : ''}>-</option>
+                <option value="양호"${v === '양호' ? ' selected' : ''}>양호</option>
+                <option value="불량"${v === '불량' ? ' selected' : ''}>불량</option>
+              </select></div>`;
+          }
+          const over = overLimit(f, num(v), it);
+          const lt = limitText(f, it);
+          return `<div class="cell ${over ? 'over' : ''}"><label>${esc(f.lab)}${f.unit ? ` (${esc(f.unit)})` : ''}${lt ? ` <span style="opacity:.75">${esc(lt)}</span>` : ''}</label>
+            <input data-f="val" data-lab="${esc(f.lab)}" value="${esc(v)}" inputmode="decimal"></div>`;
+        }).join('') + `</div></div>`;
+      }
+      // (3) 불량 상세사유 — 판정이 불량이거나 불량수량이 1 이상이면 표시
+      const showDf = st.jdg === '불량' || (Number(st.defects) || 0) > 0;
+      if (showDf) {
+        html += `<div class="panel bad">
+          <div style="font-weight:700;margin-bottom:8px;color:var(--bad)">불량 상세사유 (필수)</div>
+          <div class="grid g2">
+            <div><label class="f">불량유형</label>
+              <select data-f="dfType">
+                <option value=""${!st.dfType ? ' selected' : ''}>선택</option>
+                ${DEFECT_TYPES.map(t => `<option value="${esc(t)}"${st.dfType === t ? ' selected' : ''}>${esc(t)}</option>`).join('')}
+              </select></div>
+            <div><label class="f">발생 공정 / 위치</label><input data-f="dfWhere" value="${esc(st.dfWhere || '')}" placeholder="예: 조립3라인 / 부싱 접속부"></div>
+          </div>
+          <div style="margin-top:8px"><label class="f">불량 현상 (무엇이 어떻게 잘못되었는지)</label>
+            <textarea data-f="dfPhenom" placeholder="예: B상 부분방전 32pC 측정(기준 20pC 이하)">${esc(st.dfPhenom || '')}</textarea></div>
+          <div class="grid g2" style="margin-top:8px">
+            <div><label class="f">원인</label><textarea data-f="dfCause" placeholder="예: 에폭시 몰딩 시 기포 혼입">${esc(st.dfCause || '')}</textarea></div>
+            <div><label class="f">조치내용</label><textarea data-f="dfAction" placeholder="예: 해당 부싱 교체 후 재시험 20pC 이하 확인">${esc(st.dfAction || '')}</textarea></div>
+          </div>
+          <div style="margin-top:8px"><label class="f">재발방지 대책</label>
+            <textarea data-f="dfPrevent" placeholder="예: 몰딩 진공시간 15분 → 25분 상향, 작업표준 개정">${esc(st.dfPrevent || '')}</textarea></div>
+        </div>`;
+      }
+      return html;
+    }
+
+    function bindStep() {
+      const body = $('stepBody');
+      body.querySelectorAll('tr[data-k]').forEach(tr => {
+        const key = tr.dataset.k;
+        tr.querySelectorAll('[data-f]').forEach(el => {
+          const f = el.dataset.f;
+          if (f === 'jdg') {
+            el.onclick = () => { setVal(key, 'jdg', M.items[key].jdg === el.dataset.v ? '' : el.dataset.v); renderStep(); };
+            return;
+          }
+          if (f === 'val') {
+            const h = () => { const st = M.items[key]; st.vals = st.vals || {}; st.vals[el.dataset.lab] = el.value; afterValue(key); };
+            el.tagName === 'SELECT' ? (el.onchange = () => { h(); renderStep(); }) : (el.onchange = h, el.oninput = h);
+            return;
+          }
+          if (f === 'mcrSet') { el.onchange = () => { setVal(key, 'mcrSet', Number(el.value) || 0); renderStep(); }; return; }
+          if (f === 'checked' || f === 'defects') {
+            el.onchange = () => { setVal(key, f, Math.max(0, Number(el.value) || 0)); renderStep(); };
+            return;
+          }
+          const h2 = () => setVal(key, f, el.value);
+          el.tagName === 'TEXTAREA' || el.tagName === 'INPUT' ? (el.oninput = h2, el.onchange = h2) : (el.onchange = h2);
+        });
+      });
+    }
+    function setVal(key, f, v) {
+      const st = M.items[key] = M.items[key] || {};
+      st[f] = v;
+      normalizeCounts(key);
+      saveDraftSoon();
+    }
+    // 불량 판정인데 불량수량이 0이면 최소 1대로 잡아 준다(불량률 0%로 집계되는 것을 막는다).
+    // 불량수량이 검사수량을 넘으면 검사수량으로 맞춘다.
+    function normalizeCounts(key) {
+      const st = M.items[key]; if (!st) return;
+      const chk = st.checked == null ? M.base.qty : Number(st.checked) || 0;
+      let df = Number(st.defects) || 0;
+      if (st.jdg === '불량' && df === 0) df = 1;
+      if (st.jdg === '양호') df = 0;
+      if (df > chk) df = chk;
+      st.defects = df;
+      if (df > 0 && st.jdg !== '불량') st.jdg = '불량';
+    }
+    function afterValue(key) {
+      const it = findItem(key); if (!it) return;
+      const a = autoJdg(it);
+      const st = M.items[key];
+      if (a) { st.jdg = a; normalizeCounts(key); }
+      saveDraftSoon();
+      // 자동 판정 결과가 화면 판정 버튼/불량 패널과 어긋나면 다시 그린다
+      const tr = $('stepBody').querySelector(`tr[data-k="${CSS.escape(key)}"]`);
+      const shown = tr && tr.querySelector('.on-bad') ? '불량' : (tr && tr.querySelector('.on-good') ? '양호' : '');
+      if (shown !== (st.jdg || '')) renderStep();
+    }
+    function findItem(key) {
+      for (const sd of stepDefs()) { const it = sd.items.find(x => x.key === key); if (it) return it; }
+      return null;
+    }
+
+    // ===== 요약 =====
+    function collect() {
+      const out = [];
+      stepDefs().forEach(sd => sd.items.forEach(it => {
+        const st = M.items[it.key] || {};
+        const na = isNA(it);
+        out.push({
+          stepKey: sd.key, stepTitle: sd.title, key: it.key, name: it.name,
+          ref: it.ref || '', crit: effCrit(it) || '', unit: it.unit || '', cycle: it.cycle || '',
+          cert: !!it.cert, na,
+          checked: na ? 0 : (st.checked == null ? M.base.qty : Number(st.checked) || 0),
+          defects: na ? 0 : Number(st.defects) || 0,
+          jdg: na ? '해당없음' : (st.jdg || ''),
+          vals: st.vals || {}, sub: st.sub || '', date: st.date || '', note: st.note || '',
+          defect: (st.jdg === '불량' || (Number(st.defects) || 0) > 0) ? {
+            type: st.dfType || '', where: st.dfWhere || '', phenom: st.dfPhenom || '',
+            cause: st.dfCause || '', action: st.dfAction || '', prevent: st.dfPrevent || ''
+          } : null,
+        });
+      }));
+      return out;
+    }
+    function summarize(items) {
+      const eff = items.filter(i => !i.na);
+      const checked = eff.reduce((s, i) => s + i.checked, 0);
+      const defects = eff.reduce((s, i) => s + i.defects, 0);
+      const badItems = eff.filter(i => i.jdg === '불량');
+      const empty = eff.filter(i => !i.jdg);
+      return {
+        item_total: eff.length, checked_total: checked, defect_total: defects,
+        defect_rate: checked ? defects / checked * 100 : 0,
+        bad_item_count: badItems.length, empty_count: empty.length,
+        judgement: empty.length ? '작성중' : (badItems.length ? '불합격' : '합격'),
+      };
+    }
+    function showSummary() {
+      activeStep = 'sum';
+      $('secTest').classList.add('hidden'); $('secSum').classList.remove('hidden');
+      renderTabs(); $('stepTabs').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.i === 'sum'));
+      const items = collect(), s = summarize(items), b = M.base;
+      $('sumHead').innerHTML = `${esc(b.maker)} · ${esc(b.material)} · ${esc(b.variant)} · 로트 ${esc(b.lot_no)} · 생산 ${b.qty}대`;
+      $('sumKpi').innerHTML = [
+        ['검사항목', s.item_total + '개'], ['총 검사수량', s.checked_total.toLocaleString() + '대'],
+        ['총 불량수', s.defect_total.toLocaleString() + '대'], ['불량률', s.defect_rate.toFixed(2) + '%'],
+        ['종합판정', s.judgement]
+      ].map(([k, v]) => `<div class="b">${k}<b>${v}</b></div>`).join('');
+      const rows = items.map(i => `
+        <tr class="${i.jdg === '불량' ? 'rowbad' : ''}">
+          <td class="l">${esc(i.stepTitle)}</td><td class="l">${esc(i.name)}</td>
+          <td>${i.na ? '-' : i.checked}</td><td>${i.na ? '-' : i.defects}</td>
+          <td>${i.na ? '-' : (i.checked ? (i.defects / i.checked * 100).toFixed(2) : '0.00') + '%'}</td>
+          <td><span class="badge ${i.jdg === '불량' ? 'bad' : i.jdg === '양호' ? 'good' : 'na'}">${esc(i.jdg || '미입력')}</span></td>
+          <td class="l">${esc(i.defect ? [i.defect.type, i.defect.phenom].filter(Boolean).join(' · ') : '')}</td>
+        </tr>`).join('');
+      $('sumTable').innerHTML = `<thead><tr>
+          <th class="l">단계</th><th class="l">시험항목</th><th>검사수량</th><th>불량수량</th><th>불량률</th><th>판정</th><th class="l">불량 요약</th>
+        </tr></thead><tbody>${rows}</tbody>`;
+      const miss = items.filter(i => i.defect && (!i.defect.type || !i.defect.phenom)).map(i => i.name);
+      $('sumHint').innerHTML = (s.empty_count ? `· 판정 미입력 항목 ${s.empty_count}개가 있습니다.<br>` : '')
+        + (miss.length ? `· 불량유형·현상이 비어 있는 항목: <b>${esc(miss.join(', '))}</b><br>` : '')
+        + '· 저장한 JSON 파일을 「개폐기류 제조사 품질 대시보드」에서 불러오면 불량률·원인 통계를 볼 수 있습니다.';
+      saveDraft();
+    }
+
+    // ===== 저장 / 불러오기 =====
+    function buildRecord() {
+      const items = collect();
+      return {
+        schema: 'KEPCO-MFR-SELF-1.0',
+        saved_at: new Date().toISOString(),
+        maker: M.base.maker, spec_id: M.base.spec_id, material: M.base.material,
+        gs_no: M.base.gsNo, install: M.base.install, variant: M.base.variant, mode: M.base.mode,
+        lot_no: M.base.lot_no, qty: M.base.qty,
+        dates: { start: M.base.d1 || '', end: M.base.d2 || M.base.d1 || '' },
+        writer: M.base.writer, serial_range: M.base.serial, memo: M.base.memo,
+        items, summary: summarize(items),
+      };
+    }
+    function exportJSON() {
+      const rec = buildRecord();
+      const name = `자체검사_${rec.maker || '업체'}_${rec.lot_no || '로트'}_${(rec.dates.start || fmtToday()).replace(/-/g, '')}_${rec.spec_id}.json`;
+      const blob = new Blob([JSON.stringify(rec, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = name;
+      document.body.appendChild(a); a.click();
+      setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 0);
+    }
+    function loadRecord(rec) {
+      if (!rec || !rec.spec_id) { alert('제조사 자체검사 기록 파일이 아닙니다.'); return; }
+      const sp = SPECS.find(s => s.id === rec.spec_id);
+      if (!sp) { alert('알 수 없는 품목입니다: ' + rec.spec_id); return; }
+      M = { base: {}, items: {} };
+      M.base = {
+        maker: rec.maker || '', spec_id: rec.spec_id, material: sp.name, gsNo: sp.gsNo || '', install: sp.install || '',
+        variant: rec.variant || sp.variants[0].value, mode: rec.mode || '',
+        lot_no: rec.lot_no || '', qty: Number(rec.qty) || 0,
+        d1: (rec.dates || {}).start || '', d2: (rec.dates || {}).end || '',
+        writer: rec.writer || '', serial: rec.serial_range || '', memo: rec.memo || '',
+      };
+      (rec.items || []).forEach(i => {
+        M.items[i.key] = {
+          checked: i.checked, defects: i.defects, jdg: i.jdg === '해당없음' ? '' : i.jdg,
+          vals: i.vals || {}, sub: i.sub || '', date: i.date || '', note: i.note || '',
+          dfType: (i.defect || {}).type || '', dfWhere: (i.defect || {}).where || '',
+          dfPhenom: (i.defect || {}).phenom || '', dfCause: (i.defect || {}).cause || '',
+          dfAction: (i.defect || {}).action || '', dfPrevent: (i.defect || {}).prevent || '',
+        };
+      });
+      writeBase(M.base);
+      startFlow();
+    }
+
+    // ===== 중간저장(브라우저) =====
+    const DRAFT_KEY = 'mfr_draft_v1';
+    let draftTimer = null;
+    function saveDraft() {
+      if (!M.base || !M.base.spec_id) return;
+      try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ at: Date.now(), rec: buildRecord() })); } catch (e) { }
+    }
+    function saveDraftSoon() { clearTimeout(draftTimer); draftTimer = setTimeout(saveDraft, 700); }
+    function getDraft() { try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); } catch (e) { return null; } }
+    function clearDraft() { try { localStorage.removeItem(DRAFT_KEY); } catch (e) { } }
+    function draftAge(ms) {
+      const m = Math.floor((Date.now() - ms) / 60000);
+      if (m < 1) return '방금 전'; if (m < 60) return m + '분 전';
+      const h = Math.floor(m / 60); if (h < 24) return h + '시간 전';
+      return Math.floor(h / 24) + '일 전';
+    }
+    function initDraftUI() {
+      const d = getDraft();
+      if (!d || !d.rec) return;
+      $('draftCard').style.display = '';
+      $('draftInfo').textContent =
+        `${d.rec.maker || '업체미상'} · ${d.rec.material || ''} · 로트 ${d.rec.lot_no || '-'} · ${draftAge(d.at)} 자동저장`;
+      $('btnDraftGo').onclick = () => { $('draftCard').style.display = 'none'; loadRecord(d.rec); };
+      $('btnDraftDrop').onclick = () => { clearDraft(); $('draftCard').style.display = 'none'; };
+    }
+
+    // ===== 이벤트 =====
+    $('fMaker').onchange = () => {
+      $('wrapMakerEtc').style.display = $('fMaker').value === '__etc' ? '' : 'none';
+    };
+    $('fSpec').onchange = fillVariantSelect;
+    $('btnStart').onclick = startFlow;
+    $('btnBack').onclick = () => { if (activeStep > 0) { activeStep--; renderStep(); } };
+    $('btnNext').onclick = () => {
+      if (activeStep < stepDefs().length - 1) { activeStep++; renderStep(); } else showSummary();
+    };
+    $('btnSave').onclick = () => { saveDraft(); alert('브라우저에 중간저장했습니다.'); };
+    $('btnSumBack').onclick = () => {
+      activeStep = 0; $('secSum').classList.add('hidden'); $('secTest').classList.remove('hidden'); renderStep();
+    };
+    $('btnExport').onclick = exportJSON;
+    $('btnPrint').onclick = () => window.print();
+    $('btnLoad').onclick = () => $('fileLoad').click();
+    $('fileLoad').onchange = e => {
+      const f = e.target.files[0]; e.target.value = '';
+      if (!f) return;
+      const r = new FileReader();
+      r.onload = () => { try { loadRecord(JSON.parse(r.result)); } catch (err) { alert('파일을 읽지 못했습니다: ' + err.message); } };
+      r.readAsText(f, 'utf-8');
+    };
+    window.addEventListener('beforeunload', e => {
+      if (M.base && M.base.spec_id) { saveDraft(); }
+    });
+
+    // ===== 초기화 =====
+    fillMakerSelect(); fillSpecSelect(); fillVariantSelect();
+    $('fD1').value = fmtToday(); $('fD2').value = fmtToday();
+    initDraftUI();
+  </script>
+</body>
+
+</html>
