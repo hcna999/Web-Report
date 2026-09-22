@@ -674,10 +674,12 @@
             // 도장시험 — 두께(일반형 60㎛↑ / 광고물 부착방지 P형 120㎛↑)·밀착성·충돌·부착력을 한 항목에서 확인
             { key:'paint', name:'도장시험', ref:'7.2.26', crit:'두께 60㎛ 이상 · 밀착성·충돌·부착력 이상없음', critP:'광고물 부착방지(P)형 — 두께 120㎛ 이상 · 밀착성·충돌·부착력 이상없음', unit:'㎛', paintTest:true, thr:{v:60,dir:'ge'}, thrP:{v:120,dir:'ge'}, sampFn:S.note15_dry },
             { key:'conn', name:'상연결 접속재 시험', ref:'7.2.15', crit:'절연층 최소두께 12㎜ 이상', phaseConn:true, unit:'mm', thr:{v:12,dir:'ge'}, sampFn:S.per(10) },
-            { key:'connector', name:'접속재 시험', ref:'7.2.24', crit:'IEEE Std 386/성적서', cert:true, cycle:'성적서 대체' },
+            { key:'connector', name:'접속재 시험', ref:'7.2.24', crit:'IEEE Std 386/성적서', cert:true, noDate:true, cycle:'성적서 대체' },
+            // 내한성 시험 — 매 검수가 아니라 주기시험(반기 1회)으로만 시행한다
+            { key:'coldres', name:'내한성 시험', ref:'7.2.24', crit:'부싱 및 접속재 내한성 — 주기시험 항목', cert:true, noDate:true, cycle:'반기 1회' },
             { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.2.25', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
             { key:'pt', name:'전압변성장치(PT) 시험', ref:'7.2.27', crit:'IEC 61869-3/성적서(검수 매50대)', cert:true, cycle:'성적서 대체', autoOnly:true },
-            { key:'oil', name:'절연유 PCB 성적서', ref:'7.2.28', crit:'폴리염화비페닐(PCB) 미함유 확인', cert:true, noFile:true, cycle:'년 2회 중 시행일 기입' },
+            { key:'oil', name:'절연유 PCB 성적서', ref:'7.2.28', crit:'폴리염화비페닐(PCB) 미함유 확인', cert:true, noFile:true, noDate:true, cycle:'반기 1회' },
           ]},
         ],
         exemptKeys:['imp_wv','av','ai'],
@@ -712,7 +714,9 @@
             // 도장시험 — 두께(일반형 60㎛↑ / 광고물 부착방지 P형 120㎛↑)·밀착성·충돌·부착력을 한 항목에서 확인
             { key:'paint', name:'도장시험', ref:'7.2.29', crit:'두께 60㎛ 이상 · 밀착성·충돌·부착력 이상없음', critP:'광고물 부착방지(P)형 — 두께 120㎛ 이상 · 밀착성·충돌·부착력 이상없음', unit:'㎛', paintTest:true, thr:{v:60,dir:'ge'}, thrP:{v:120,dir:'ge'}, sampFn:S.note15_dry },
             { key:'conn', name:'상연결 접속재 시험', ref:'7.2.16', crit:'절연층 최소두께 12㎜ 이상', phaseConn:true, unit:'mm', thr:{v:12,dir:'ge'}, sampFn:S.per(20) },
-            { key:'connector', name:'접속재 시험', ref:'7.2.13', crit:'IEEE 386', cert:true, cycle:'성적서 대체' },
+            { key:'connector', name:'접속재 시험', ref:'7.2.13', crit:'IEEE 386', cert:true, noDate:true, cycle:'성적서 대체' },
+            // 내한성 시험 — 매 검수가 아니라 주기시험(반기 1회)으로만 시행한다
+            { key:'coldres', name:'내한성 시험', ref:'7.2.13', crit:'부싱 및 접속재 내한성 — 주기시험 항목', cert:true, noDate:true, cycle:'반기 1회' },
             { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.2.26', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
             { key:'steel_t', name:'강판두께 측정', ref:'7.2.26', crit:'외함 2.0㎜↑·베이스 3.0㎜↑', full:true },
             { key:'pt', name:'전압변성장치(PT) 시험', ref:'7.2.30', crit:'본체·케이블 내전압/부분방전', cert:true, cycle:'성적서 대체' },
@@ -750,7 +754,9 @@
             // 도장시험 — 두께(일반형 60㎛↑ / 광고물 부착방지 P형 120㎛↑)·밀착성·충돌·부착력을 한 항목에서 확인
             { key:'paint', name:'도장시험', ref:'7.2.29', crit:'두께 60㎛ 이상 · 밀착성·충돌·부착력 이상없음', critP:'광고물 부착방지(P)형 — 두께 120㎛ 이상 · 밀착성·충돌·부착력 이상없음', unit:'㎛', paintTest:true, thr:{v:60,dir:'ge'}, thrP:{v:120,dir:'ge'}, sampFn:S.note15_dry },
             { key:'conn', name:'상연결 접속재 시험', ref:'7.2.16', crit:'절연층 최소두께 12㎜ 이상', phaseConn:true, unit:'mm', thr:{v:12,dir:'ge'}, sampFn:S.per(10) },
-            { key:'connector', name:'접속재 시험', ref:'7.2.13', crit:'IEEE 386', cert:true, cycle:'성적서 대체' },
+            { key:'connector', name:'접속재 시험', ref:'7.2.13', crit:'IEEE 386', cert:true, noDate:true, cycle:'성적서 대체' },
+            // 내한성 시험 — 매 검수가 아니라 주기시험(반기 1회)으로만 시행한다
+            { key:'coldres', name:'내한성 시험', ref:'7.2.13', crit:'부싱 및 접속재 내한성 — 주기시험 항목', cert:true, noDate:true, cycle:'반기 1회' },
             { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.2.26', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
             { key:'steel_t', name:'강판두께 측정', ref:'7.2.26', crit:'외함 2.0㎜↑·베이스 3.0㎜↑', full:true },
             { key:'pt', name:'전압변성장치(PT) 시험', ref:'7.2.30', crit:'50kV 유도내전압·부분방전 20pC(검수 매50대)', cert:true, cycle:'성적서 대체' },
@@ -1034,8 +1040,12 @@
     function sampCount(it){
       if(isFullSample(it)) return baseQty();
       if(!it.sampFn) return 0;
-      let n=it.sampFn(baseQty());
+      const q=baseQty();
+      let n=it.sampFn(q);
       if(!it.sampNote){ n=Math.max(1,Math.ceil(n*(GRADE_MULT[CUR.grade]||1))); }
+      // 발취수량은 납품수량을 넘을 수 없다.
+      // (D등급 3배수 등으로 납품 2대에 3대가 산출되던 문제 — 2026-09-22)
+      if(q>0 && n>q) n=q;
       return n;
     }
     function autoVal(it,v){
@@ -1209,13 +1219,13 @@
     // ===== 주기시험 =====
     // 설비진단처 '개폐기파트 주기시험 항목정리'(구매규격 기준) — 개폐기류 해당분만.
     //  가공개폐기류 : 강판재질시험(년1회), 취부금구 도금시험(반기1회)
-    //  지중개폐기류 : 구조 및 외관검사(반기1회), 부싱 및 접속재시험 내한성(분기1회),
+    //  지중개폐기류 : 구조 및 외관검사(반기1회), 부싱 및 접속재 내한성시험(반기1회),
     //                강판재질시험(년1회), 절연유 특성시험(반기1회)
     const PERIODIC_TESTS = [
       { grp:'가공', key:'steel',     cycle:'년',   note:'공인시험기관 시험성적서 제출' },
       { grp:'가공', key:'plate',     cycle:'반기', note:'처내시험' },
       { grp:'지중', key:'ap_body',   cycle:'반기', note:'절연유 주입량 · 극간거리(접지부) · 공장시험' },
-      { grp:'지중', key:'connector', cycle:'분기', note:'1회로분(3대) · 처내시험' },
+      { grp:'지중', key:'coldres',   cycle:'반기', note:'부싱 및 접속재 내한성 · 1회로분(3대) · 처내시험' },
       { grp:'지중', key:'steel',     cycle:'년',   note:'공인시험기관 시험성적서 제출' },
       { grp:'지중', key:'oil',       cycle:'반기', note:'처내시험' },
     ];
