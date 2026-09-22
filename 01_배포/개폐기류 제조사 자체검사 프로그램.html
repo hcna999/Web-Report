@@ -153,7 +153,7 @@
       </div>
       <div class="row-act">
         <button class="ghost" id="btnLoad">파일 불러오기</button>
-        <input type="file" id="fileLoad" accept=".json,application/json" style="display:none">
+        <input type="file" id="fileLoad" accept=".xml,.json,text/xml,application/json" style="display:none">
         <button class="primary" id="btnStart">검사표 작성 시작</button>
       </div>
     </div>
@@ -177,7 +177,8 @@
       <div class="row-act">
         <button class="ghost" id="btnSumBack">항목 수정</button>
         <button class="ghost" id="btnPrint">인쇄 / PDF</button>
-        <button class="primary" id="btnExport">검사기록 저장(JSON)</button>
+        <button class="ghost" id="btnExportJson">검사기록 저장(JSON)</button>
+        <button class="primary" id="btnExport">검사기록 저장(XML)</button>
       </div>
     </div>
   </div>
@@ -1060,7 +1061,7 @@
       const miss = items.filter(i => i.defect && (!i.defect.type || !i.defect.phenom)).map(i => i.name);
       $('sumHint').innerHTML = (s.empty_count ? `· 판정 미입력 항목 ${s.empty_count}개가 있습니다.<br>` : '')
         + (miss.length ? `· 불량유형·현상이 비어 있는 항목: <b>${esc(miss.join(', '))}</b><br>` : '')
-        + '· 저장한 JSON 파일을 「개폐기류 제조사 품질 대시보드」에서 불러오면 불량률·원인 통계를 볼 수 있습니다.';
+        + '· 저장한 XML(또는 JSON) 파일을 「개폐기류 제조사 품질 대시보드」에서 불러오면 불량률·원인 통계를 볼 수 있습니다.';
       saveDraft();
     }
 
@@ -1078,14 +1079,117 @@
         items, summary: summarize(items),
       };
     }
-    function exportJSON() {
-      const rec = buildRecord();
-      const name = `자체검사_${rec.maker || '업체'}_${rec.lot_no || '로트'}_${(rec.dates.start || fmtToday()).replace(/-/g, '')}_${rec.spec_id}.json`;
-      const blob = new Blob([JSON.stringify(rec, null, 2)], { type: 'application/json' });
+    function baseName(rec) {
+      return `자체검사_${rec.maker || '업체'}_${rec.lot_no || '로트'}_${(rec.dates.start || fmtToday()).replace(/-/g, '')}_${rec.spec_id}`;
+    }
+    function download(name, text, mime) {
+      const blob = new Blob([text], { type: mime });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a'); a.href = url; a.download = name;
       document.body.appendChild(a); a.click();
       setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 0);
+    }
+    function exportJSON() {
+      const rec = buildRecord();
+      download(baseName(rec) + '.json', JSON.stringify(rec, null, 2), 'application/json');
+    }
+    function exportXML() {
+      const rec = buildRecord();
+      download(baseName(rec) + '.xml', selfToXML(rec), 'application/xml');
+    }
+
+    // ===== XML 직렬화 / 파싱 =====
+    // JSON과 같은 내용을 담되, 성적서 작성프로그램의 QIR XML과 같은 형태로 저장한다.
+    function escXml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+    }
+    function selfToXML(rec) {
+      const d = rec.dates || {}, s = rec.summary || {};
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<MfrSelfInspection schema="${escXml(rec.schema)}">\n`;
+      xml += `  <Header>\n`;
+      xml += `    <SavedAt>${escXml(rec.saved_at)}</SavedAt>\n    <Maker>${escXml(rec.maker)}</Maker>\n`;
+      xml += `    <SpecID>${escXml(rec.spec_id)}</SpecID>\n    <Material>${escXml(rec.material)}</Material>\n`;
+      xml += `    <GSNo>${escXml(rec.gs_no)}</GSNo>\n    <Install>${escXml(rec.install)}</Install>\n`;
+      xml += `    <Variant>${escXml(rec.variant)}</Variant>\n    <Mode>${escXml(rec.mode)}</Mode>\n`;
+      xml += `    <LotNo>${escXml(rec.lot_no)}</LotNo>\n    <Qty>${escXml(rec.qty)}</Qty>\n`;
+      xml += `    <Dates start="${escXml(d.start)}" end="${escXml(d.end)}"/>\n`;
+      xml += `    <Writer>${escXml(rec.writer)}</Writer>\n    <SerialRange>${escXml(rec.serial_range)}</SerialRange>\n`;
+      xml += `    <Memo>${escXml(rec.memo)}</Memo>\n  </Header>\n`;
+      xml += `  <Summary>\n    <ItemTotal>${escXml(s.item_total)}</ItemTotal>\n    <CheckedTotal>${escXml(s.checked_total)}</CheckedTotal>\n`;
+      xml += `    <DefectTotal>${escXml(s.defect_total)}</DefectTotal>\n    <DefectRate>${escXml(s.defect_rate)}</DefectRate>\n`;
+      xml += `    <BadItemCount>${escXml(s.bad_item_count)}</BadItemCount>\n    <EmptyCount>${escXml(s.empty_count)}</EmptyCount>\n`;
+      xml += `    <Judgement>${escXml(s.judgement)}</Judgement>\n  </Summary>\n  <Items>\n`;
+      (rec.items || []).forEach(i => {
+        xml += `    <Item key="${escXml(i.key)}" name="${escXml(i.name)}" ref="${escXml(i.ref)}">\n`;
+        xml += `      <StepKey>${escXml(i.stepKey)}</StepKey>\n      <StepTitle>${escXml(i.stepTitle)}</StepTitle>\n`;
+        xml += `      <Crit>${escXml(i.crit)}</Crit>\n      <Unit>${escXml(i.unit)}</Unit>\n      <Cycle>${escXml(i.cycle)}</Cycle>\n`;
+        xml += `      <Cert>${escXml(i.cert)}</Cert>\n      <NA>${escXml(i.na)}</NA>\n`;
+        xml += `      <Checked>${escXml(i.checked)}</Checked>\n      <Defects>${escXml(i.defects)}</Defects>\n`;
+        xml += `      <Judgement>${escXml(i.jdg)}</Judgement>\n`;
+        xml += `      <Sub>${escXml(i.sub)}</Sub>\n      <Date>${escXml(i.date)}</Date>\n      <Note>${escXml(i.note)}</Note>\n`;
+        const vals = Object.entries(i.vals || {});
+        if (vals.length) {
+          xml += `      <Vals>${vals.map(([k, v]) => `<Val name="${escXml(k)}">${escXml(v)}</Val>`).join('')}</Vals>\n`;
+        }
+        if (i.defect) {
+          xml += `      <Defect type="${escXml(i.defect.type)}" where="${escXml(i.defect.where)}">\n`;
+          xml += `        <Phenom>${escXml(i.defect.phenom)}</Phenom>\n        <Cause>${escXml(i.defect.cause)}</Cause>\n`;
+          xml += `        <Action>${escXml(i.defect.action)}</Action>\n        <Prevent>${escXml(i.defect.prevent)}</Prevent>\n      </Defect>\n`;
+        }
+        xml += `    </Item>\n`;
+      });
+      xml += `  </Items>\n</MfrSelfInspection>`;
+      return xml;
+    }
+    function xmlToSelfRecord(xmlText) {
+      const doc = new DOMParser().parseFromString(xmlText, 'application/xml');
+      if (doc.querySelector('parsererror')) throw new Error('XML 형식이 올바르지 않습니다.');
+      const root = doc.querySelector('MfrSelfInspection');
+      if (!root) throw new Error('제조사 자체검사 XML이 아닙니다.');
+      const txt = (p, t) => (p && p.querySelector(t) ? p.querySelector(t).textContent.trim() : '');
+      const h = root.querySelector('Header'), sm = root.querySelector('Summary');
+      const dates = h ? h.querySelector('Dates') : null;
+      const items = Array.from(root.querySelectorAll('Items > Item')).map(el => {
+        const vals = {};
+        el.querySelectorAll('Vals > Val').forEach(v => { vals[v.getAttribute('name')] = v.textContent.trim(); });
+        const dfEl = el.querySelector('Defect');
+        return {
+          stepKey: txt(el, 'StepKey'), stepTitle: txt(el, 'StepTitle'),
+          key: el.getAttribute('key') || '', name: el.getAttribute('name') || '', ref: el.getAttribute('ref') || '',
+          crit: txt(el, 'Crit'), unit: txt(el, 'Unit'), cycle: txt(el, 'Cycle'),
+          cert: txt(el, 'Cert') === 'true', na: txt(el, 'NA') === 'true',
+          checked: Number(txt(el, 'Checked')) || 0, defects: Number(txt(el, 'Defects')) || 0,
+          jdg: txt(el, 'Judgement'), vals,
+          sub: txt(el, 'Sub'), date: txt(el, 'Date'), note: txt(el, 'Note'),
+          defect: dfEl ? {
+            type: dfEl.getAttribute('type') || '', where: dfEl.getAttribute('where') || '',
+            phenom: txt(dfEl, 'Phenom'), cause: txt(dfEl, 'Cause'),
+            action: txt(dfEl, 'Action'), prevent: txt(dfEl, 'Prevent'),
+          } : null,
+        };
+      });
+      return {
+        schema: root.getAttribute('schema') || 'KEPCO-MFR-SELF-1.0',
+        saved_at: txt(h, 'SavedAt'), maker: txt(h, 'Maker'), spec_id: txt(h, 'SpecID'),
+        material: txt(h, 'Material'), gs_no: txt(h, 'GSNo'), install: txt(h, 'Install'),
+        variant: txt(h, 'Variant'), mode: txt(h, 'Mode'),
+        lot_no: txt(h, 'LotNo'), qty: Number(txt(h, 'Qty')) || 0,
+        dates: { start: dates ? dates.getAttribute('start') || '' : '', end: dates ? dates.getAttribute('end') || '' : '' },
+        writer: txt(h, 'Writer'), serial_range: txt(h, 'SerialRange'), memo: txt(h, 'Memo'),
+        items,
+        summary: {
+          item_total: Number(txt(sm, 'ItemTotal')) || 0, checked_total: Number(txt(sm, 'CheckedTotal')) || 0,
+          defect_total: Number(txt(sm, 'DefectTotal')) || 0, defect_rate: Number(txt(sm, 'DefectRate')) || 0,
+          bad_item_count: Number(txt(sm, 'BadItemCount')) || 0, empty_count: Number(txt(sm, 'EmptyCount')) || 0,
+          judgement: txt(sm, 'Judgement'),
+        },
+      };
+    }
+    // 확장자와 상관없이 내용으로 XML/JSON을 가른다
+    function parseRecordText(text) {
+      return /^\s*<\?xml|^\s*<MfrSelfInspection/.test(text) ? xmlToSelfRecord(text) : JSON.parse(text);
     }
     function loadRecord(rec) {
       if (!rec || !rec.spec_id) { alert('제조사 자체검사 기록 파일이 아닙니다.'); return; }
@@ -1152,14 +1256,15 @@
     $('btnSumBack').onclick = () => {
       activeStep = 0; $('secSum').classList.add('hidden'); $('secTest').classList.remove('hidden'); renderStep();
     };
-    $('btnExport').onclick = exportJSON;
+    $('btnExport').onclick = exportXML;
+    $('btnExportJson').onclick = exportJSON;
     $('btnPrint').onclick = () => window.print();
     $('btnLoad').onclick = () => $('fileLoad').click();
     $('fileLoad').onchange = e => {
       const f = e.target.files[0]; e.target.value = '';
       if (!f) return;
       const r = new FileReader();
-      r.onload = () => { try { loadRecord(JSON.parse(r.result)); } catch (err) { alert('파일을 읽지 못했습니다: ' + err.message); } };
+      r.onload = () => { try { loadRecord(parseRecordText(r.result)); } catch (err) { alert('파일을 읽지 못했습니다: ' + err.message); } };
       r.readAsText(f, 'utf-8');
     };
     window.addEventListener('beforeunload', e => {

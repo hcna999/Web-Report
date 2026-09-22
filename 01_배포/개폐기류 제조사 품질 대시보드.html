@@ -90,7 +90,7 @@
       </div>
       <button class="primary" id="btnFiles">검사기록 파일 선택</button>
       <button id="btnFolder">폴더 선택</button>
-      <input type="file" id="fileInput" multiple accept=".json" hidden>
+      <input type="file" id="fileInput" multiple accept=".xml,.json" hidden>
       <input type="file" id="folderInput" webkitdirectory directory multiple hidden>
       <div class="status" id="loadStatus">불러온 기록이 없습니다.</div>
       <div style="border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:6px">
@@ -110,7 +110,7 @@
       <div class="card" id="emptyState">
         <div class="empty">
           <h2>자체검사 기록을 불러오세요</h2>
-          <p class="sub">「개폐기류 제조사 자체검사 프로그램」에서 저장한 <b>.json</b> 파일을 좌측 버튼으로 선택하면<br>
+          <p class="sub">「개폐기류 제조사 자체검사 프로그램」에서 저장한 <b>.xml</b>(또는 <b>.json</b>) 파일을 좌측 버튼으로 선택하면<br>
             불량률 추이 · 항목별 불량 · 원인 분석 · 불량 상세대장을 볼 수 있습니다.</p>
         </div>
       </div>
@@ -252,13 +252,58 @@
     $('fileInput').onchange = e => { const f = [...e.target.files]; e.target.value = ''; handleFiles(f); };
     $('folderInput').onchange = e => { const f = [...e.target.files]; e.target.value = ''; handleFiles(f); };
 
+    // 자체검사 프로그램이 저장한 XML(MfrSelfInspection) → JSON 기록과 같은 형태로 되돌린다.
+    function xmlToSelfRecord(xmlText) {
+      const doc = new DOMParser().parseFromString(xmlText, 'application/xml');
+      if (doc.querySelector('parsererror')) throw new Error('XML 형식 오류');
+      const root = doc.querySelector('MfrSelfInspection');
+      if (!root) throw new Error('자체검사 XML 아님');
+      const txt = (p, t) => (p && p.querySelector(t) ? p.querySelector(t).textContent.trim() : '');
+      const h = root.querySelector('Header'), sm = root.querySelector('Summary');
+      const dates = h ? h.querySelector('Dates') : null;
+      const items = [...root.querySelectorAll('Items > Item')].map(el => {
+        const vals = {};
+        el.querySelectorAll('Vals > Val').forEach(v => { vals[v.getAttribute('name')] = v.textContent.trim(); });
+        const df = el.querySelector('Defect');
+        return {
+          stepKey: txt(el, 'StepKey'), stepTitle: txt(el, 'StepTitle'),
+          key: el.getAttribute('key') || '', name: el.getAttribute('name') || '', ref: el.getAttribute('ref') || '',
+          crit: txt(el, 'Crit'), unit: txt(el, 'Unit'), cycle: txt(el, 'Cycle'),
+          cert: txt(el, 'Cert') === 'true', na: txt(el, 'NA') === 'true',
+          checked: Number(txt(el, 'Checked')) || 0, defects: Number(txt(el, 'Defects')) || 0,
+          jdg: txt(el, 'Judgement'), vals,
+          sub: txt(el, 'Sub'), date: txt(el, 'Date'), note: txt(el, 'Note'),
+          defect: df ? {
+            type: df.getAttribute('type') || '', where: df.getAttribute('where') || '',
+            phenom: txt(df, 'Phenom'), cause: txt(df, 'Cause'),
+            action: txt(df, 'Action'), prevent: txt(df, 'Prevent'),
+          } : null,
+        };
+      });
+      return {
+        schema: root.getAttribute('schema') || 'KEPCO-MFR-SELF-1.0',
+        saved_at: txt(h, 'SavedAt'), maker: txt(h, 'Maker'), spec_id: txt(h, 'SpecID'),
+        material: txt(h, 'Material'), gs_no: txt(h, 'GSNo'), install: txt(h, 'Install'),
+        variant: txt(h, 'Variant'), mode: txt(h, 'Mode'),
+        lot_no: txt(h, 'LotNo'), qty: Number(txt(h, 'Qty')) || 0,
+        dates: { start: dates ? dates.getAttribute('start') || '' : '', end: dates ? dates.getAttribute('end') || '' : '' },
+        writer: txt(h, 'Writer'), serial_range: txt(h, 'SerialRange'), memo: txt(h, 'Memo'),
+        items,
+        summary: { judgement: txt(sm, 'Judgement') },
+      };
+    }
+    // 확장자와 상관없이 내용으로 XML/JSON을 가른다
+    function parseRecordText(text) {
+      return /^\s*<\?xml|^\s*<MfrSelfInspection/.test(text) ? xmlToSelfRecord(text) : JSON.parse(text);
+    }
+
     async function handleFiles(files) {
       if (!files.length) { $('loadStatus').textContent = '선택된 파일이 없습니다.'; return; }
       const lots = []; let ok = 0, ng = 0;
       for (const f of files) {
-        if (!/\.json$/i.test(f.name)) continue;
+        if (!/\.(xml|json)$/i.test(f.name)) continue;
         try {
-          const rec = JSON.parse(await f.text());
+          const rec = parseRecordText(await f.text());
           const arr = Array.isArray(rec) ? rec : [rec];
           arr.forEach(r => {
             if (!r || !r.items) throw new Error('items 없음');
