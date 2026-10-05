@@ -87,6 +87,14 @@
     .fitgrid .cell.over input { border-color:var(--bad); color:var(--bad); font-weight:700 }
     .fitgrid .cell label { font-size:11px; color:var(--muted); display:block; margin-bottom:2px }
     .hidden { display:none !important }
+    table.meas { font-size:12px; min-width:100% }
+    table.meas th { position:sticky; top:0; z-index:1; padding:5px 6px; font-size:11px; line-height:1.25 }
+    table.meas td { padding:3px 4px }
+    table.meas td input, table.meas td select { padding:4px 6px; font-size:12px; text-align:center }
+    table.meas td.over input { border-color:var(--bad); color:var(--bad); font-weight:700;
+                               background:rgba(239,68,68,.08) }
+    table.meas td.sn { text-align:left; font-weight:700; color:var(--muted); white-space:nowrap }
+    .measwrap { overflow:auto; max-height:430px; border:1px solid var(--line); border-radius:8px }
     @media print {
       body { background:#fff } .card { box-shadow:none; break-inside:avoid }
       .row-act, .steps, .top button, #secBase, #draftCard { display:none !important }
@@ -144,7 +152,8 @@
       </div>
       <div class="grid g3" style="margin-top:10px">
         <div><label class="f">검사 담당자</label><input id="fWriter" placeholder="성명"></div>
-        <div><label class="f">제조번호 범위(선택)</label><input id="fSerial" placeholder="예: 26-001 ~ 26-200"></div>
+        <div><label class="f">제조번호 (쉼표 구분 또는 범위)</label>
+          <input id="fSerial" placeholder="예: 26-001~26-050 또는 26-001, 26-005"></div>
         <div><label class="f">비고</label><input id="fMemo" placeholder="특이사항"></div>
       </div>
       <div class="hint">
@@ -630,7 +639,14 @@
     const fmtToday = () => new Date().toISOString().slice(0, 10);
     const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
       ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-    const num = v => { const n = Number(String(v == null ? '' : v).trim()); return isFinite(n) && String(v).trim() !== '' ? n : NaN; };
+    // 빈 칸은 반드시 NaN이어야 한다. (예전 판은 String(undefined)='undefined' 를 비교해
+    //  빈 칸을 0으로 읽었고, 그 탓에 입력하지 않은 측정칸까지 '기준 이내'로 판정됐다)
+    const num = v => {
+      const t = String(v == null ? '' : v).trim();
+      if (t === '') return NaN;
+      const n = Number(t);
+      return isFinite(n) ? n : NaN;
+    };
 
     // 버전은 파일 최종 수정일로 자동 표기
     (() => {
@@ -652,6 +668,47 @@
     const DEFECT_TYPES = ['자재불량', '가공불량', '조립불량', '용접불량', '도장·도금불량',
       '절연물 불량', '기밀·누설', '전장·배선불량', '제어·소프트웨어', '설정·조정불량',
       '작업자 실수', '설계문제', '외주품 불량', '기타'];
+
+    // 자체검사에서는 공인시험기관 성적서로 갈음하는 항목(cert)을 다루지 않으므로 제외한다.
+    // 항목이 하나도 남지 않은 시험단계는 화면에서 함께 뺀다.
+    SPECS.forEach(sp => {
+      sp.steps.forEach(st => { st.items = st.items.filter(i => !i.cert); });
+      sp.steps = sp.steps.filter(st => st.items.length);
+    });
+
+    // "26-001~26-050" 또는 "26-001, 26-005" 를 풀어 제조번호 목록을 만든다.
+    // 비워 두면 1번부터 수량만큼 자동 생성한다.
+    function parseSerials(text, qty) {
+      const t = String(text || '').trim();
+      const n = Math.max(0, Number(qty) || 0);
+      if (!t) return Array.from({ length: n }, (_, i) => String(i + 1));
+      const out = [];
+      t.split(/[,\n]/).forEach(part => {
+        const p = part.trim(); if (!p) return;
+        const se = p.split(/\s*~\s*/);
+        if (se.length === 2) {
+          const ml = se[0].match(/^(.*?)(\d+)$/), mr = se[1].match(/^(.*?)(\d+)$/);
+          if (ml && mr) {
+            const pre = ml[1], a = Number(ml[2]), b = Number(mr[2]), w = ml[2].length;
+            if (isFinite(a) && isFinite(b) && b >= a && b - a < 2000) {
+              for (let k = a; k <= b; k++) out.push(pre + String(k).padStart(w, '0'));
+              return;
+            }
+          }
+        }
+        out.push(p);
+      });
+      return out;
+    }
+    // 이 항목에서 측정할 제조번호 — 앞에서부터 검사수량만큼
+    function itemSerials(it) {
+      const all = M.base.serials || [];
+      const st = M.items[it.key] || {};
+      const n = Math.max(0, Number(st.checked == null ? M.base.qty : st.checked) || 0);
+      const out = all.slice(0, n);
+      for (let i = out.length; i < n; i++) out.push(String(i + 1));
+      return out;
+    }
 
     // ===== 상태 =====
     // M = { base:{...}, items:{ itemKey:{ checked, defects, jdg, vals:{}, sub, date, dfType, dfPhenom, dfCause, dfAction, dfPrevent, note } } }
@@ -729,13 +786,13 @@
       if (f.thr) return (f.thr.dir === 'le' ? '≤ ' : '≥ ') + f.thr.v;
       return '';
     }
-    // 측정값 기반 자동 판정 (하나라도 기준 밖 → 불량, 전부 입력·기준 내 → 양호)
-    function autoJdg(it) {
+    // 제조번호 한 대의 판정 — 하나라도 기준 밖이면 불량, 전 칸이 기준 내면 양호
+    function serialJdg(it, sn) {
       const fs = measFields(it); if (!fs.length) return '';
-      const st = M.items[it.key] || {}; const vals = st.vals || {};
+      const rv = ((M.items[it.key] || {}).res || {})[sn] || {};
       let filled = 0, bad = false;
       for (const f of fs) {
-        const raw = vals[f.lab];
+        const raw = rv[f.lab];
         if (f.kind === 'jdg') { if (raw) { filled++; if (raw === '불량') bad = true; } continue; }
         const v = num(raw);
         if (!isFinite(v)) continue;
@@ -746,6 +803,21 @@
       if (bad) return '불량';
       return filled === fs.length ? '양호' : '';
     }
+    // 항목 전체 판정 — 제조번호 중 하나라도 불량이면 불량
+    function autoJdg(it) {
+      const fs = measFields(it); if (!fs.length) return '';
+      const sns = itemSerials(it);
+      let judged = 0, bad = 0;
+      sns.forEach(sn => { const j = serialJdg(it, sn); if (j) { judged++; if (j === '불량') bad++; } });
+      if (!judged) return '';
+      if (bad) return '불량';
+      return judged === sns.length ? '양호' : '';
+    }
+    // 측정 항목의 불량수량은 불량으로 판정된 제조번호 수로 자동 집계한다
+    function badSerialCount(it) {
+      return itemSerials(it).filter(sn => serialJdg(it, sn) === '불량').length;
+    }
+    function isMeasured(it) { return measFields(it).length > 0; }
 
     // ===== 화면 구성 =====
     function stepDefs() { return CUR ? CUR.spec.steps : []; }
@@ -777,6 +849,7 @@
         d1: $('fD1').value, d2: $('fD2').value,
         writer: ($('fWriter').value || '').trim(),
         serial: ($('fSerial').value || '').trim(),
+        serials: parseSerials($('fSerial').value, Number($('fQty').value) || 0),
         memo: ($('fMemo').value || '').trim(),
       };
     }
@@ -860,8 +933,9 @@
         <td class="l"><b>${esc(it.name)}</b>${cyc}<div class="lim">${esc(it.ref || '')}</div></td>
         <td class="l"><span class="lim">${esc(effCrit(it) || '')}</span></td>
         <td>${na ? '-' : `<input type="number" min="0" step="1" data-f="checked" value="${chk}">`}</td>
-        <td>${na ? '-' : `<input type="number" min="0" step="1" data-f="defects" value="${df}">`}</td>
-        <td>${na ? '-' : `<span class="badge ${df > 0 ? 'bad' : 'good'}">${rate.toFixed(2)}%</span>`}</td>
+        <td>${na ? '-' : `<input type="number" min="0" step="1" data-f="defects" value="${df}"${
+            isMeasured(it) ? ' readonly title="측정값으로 자동 집계됩니다"' : ''}>`}</td>
+        <td>${na ? '-' : `<span class="badge ${df > 0 ? 'bad' : 'good'}" data-f="rate">${rate.toFixed(2)}%</span>`}</td>
         <td>${na
           ? '<span class="badge na">해당없음</span>'
           : `<button class="jbtn ${jdg === '양호' ? 'on-good' : ''}" data-f="jdg" data-v="양호">양호</button>
@@ -873,21 +947,7 @@
     function itemDetailHTML(it) {
       const st = M.items[it.key] || {};
       let html = '';
-      // (1) 서류 대체 항목
-      if (it.cert) {
-        html += `<div class="panel"><div class="grid g3">
-          <div><label class="f">제출 여부</label>
-            <select data-f="sub">
-              <option value=""${!st.sub ? ' selected' : ''}>선택</option>
-              <option value="제출"${st.sub === '제출' ? ' selected' : ''}>제출</option>
-              <option value="미제출"${st.sub === '미제출' ? ' selected' : ''}>미제출</option>
-              <option value="해당없음"${st.sub === '해당없음' ? ' selected' : ''}>해당없음</option>
-            </select></div>
-          ${it.noDate ? '' : `<div><label class="f">시험(발행) 일자</label><input type="date" data-f="date" value="${esc(st.date || '')}"></div>`}
-          <div><label class="f">성적서 번호 / 발행처</label><input data-f="note" value="${esc(st.note || '')}" placeholder="예: KTL 2026-0001"></div>
-        </div></div>`;
-      }
-      // (2) 측정값
+      // 측정값 — 제조번호별로 한 줄씩 입력한다
       const fs = measFields(it);
       if (fs.length) {
         const pick = it.resistance ? mcrPick(it) : null;
@@ -897,24 +957,42 @@
             ? `<div class="lim" style="margin-bottom:6px">업체 기준치 세트:
                  <select data-f="mcrSet" style="width:auto;display:inline-block">
                    ${pick.sets.map((s, i) => `<option value="${i}"${i === pick.idx ? ' selected' : ''}>${esc(s.label)}</option>`).join('')}
-                 </select> (기준치 초과 시 붉게 표시)</div>`
+                 </select></div>`
             : `<div class="lim" style="margin-bottom:6px">등록된 업체 기준치가 없습니다 — 측정값만 기록되며 판정은 직접 선택하세요.</div>`;
         }
-        html += `<div class="panel">${head}<div class="fitgrid">` + fs.map(f => {
-          const v = (st.vals || {})[f.lab] == null ? '' : (st.vals || {})[f.lab];
-          if (f.kind === 'jdg') {
-            return `<div class="cell"><label>${esc(f.lab)}</label>
-              <select data-f="val" data-lab="${esc(f.lab)}">
+        const sns = itemSerials(it);
+        const res = st.res || {};
+        const heads = fs.map(f => {
+          const lt = limitText(f, it);
+          return `<th>${esc(f.lab)}${f.unit ? `<div class="lim">(${esc(f.unit)})</div>` : ''}` +
+                 `${lt ? `<div class="lim">${esc(lt)}</div>` : ''}</th>`;
+        }).join('');
+        const rows = sns.map(sn => {
+          const rv = res[sn] || {};
+          const j = serialJdg(it, sn);
+          const cells = fs.map(f => {
+            const v = rv[f.lab] == null ? '' : rv[f.lab];
+            if (f.kind === 'jdg') {
+              return `<td><select data-f="rval" data-sn="${esc(sn)}" data-lab="${esc(f.lab)}">
                 <option value=""${!v ? ' selected' : ''}>-</option>
                 <option value="양호"${v === '양호' ? ' selected' : ''}>양호</option>
                 <option value="불량"${v === '불량' ? ' selected' : ''}>불량</option>
-              </select></div>`;
-          }
-          const over = overLimit(f, num(v), it);
-          const lt = limitText(f, it);
-          return `<div class="cell ${over ? 'over' : ''}"><label>${esc(f.lab)}${f.unit ? ` (${esc(f.unit)})` : ''}${lt ? ` <span style="opacity:.75">${esc(lt)}</span>` : ''}</label>
-            <input data-f="val" data-lab="${esc(f.lab)}" value="${esc(v)}" inputmode="decimal"></div>`;
-        }).join('') + `</div></div>`;
+              </select></td>`;
+            }
+            const over = overLimit(f, num(v), it);
+            return `<td class="${over ? 'over' : ''}"><input data-f="rval" data-sn="${esc(sn)}"
+              data-lab="${esc(f.lab)}" value="${esc(v)}" inputmode="decimal"></td>`;
+          }).join('');
+          return `<tr data-sn="${esc(sn)}" class="${j === '불량' ? 'rowbad' : ''}">
+            <td class="sn">${esc(sn)}</td>${cells}
+            <td><span class="badge ${j === '불량' ? 'bad' : j === '양호' ? 'good' : 'na'}" data-f="snj">${j || '-'}</span></td></tr>`;
+        }).join('');
+        html += `<div class="panel">${head}
+          <div class="lim" style="margin-bottom:6px">제조번호별로 입력합니다 · ${sns.length}대
+            ${sns.length > 60 ? ' <b style="color:var(--warn)">— 대수가 많으면 입력이 느려질 수 있습니다</b>' : ''}</div>
+          <div class="measwrap"><table class="meas">
+            <thead><tr><th style="min-width:98px">제조번호</th>${heads}<th style="min-width:66px">판정</th></tr></thead>
+            <tbody>${rows}</tbody></table></div></div>`;
       }
       // (3) 불량 상세사유 — 판정이 불량이거나 불량수량이 1 이상이면 표시
       const showDf = st.jdg === '불량' || (Number(st.defects) || 0) > 0;
@@ -952,9 +1030,15 @@
             el.onclick = () => { setVal(key, 'jdg', M.items[key].jdg === el.dataset.v ? '' : el.dataset.v); renderStep(); };
             return;
           }
-          if (f === 'val') {
-            const h = () => { const st = M.items[key]; st.vals = st.vals || {}; st.vals[el.dataset.lab] = el.value; afterValue(key); };
-            el.tagName === 'SELECT' ? (el.onchange = () => { h(); renderStep(); }) : (el.onchange = h, el.oninput = h);
+          if (f === 'rval') {
+            const h = () => {
+              const st = M.items[key]; st.res = st.res || {};
+              const sn = el.dataset.sn;
+              st.res[sn] = st.res[sn] || {};
+              st.res[sn][el.dataset.lab] = el.value;
+              afterValue(key, el);
+            };
+            el.tagName === 'SELECT' ? (el.onchange = h) : (el.onchange = h, el.oninput = h);
             return;
           }
           if (f === 'mcrSet') { el.onchange = () => { setVal(key, 'mcrSet', Number(el.value) || 0); renderStep(); }; return; }
@@ -977,24 +1061,66 @@
     // 불량수량이 검사수량을 넘으면 검사수량으로 맞춘다.
     function normalizeCounts(key) {
       const st = M.items[key]; if (!st) return;
+      const it = findItem(key);
       const chk = st.checked == null ? M.base.qty : Number(st.checked) || 0;
       let df = Number(st.defects) || 0;
+      // 측정 항목은 불량으로 판정된 제조번호 수가 곧 불량수량이다
+      if (it && isMeasured(it)) {
+        st.defects = Math.min(badSerialCount(it), chk);
+        if (st.defects > 0) st.jdg = '불량';
+        return;
+      }
       if (st.jdg === '불량' && df === 0) df = 1;
       if (st.jdg === '양호') df = 0;
       if (df > chk) df = chk;
       st.defects = df;
       if (df > 0 && st.jdg !== '불량') st.jdg = '불량';
     }
-    function afterValue(key) {
+    // 측정값은 입력할 때마다 전체를 다시 그리지 않고 해당 칸·행·항목 요약만 고쳐 그린다
+    // (전수 측정이면 표가 수백 줄이라 매번 다시 그리면 느려진다)
+    function afterValue(key, el) {
       const it = findItem(key); if (!it) return;
-      const a = autoJdg(it);
       const st = M.items[key];
-      if (a) { st.jdg = a; normalizeCounts(key); }
+      if (el) {
+        const f = measFields(it).find(x => x.lab === el.dataset.lab);
+        const td = el.closest('td'), tr = el.closest('tr');
+        if (td && f && f.kind !== 'jdg') td.classList.toggle('over', overLimit(f, num(el.value), it));
+        if (tr) {
+          const j = serialJdg(it, tr.dataset.sn);
+          const b = tr.querySelector('[data-f="snj"]');
+          if (b) { b.textContent = j || '-'; b.className = 'badge ' + (j === '불량' ? 'bad' : j === '양호' ? 'good' : 'na'); }
+          tr.classList.toggle('rowbad', j === '불량');
+        }
+      }
+      const a = autoJdg(it);
+      if (a) st.jdg = a;
+      normalizeCounts(key);
       saveDraftSoon();
-      // 자동 판정 결과가 화면 판정 버튼/불량 패널과 어긋나면 다시 그린다
-      const tr = $('stepBody').querySelector(`tr[data-k="${CSS.escape(key)}"]`);
-      const shown = tr && tr.querySelector('.on-bad') ? '불량' : (tr && tr.querySelector('.on-good') ? '양호' : '');
-      if (shown !== (st.jdg || '')) renderStep();
+      updateItemRow(key);
+    }
+    // 항목 요약 줄(불량수량·불량률·판정)만 갱신하고, 불량 패널 유무가 바뀔 때만 다시 그린다
+    function updateItemRow(key) {
+      const it = findItem(key); if (!it) return;
+      const st = M.items[key] || {};
+      const host = $('stepBody');
+      const tr = host.querySelector(`tr[data-k="${CSS.escape(key)}"]`);
+      if (!tr) return;
+      const chk = st.checked == null ? M.base.qty : Number(st.checked) || 0;
+      const df = Number(st.defects) || 0;
+      const dfIn = tr.querySelector('[data-f="defects"]');
+      if (dfIn && dfIn.value !== String(df)) dfIn.value = df;
+      const rb = tr.querySelector('[data-f="rate"]');
+      if (rb) {
+        rb.textContent = (chk > 0 ? df / chk * 100 : 0).toFixed(2) + '%';
+        rb.className = 'badge ' + (df > 0 ? 'bad' : 'good');
+      }
+      const g = tr.querySelector('[data-v="양호"]'), b = tr.querySelector('[data-v="불량"]');
+      if (g) g.className = 'jbtn ' + (st.jdg === '양호' ? 'on-good' : '');
+      if (b) b.className = 'jbtn ' + (st.jdg === '불량' ? 'on-bad' : '');
+      tr.classList.toggle('rowbad', st.jdg === '불량');
+      const need = st.jdg === '불량' || df > 0;
+      const drow = host.querySelector(`tr.drow[data-k="${CSS.escape(key)}"]`);
+      if (need !== !!(drow && drow.querySelector('.panel.bad'))) renderStep();
     }
     function findItem(key) {
       for (const sd of stepDefs()) { const it = sd.items.find(x => x.key === key); if (it) return it; }
@@ -1014,7 +1140,7 @@
           checked: na ? 0 : (st.checked == null ? M.base.qty : Number(st.checked) || 0),
           defects: na ? 0 : Number(st.defects) || 0,
           jdg: na ? '해당없음' : (st.jdg || ''),
-          vals: st.vals || {}, sub: st.sub || '', date: st.date || '', note: st.note || '',
+          res: st.res || {}, sub: st.sub || '', date: st.date || '', note: st.note || '',
           defect: (st.jdg === '불량' || (Number(st.defects) || 0) > 0) ? {
             type: st.dfType || '', where: st.dfWhere || '', phenom: st.dfPhenom || '',
             cause: st.dfCause || '', action: st.dfAction || '', prevent: st.dfPrevent || ''
@@ -1129,9 +1255,12 @@
         xml += `      <Checked>${escXml(i.checked)}</Checked>\n      <Defects>${escXml(i.defects)}</Defects>\n`;
         xml += `      <Judgement>${escXml(i.jdg)}</Judgement>\n`;
         xml += `      <Sub>${escXml(i.sub)}</Sub>\n      <Date>${escXml(i.date)}</Date>\n      <Note>${escXml(i.note)}</Note>\n`;
-        const vals = Object.entries(i.vals || {});
-        if (vals.length) {
-          xml += `      <Vals>${vals.map(([k, v]) => `<Val name="${escXml(k)}">${escXml(v)}</Val>`).join('')}</Vals>\n`;
+        const units = Object.entries(i.res || {});
+        if (units.length) {
+          xml += `      <Results>${units.map(([sn, fv]) =>
+            `<Unit serial="${escXml(sn)}">` +
+            Object.entries(fv || {}).map(([k, v]) => `<Val name="${escXml(k)}">${escXml(v)}</Val>`).join('') +
+            `</Unit>`).join('')}</Results>\n`;
         }
         if (i.defect) {
           xml += `      <Defect type="${escXml(i.defect.type)}" where="${escXml(i.defect.where)}">\n`;
@@ -1152,8 +1281,17 @@
       const h = root.querySelector('Header'), sm = root.querySelector('Summary');
       const dates = h ? h.querySelector('Dates') : null;
       const items = Array.from(root.querySelectorAll('Items > Item')).map(el => {
-        const vals = {};
-        el.querySelectorAll('Vals > Val').forEach(v => { vals[v.getAttribute('name')] = v.textContent.trim(); });
+        const res = {};
+        el.querySelectorAll('Results > Unit').forEach(u => {
+          const sn = u.getAttribute('serial') || '';
+          const fv = {};
+          u.querySelectorAll('Val').forEach(v => { fv[v.getAttribute('name')] = v.textContent.trim(); });
+          res[sn] = fv;
+        });
+        // 예전 판(제조번호 구분 없이 저장하던 형식)도 읽어 첫 대수에 넣는다
+        const legacy = {};
+        el.querySelectorAll('Vals > Val').forEach(v => { legacy[v.getAttribute('name')] = v.textContent.trim(); });
+        if (!Object.keys(res).length && Object.keys(legacy).length) res['1'] = legacy;
         const dfEl = el.querySelector('Defect');
         return {
           stepKey: txt(el, 'StepKey'), stepTitle: txt(el, 'StepTitle'),
@@ -1161,7 +1299,7 @@
           crit: txt(el, 'Crit'), unit: txt(el, 'Unit'), cycle: txt(el, 'Cycle'),
           cert: txt(el, 'Cert') === 'true', na: txt(el, 'NA') === 'true',
           checked: Number(txt(el, 'Checked')) || 0, defects: Number(txt(el, 'Defects')) || 0,
-          jdg: txt(el, 'Judgement'), vals,
+          jdg: txt(el, 'Judgement'), res,
           sub: txt(el, 'Sub'), date: txt(el, 'Date'), note: txt(el, 'Note'),
           defect: dfEl ? {
             type: dfEl.getAttribute('type') || '', where: dfEl.getAttribute('where') || '',
@@ -1198,6 +1336,7 @@
       M = { base: {}, items: {} };
       M.base = {
         maker: rec.maker || '', spec_id: rec.spec_id, material: sp.name, gsNo: sp.gsNo || '', install: sp.install || '',
+        serials: parseSerials(rec.serial_range || '', Number(rec.qty) || 0),
         variant: rec.variant || sp.variants[0].value, mode: rec.mode || '',
         lot_no: rec.lot_no || '', qty: Number(rec.qty) || 0,
         d1: (rec.dates || {}).start || '', d2: (rec.dates || {}).end || '',
@@ -1206,7 +1345,7 @@
       (rec.items || []).forEach(i => {
         M.items[i.key] = {
           checked: i.checked, defects: i.defects, jdg: i.jdg === '해당없음' ? '' : i.jdg,
-          vals: i.vals || {}, sub: i.sub || '', date: i.date || '', note: i.note || '',
+          res: i.res || {}, sub: i.sub || '', date: i.date || '', note: i.note || '',
           dfType: (i.defect || {}).type || '', dfWhere: (i.defect || {}).where || '',
           dfPhenom: (i.defect || {}).phenom || '', dfCause: (i.defect || {}).cause || '',
           dfAction: (i.defect || {}).action || '', dfPrevent: (i.defect || {}).prevent || '',

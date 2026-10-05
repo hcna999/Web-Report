@@ -262,8 +262,17 @@
       const h = root.querySelector('Header'), sm = root.querySelector('Summary');
       const dates = h ? h.querySelector('Dates') : null;
       const items = [...root.querySelectorAll('Items > Item')].map(el => {
-        const vals = {};
-        el.querySelectorAll('Vals > Val').forEach(v => { vals[v.getAttribute('name')] = v.textContent.trim(); });
+        // 측정값은 제조번호별로 저장된다. 예전 판의 Vals(제조번호 구분 없음)도 함께 읽는다.
+        const res = {};
+        el.querySelectorAll('Results > Unit').forEach(u => {
+          const sn = u.getAttribute('serial') || '';
+          const fv = {};
+          u.querySelectorAll('Val').forEach(v => { fv[v.getAttribute('name')] = v.textContent.trim(); });
+          res[sn] = fv;
+        });
+        const legacy = {};
+        el.querySelectorAll('Vals > Val').forEach(v => { legacy[v.getAttribute('name')] = v.textContent.trim(); });
+        if (!Object.keys(res).length && Object.keys(legacy).length) res['1'] = legacy;
         const df = el.querySelector('Defect');
         return {
           stepKey: txt(el, 'StepKey'), stepTitle: txt(el, 'StepTitle'),
@@ -271,7 +280,7 @@
           crit: txt(el, 'Crit'), unit: txt(el, 'Unit'), cycle: txt(el, 'Cycle'),
           cert: txt(el, 'Cert') === 'true', na: txt(el, 'NA') === 'true',
           checked: Number(txt(el, 'Checked')) || 0, defects: Number(txt(el, 'Defects')) || 0,
-          jdg: txt(el, 'Judgement'), vals,
+          jdg: txt(el, 'Judgement'), res,
           sub: txt(el, 'Sub'), date: txt(el, 'Date'), note: txt(el, 'Note'),
           defect: df ? {
             type: df.getAttribute('type') || '', where: df.getAttribute('where') || '',
@@ -328,7 +337,7 @@
         stepKey: i.stepKey || '', stepTitle: i.stepTitle || '기타', key: i.key || '', name: i.name || '',
         ref: i.ref || '', crit: i.crit || '', unit: i.unit || '', na: !!i.na,
         checked: Number(i.checked) || 0, defects: Number(i.defects) || 0,
-        jdg: i.jdg || '', vals: i.vals || {},
+        jdg: i.jdg || '', res: i.res || i.vals || {},
         defect: i.defect && (i.defect.type || i.defect.phenom || i.defect.cause || i.defect.action || i.defect.prevent)
           ? {
             type: i.defect.type || '(미분류)', where: i.defect.where || '',
