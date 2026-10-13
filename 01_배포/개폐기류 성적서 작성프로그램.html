@@ -1818,7 +1818,11 @@
         }
         const serials=st.serials;
         const chips=serials.map((sn,i)=>{
-          const opts = `<option value="">-- 선택 --</option>` + pList.map(p=>`<option value="${p}" ${sn===p?'selected':''}>${p}</option>`).join('');
+          // 이미 발취된 제조번호가 현재 풀에 없더라도 선택지에 넣어 둔다.
+          // (없으면 칸이 비어 보이고, 한 번만 건드려도 발취내역이 지워진다)
+          const optList = (sn && !pList.includes(sn)) ? pList.concat([sn]) : pList;
+          const opts = `<option value="">-- 선택 --</option>` + optList.map(p=>
+            `<option value="${p}" ${sn===p?'selected':''}>${p}${pList.includes(p)?'':' (풀 외)'}</option>`).join('');
           return `<span class="serial-chip" style="margin-bottom:4px;display:inline-flex;align-items:center;gap:4px">
             <select data-sn="${it.key}" data-i="${i}" style="width:130px;padding:4px 6px">${opts}</select>
             <span class="x" data-del="${it.key}" data-i="${i}">×</span>
@@ -2757,7 +2761,8 @@
         const move=e=>{ if(!drawing) return; const p=pos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); dirty=true; e.preventDefault(); };
         const end=()=>{ if(!drawing) return; drawing=false;
           if(dirty){ STATE.__sign=STATE.__sign||{}; STATE.__sign[role]=cv.toDataURL('image/png');
-            const s=host.querySelector(`[data-signstate="${role}"]`); if(s) s.textContent='서명 완료'; } };
+            const s=host.querySelector(`[data-signstate="${role}"]`); if(s) s.textContent='서명 완료';
+            saveDraftSoon(); } };          // 캔버스는 input/change가 없어 따로 저장해 준다
         cv.addEventListener('pointerdown',start);
         cv.addEventListener('pointermove',move);
         cv.addEventListener('pointerup',end);
@@ -2766,7 +2771,7 @@
       host.querySelectorAll('[data-signclear]').forEach(b=>{
         b.onclick=()=>{ const role=b.dataset.signclear;
           STATE.__sign=STATE.__sign||{}; STATE.__sign[role]='';
-          renderStep(); };
+          saveDraftSoon(); renderStep(); };
       });
     }
     function renderFinal(){
@@ -3010,7 +3015,11 @@
     function loadQIRObj(q){
       const spec=SPECS.find(s=>s.id===q.spec_id); if(!spec){ alert('알 수 없는 규격입니다.'); return; }
       CUR={ spec, variant:q.variant, mode:q.mode, grade:q.grade||'B', gradeSource:q.grade_source||'-' };
-      STATE={ __base:{ lot:q.lot_no, variant:q.variant, qty:q.qty, maker:q.maker, serialsInput:q.serials_input||'', serialList:parseSerials(q.serials_input||''),
+      // 제조번호 풀은 저장 당시의 목록(pool_list)을 그대로 쓴다.
+      // 입력문자열에서 다시 계산하면 저장 때와 달라질 수 있고, 그러면 이미 발취해 둔
+      // 제조번호가 선택칸에 없어 발취내역이 사라진 것처럼 보인다.
+      const _pool = Array.isArray(q.pool_list) && q.pool_list.length ? q.pool_list.slice() : null;
+      STATE={ __base:{ lot:q.lot_no, variant:q.variant, qty:q.qty, maker:q.maker, serialsInput:q.serials_input||'', serialList:_pool || parseSerials(q.serials_input||''),
         sdate:q.test_dates?.start, edate:q.test_dates?.end, insp:q.attendants?.inspector, test:q.attendants?.tester, itype:q.inspection_type },
         __earlyTerminated: q.early_terminated || false,
         __earlyTerminatedStepIndex: q.early_terminated_step,
