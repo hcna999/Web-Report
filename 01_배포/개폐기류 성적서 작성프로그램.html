@@ -4041,7 +4041,110 @@
       resRowE.height = 22;
 
       // 시트명 중복 방지용 (한전 예시 양식과 동일하게 '갑지','을지'는 먼저 선점)
-      const usedSheetNames = new Set(['갑지', '을지']);
+      const usedSheetNames = new Set(['갑지', '을지', '발취(샘플링)']);
+
+      // ====== 2-1. 발취(샘플링) Sheet — 을지 바로 뒤, 항상 1페이지로 출력 ======
+      {
+        const sampRows = [];   // 발취 대상 항목
+        const fullRows = [];   // 전수검사(전량) 항목
+        const certRows = [];   // 공인기관 성적서 대체 — 발취 없음
+        Object.values(q.results || {}).forEach(grp => {
+          (grp.items || []).forEach(it => {
+            if (it.na) return;
+            if (it.kind === 'cert') { certRows.push(it); return; }
+            if (it.kind === 'full' || it.samp === '전량') { fullRows.push(it); return; }
+            if (it.samp === '면제') return;
+            sampRows.push(it);
+          });
+        });
+
+        const SW = [6, 32, 10, 12, 46];   // 연번 / 시험항목 / 조항 / 발취수량 / 발취 제조번호
+        const nSCols = SW.length;
+        // fitToHeight:1 — 항목이 많아도 축소 배율로 한 장에 들어가게 한다
+        const wsSamp = wb.addWorksheet('발취(샘플링)', {
+          pageSetup: {
+            orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 1,
+            margins: printMargins
+          }
+        });
+        wsSamp.columns = SW.map(w => ({ width: w }));
+
+        wsSamp.mergeCells(1, 1, 1, nSCols);
+        const sTitle = wsSamp.getCell(1, 1);
+        sTitle.value = '발  취  (샘  플  링)  내  역';
+        xlsStyle(sTitle, { bold: true, size: 18, color: XLS_COLOR.title, border: false });
+        sTitle.border = { bottom: { style: 'medium', color: { argb: XLS_COLOR.title } } };
+        wsSamp.getRow(1).height = 28;
+
+        let sr = 3;   // 2행은 여백
+        const infoTxt = [
+          '검사로트번호: ' + (q.lot_no || '-'),
+          '품명: ' + (q.material || '-'),
+          '제작회사: ' + (q.maker || '-'),
+          '품질등급: ' + (q.grade || 'B') + ' (등급 배수 반영)',
+          '납품수량: ' + (q.qty || 0) + (q.unit || '대'),
+          '제조번호 풀: ' + pool.length + '개'
+        ].join('   |   ');
+        wsSamp.mergeCells(sr, 1, sr, nSCols);
+        xlsStyle(wsSamp.getCell(sr, 1), { align: 'left', size: 9.5, bg: XLS_COLOR.labelBg });
+        wsSamp.getCell(sr, 1).value = infoTxt;
+        xlsAutoHeight(wsSamp.getRow(sr), [{ text: infoTxt, width: SW.reduce((a, b) => a + b, 0) }], { size: 9.5, min: 20 });
+        sr += 2;
+
+        // 한 섹션(제목행 + 표머리 + 자료행)을 찍는다
+        const sampSection = (title, list, serialTxt) => {
+          if (!list.length) return;
+          wsSamp.mergeCells(sr, 1, sr, nSCols);
+          xlsStyle(wsSamp.getCell(sr, 1), { align: 'left', bold: true, size: 10.5, bg: XLS_COLOR.headerBg });
+          wsSamp.getCell(sr, 1).value = title;
+          wsSamp.getRow(sr).height = 20;
+          sr++;
+
+          const hdr = wsSamp.getRow(sr);
+          ['연번', '시험항목', '기준조항', '발취수량', '발취 제조번호'].forEach((t, i) => {
+            xlsStyle(hdr.getCell(i + 1), { bold: true, size: 9.5, bg: XLS_COLOR.labelBg });
+            hdr.getCell(i + 1).value = t;
+          });
+          hdr.height = 19;
+          sr++;
+
+          list.forEach((it, idx) => {
+            const zebra = idx % 2 === 1 ? XLS_COLOR.zebraBg : null;
+            const row = wsSamp.getRow(sr);
+            const sn = serialTxt(it);
+            xlsStyle(row.getCell(1), { size: 9, bg: zebra }); row.getCell(1).value = idx + 1;
+            xlsStyle(row.getCell(2), { align: 'left', size: 9, bg: zebra }); row.getCell(2).value = it.name || '';
+            xlsStyle(row.getCell(3), { size: 9, color: XLS_COLOR.gray, bg: zebra }); row.getCell(3).value = it.ref || '';
+            xlsStyle(row.getCell(4), { bold: true, size: 9, bg: zebra }); row.getCell(4).value = it.samp || '-';
+            xlsStyle(row.getCell(5), Object.assign({ align: 'left', size: 9, bg: zebra },
+              sn === '미발취' ? { color: XLS_COLOR.bad } : {}));
+            row.getCell(5).value = sn;
+            xlsAutoHeight(row, [{ text: it.name || '', width: SW[1] }, { text: sn, width: SW[4] }],
+              { size: 9, min: 18 });
+            sr++;
+          });
+          sr++;   // 섹션 사이 여백
+        };
+
+        sampSection('■ 발취검사 항목 (검사자 지정 제조번호)', sampRows, it => {
+          const list = (it.serials || []).filter(Boolean);
+          return list.length ? list.join(', ') : '미발취';
+        });
+        // 납품수량이 많으면 제조번호를 모두 적으면 한 장에 들어가지 않으므로 수량만 표기한다
+        const fullSerialTxt = (pool.length && pool.length <= 12)
+          ? '전량 (' + pool.join(', ') + ')'
+          : '전량 ' + (pool.length || q.qty || 0) + '대 (제조번호 전체)';
+        sampSection('■ 전수검사 항목 (전량 · 발취 불필요)', fullRows, () => fullSerialTxt);
+        sampSection('■ 공인기관 성적서 대체 항목 (발취 없음)', certRows,
+          () => '해당없음 — 성적서 별첨');
+
+        // 발취 입회자 · 시험자
+        wsSamp.mergeCells(sr, 1, sr, nSCols);
+        const att = q.attendants || {};
+        xlsStyle(wsSamp.getCell(sr, 1), { align: 'left', size: 9.5, bg: XLS_COLOR.resultBg });
+        wsSamp.getCell(sr, 1).value = '발취 입회자: ' + (att.inspector || '-') + '        시험자: ' + (att.tester || '-');
+        wsSamp.getRow(sr).height = 20;
+      }
 
       // ====== 3. 주회로 저항 등 상세 실측값 Sheet (항목별로 분리) ======
       resistanceItemsList(q).forEach(it => {
