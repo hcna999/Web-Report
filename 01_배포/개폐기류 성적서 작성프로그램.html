@@ -3713,6 +3713,11 @@
     // 셀 내용이 열 너비를 넘어 줄바꿈될 때 글자가 잘리지 않도록 행 높이를 계산해서 지정한다.
     // cells: [{text, width}] — width는 해당 열의 엑셀 너비(문자 단위)
     // 엑셀 열 너비 1 ≈ 숫자 '0' 한 글자. 한글·전각은 약 2배 폭으로 계산한다.
+    function xlsTextUnits(t) {
+      let u = 0;
+      for (const ch of String(t === undefined || t === null ? '' : t)) u += (ch.charCodeAt(0) > 0x2000 ? 2 : 1);
+      return u;
+    }
     function xlsAutoHeight(row, cells, opts = {}) {
       const size = opts.size || 10.5;
       const lineH = Math.ceil(size * 1.55);            // 한 줄에 필요한 높이(pt)
@@ -3721,11 +3726,20 @@
         const t = String(c.text === undefined || c.text === null ? '' : c.text);
         const w = Math.max(4, Number(c.width) || 10);
         if (!t) return;
-        let units = 0;
-        for (const ch of t) units += (ch.charCodeAt(0) > 0x2000 ? 2 : 1);
-        lines = Math.max(lines, Math.ceil(units / w));
+        // 줄바꿈(\n)이 들어간 셀은 줄마다 따로 계산해서 합산해야 글자가 잘리지 않는다
+        let n = 0;
+        t.split('\n').forEach(seg => { n += Math.max(1, Math.ceil(xlsTextUnits(seg) / w)); });
+        lines = Math.max(lines, n);
       });
       row.height = Math.max(opts.min || 18, lines * lineH + 4);
+    }
+    // 글자 크기에 필요한 최소 행 높이(pt). 고정 높이를 줄 때 이 값보다 작게 주면 글자가 잘린다.
+    function xlsLineH(size, lines = 1) { return Math.ceil(size * 1.55) * Math.max(1, lines) + 4; }
+    // 제조번호 열 너비 — 번호가 길면 넓혀서 머리글이 두 줄로 접히지 않게 한다
+    function xlsSerialColWidth(list, base = 11, max = 24) {
+      let w = base;
+      (list || []).forEach(s => { const u = xlsTextUnits(s) + 2; if (u > w) w = u; });
+      return Math.min(max, w);
     }
     // 판정값(양호/불량 등)에 따른 강조색 - PDF의 jbP()와 동일 기준
     function xlsJudgeStyle(v) {
@@ -3828,7 +3842,7 @@
       ws.mergeCells(startRow, 1, startRow, 3);
       xlsStyle(cap.getCell(1), { align: 'left', bold: true, size: 9.5, bg: XLS_COLOR.headerBg });
       cap.getCell(1).value = `[첨부 ${idx + 1}] ${file.name || ''}`;
-      cap.height = 18;
+      xlsAutoHeight(cap, [{ text: cap.getCell(1).value, width: 14 + 40 + 16 }], { size: 9.5, min: 18 });
       for (let r = startRow + 1; r <= startRow + 12; r++) ws.getRow(r).height = 20;
       // 첨부 이미지도 같은 상자(460×300) 안에서 원본 비율을 유지해 축소한다.
       const box = await xlsImgBox(file.dataUrl, 460, 300);
@@ -3863,7 +3877,7 @@
       gTitle.value = '시  험  성  적  서';
       xlsStyle(gTitle, { bold: true, size: 20, color: XLS_COLOR.title, align: 'center', border: false });
       gTitle.border = { bottom: { style: 'medium', color: { argb: XLS_COLOR.title } } };
-      wsGapji.getRow(1).height = 32;
+      wsGapji.getRow(1).height = xlsLineH(20);
 
       const metaRowsG = [
         ['검사로트번호', q.lot_no || '-', null, null],
@@ -3914,7 +3928,7 @@
       ['시험항목[기준]', '결   과', '시험항목[기준]', '결   과'].forEach((t, i) => {
         xlsStyle(hdrRowG.getCell(i + 1), { bold: true, bg: XLS_COLOR.headerBg }); hdrRowG.getCell(i + 1).value = t;
       });
-      hdrRowG.height = 20;
+      hdrRowG.height = xlsLineH(10.5);
       r++;
 
       const allItems = [];
@@ -3958,7 +3972,9 @@
       xlsStyle(footRow1.getCell(3), { bold: true }); footRow1.getCell(3).value = '종 합 판 정';
       xlsStyle(footRow1.getCell(4), { bold: true, size: 13, color: isGood ? XLS_COLOR.good : XLS_COLOR.bad, bg: isGood ? XLS_COLOR.goodBg : XLS_COLOR.badBg });
       footRow1.getCell(4).value = jdgDisplay;
-      footRow1.height = 32;
+      // 시험근거/품질등급은 두 줄(\n)이므로 글자가 잘리지 않게 줄 수에 맞춰 높이를 잡는다
+      xlsAutoHeight(footRow1, [{ text: footRow1.getCell(1).value, width: GAPJI_W[0] + GAPJI_W[1] }],
+        { size: 9.5, min: Math.max(32, xlsLineH(13)) });
       r++;
       wsGapji.mergeCells(`A${r}:B${r}`);
       wsGapji.mergeCells(`C${r}:D${r}`);
@@ -3970,7 +3986,9 @@
       xlsStyle(footRow2.getCell(3), { bold: true });
       const kepcoMark = kepcoLogoDataURL();
       footRow2.getCell(3).value = kepcoMark ? '       한국전력공사' : '한국전력공사';
-      footRow2.height = 28;
+      // 비고가 길면 줄이 늘어나므로 행 높이를 내용에 맞춘다(심볼마크가 들어갈 28pt 이상 유지)
+      xlsAutoHeight(footRow2, [{ text: footRow2.getCell(1).value, width: GAPJI_W[0] + GAPJI_W[1] }],
+        { size: 9, min: 28 });
       if (kepcoMark) {
         xlsAddImage(wb, wsGapji, kepcoMark,
           { tl: { col: 2 + 1 / GAPJI_W[2], row: (r - 1) + 0.12 }, ext: { width: 34, height: 20 } });
@@ -3989,20 +4007,23 @@
         }
       });
       wsEulji.getColumn(1).width = 30;
-      pool.forEach((_, i) => { wsEulji.getColumn(i + 2).width = 11; });
+      // 제조번호가 길면(예: EMCB2026-0001) 11자 폭에서는 머리글이 접혀 잘린다 → 번호 길이에 맞춰 넓힌다
+      const SNW = xlsSerialColWidth(pool);
+      pool.forEach((_, i) => { wsEulji.getColumn(i + 2).width = SNW; });
 
       wsEulji.mergeCells(1, 1, 1, nCols);
       const eTitle = wsEulji.getCell(1, 1);
       eTitle.value = '시  험  성  적  서';
       xlsStyle(eTitle, { bold: true, size: 18, color: XLS_COLOR.title, border: false });
       eTitle.border = { bottom: { style: 'medium', color: { argb: XLS_COLOR.title } } };
-      wsEulji.getRow(1).height = 28;
+      wsEulji.getRow(1).height = xlsLineH(18);
 
       let er = 3; // 2행은 여백
       const eHdr = wsEulji.getRow(er);
       xlsStyle(eHdr.getCell(1), { bold: true, bg: XLS_COLOR.headerBg, size: 9 }); eHdr.getCell(1).value = '제조번호 \\ 시험항목';
       pool.forEach((sn, i) => { xlsStyle(eHdr.getCell(i + 2), { bold: true, bg: XLS_COLOR.headerBg }); eHdr.getCell(i + 2).value = sn; });
-      eHdr.height = 22;
+      xlsAutoHeight(eHdr, [{ text: '제조번호 \\ 시험항목', width: 30 }].concat(pool.map(sn => ({ text: sn, width: SNW }))),
+        { size: 10, min: 22 });
       er++;
 
       itemsForEulji.forEach((it, idx) => {
@@ -4074,7 +4095,7 @@
         sTitle.value = '발  취  (샘  플  링)  내  역';
         xlsStyle(sTitle, { bold: true, size: 18, color: XLS_COLOR.title, border: false });
         sTitle.border = { bottom: { style: 'medium', color: { argb: XLS_COLOR.title } } };
-        wsSamp.getRow(1).height = 28;
+        wsSamp.getRow(1).height = xlsLineH(18);
 
         let sr = 3;   // 2행은 여백
         const infoTxt = [
@@ -4097,7 +4118,7 @@
           wsSamp.mergeCells(sr, 1, sr, nSCols);
           xlsStyle(wsSamp.getCell(sr, 1), { align: 'left', bold: true, size: 10.5, bg: XLS_COLOR.headerBg });
           wsSamp.getCell(sr, 1).value = title;
-          wsSamp.getRow(sr).height = 20;
+          wsSamp.getRow(sr).height = xlsLineH(10.5);
           sr++;
 
           const hdr = wsSamp.getRow(sr);
@@ -4105,7 +4126,7 @@
             xlsStyle(hdr.getCell(i + 1), { bold: true, size: 9.5, bg: XLS_COLOR.labelBg });
             hdr.getCell(i + 1).value = t;
           });
-          hdr.height = 19;
+          hdr.height = xlsLineH(9.5);
           sr++;
 
           list.forEach((it, idx) => {
@@ -4119,8 +4140,8 @@
             xlsStyle(row.getCell(5), Object.assign({ align: 'left', size: 9, bg: zebra },
               sn === '미발취' ? { color: XLS_COLOR.bad } : {}));
             row.getCell(5).value = sn;
-            xlsAutoHeight(row, [{ text: it.name || '', width: SW[1] }, { text: sn, width: SW[4] }],
-              { size: 9, min: 18 });
+            xlsAutoHeight(row, [{ text: it.name || '', width: SW[1] }, { text: it.ref || '', width: SW[2] },
+              { text: it.samp || '', width: SW[3] }, { text: sn, width: SW[4] }], { size: 9, min: 18 });
             sr++;
           });
           sr++;   // 섹션 사이 여백
@@ -4143,7 +4164,7 @@
         const att = q.attendants || {};
         xlsStyle(wsSamp.getCell(sr, 1), { align: 'left', size: 9.5, bg: XLS_COLOR.resultBg });
         wsSamp.getCell(sr, 1).value = '발취 입회자: ' + (att.inspector || '-') + '        시험자: ' + (att.tester || '-');
-        wsSamp.getRow(sr).height = 20;
+        wsSamp.getRow(sr).height = xlsLineH(9.5);
       }
 
       // ====== 3. 주회로 저항 등 상세 실측값 Sheet (항목별로 분리) ======
@@ -4159,7 +4180,8 @@
         const c0 = lim ? 3 : 2;                       // 측정값이 시작되는 열
         ws.getColumn(1).width = 20;
         if (lim) ws.getColumn(2).width = 12;
-        serials.forEach((_, i) => { ws.getColumn(i + c0).width = 11; });
+        const snw = xlsSerialColWidth(serials);
+        serials.forEach((_, i) => { ws.getColumn(i + c0).width = snw; });
         ws.mergeCells(1, 1, 1, serials.length + c0 - 1);
         xlsStyle(ws.getCell(1, 1), { bold: true, size: 13, color: XLS_COLOR.title, border: false });
         ws.getCell(1, 1).value = it.name + (it.crit ? ' [' + it.crit + ']' : '')
@@ -4203,7 +4225,7 @@
           pageSetup: { orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: printMargins }
         });
         ws.getColumn(1).width = 10; ws.getColumn(2).width = 34;
-        serials.forEach((_, i) => { ws.getColumn(i + 3).width = 11; });
+        serials.forEach((_, i) => { ws.getColumn(i + 3).width = xlsSerialColWidth(serials); });
         ws.mergeCells(1, 1, 1, serials.length + 2);
         xlsStyle(ws.getCell(1, 1), { bold: true, size: 13, color: XLS_COLOR.title, border: false });
         ws.getCell(1, 1).value = it.name + (it.crit ? ' [' + it.crit + ']' : '') + (it.shield ? ' · 하우징 실드 처리(상간 측정 생략)' : '') + (it.openAdd ? ' · 개방형 대지간 추가시험' : '');
@@ -4242,7 +4264,7 @@
           pageSetup: { orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: printMargins }
         });
         ws.getColumn(1).width = 16; ws.getColumn(2).width = 22;
-        serials.forEach((_, i) => { ws.getColumn(i + 3).width = 12; });
+        serials.forEach((_, i) => { ws.getColumn(i + 3).width = xlsSerialColWidth(serials, 12); });
         ws.mergeCells(1, 1, 1, serials.length + 2);
         xlsStyle(ws.getCell(1, 1), { bold: true, size: 13, color: XLS_COLOR.title, border: false });
         ws.getCell(1, 1).value = it.name + ' [' + (it.crit || '') + ', 두께 단위 ' + u + ']';
@@ -4284,7 +4306,7 @@
           pageSetup: { orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: printMargins }
         });
         ws.getColumn(1).width = 16; ws.getColumn(2).width = 14;
-        serials.forEach((_, i) => { ws.getColumn(i + 3).width = 12; });
+        serials.forEach((_, i) => { ws.getColumn(i + 3).width = xlsSerialColWidth(serials, 12); });
         ws.mergeCells(1, 1, 1, serials.length + 2);
         xlsStyle(ws.getCell(1, 1), { bold: true, size: 13, color: XLS_COLOR.title, border: false });
         ws.getCell(1, 1).value = it.name + ' [도막두께 평균 측정값, 단위 ' + u + ']';
@@ -4322,7 +4344,7 @@
           pageSetup: { orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: printMargins }
         });
         ws.getColumn(1).width = 18; ws.getColumn(2).width = 26;
-        serials.forEach((_, i) => { ws.getColumn(i + 3).width = 14; });
+        serials.forEach((_, i) => { ws.getColumn(i + 3).width = xlsSerialColWidth(serials, 14); });
         ws.mergeCells(1, 1, 1, serials.length + 2);
         xlsStyle(ws.getCell(1, 1), { bold: true, size: 13, color: XLS_COLOR.title, border: false });
         ws.getCell(1, 1).value = it.name + (it.crit ? ' [' + it.crit + ']' : '');
@@ -4360,7 +4382,7 @@
           pageSetup: { orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: printMargins }
         });
         ws.getColumn(1).width = 16; ws.getColumn(2).width = 12;
-        serials.forEach((_, i) => { ws.getColumn(i + 3).width = 12; });
+        serials.forEach((_, i) => { ws.getColumn(i + 3).width = xlsSerialColWidth(serials, 12); });
         ws.mergeCells(1, 1, 1, serials.length + 2);
         xlsStyle(ws.getCell(1, 1), { bold: true, size: 13, color: XLS_COLOR.title, border: false });
         ws.getCell(1, 1).value = it.name + (it.crit ? ' [' + it.crit + ']' : '');
@@ -4404,7 +4426,7 @@
       for (const it of certItemsList(q)) {
         const files = it.certFiles || [];
         const ws = wb.addWorksheet(safeSheetName(it.name, usedSheetNames), { pageSetup: { orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: printMargins } });
-        ws.getColumn(1).width = 10; ws.getColumn(2).width = 40; ws.getColumn(3).width = 16;
+        ws.getColumn(1).width = 14; ws.getColumn(2).width = 40; ws.getColumn(3).width = 16;
         ws.mergeCells(1, 1, 1, 3);
         xlsStyle(ws.getCell(1, 1), { bold: true, size: 13, color: XLS_COLOR.title, border: false });
         ws.getCell(1, 1).value = it.name + (it.crit ? ' [' + it.crit + ']' : '');
@@ -4421,7 +4443,7 @@
           const row = ws.getRow(rr);
           xlsStyle(row.getCell(1), { bold: true, bg: XLS_COLOR.labelBg }); row.getCell(1).value = k;
           xlsStyle(row.getCell(2), { align: 'left' }); row.getCell(2).value = v;
-          xlsAutoHeight(row, [{ text: v, width: 40 + 16 }], { min: 20 });   // B:C 병합 폭
+          xlsAutoHeight(row, [{ text: k, width: 14 }, { text: v, width: 40 + 16 }], { min: 20 });   // A열 / B:C 병합 폭
           rr++;
         });
         rr++;
@@ -4494,7 +4516,8 @@
               capRow.getCell(ci + 1).value = `[사진 ${i + ci + 1}] ${p.caption || '시험 진행 사진'}`;
             });
             if (pair.length === 1) xlsStyle(capRow.getCell(2), { bg: XLS_COLOR.headerBg });
-            capRow.height = 18;
+            xlsAutoHeight(capRow, pair.map((p, ci) => ({ text: capRow.getCell(ci + 1).value, width: 44 })),
+              { size: 9.5, min: 18 });
             rr++;
             const imgRow = ws.getRow(rr);
             imgRow.height = 150;                       // 약 200px
@@ -4560,7 +4583,7 @@
         // body margin(약 8px)만큼 오른쪽으로 밀어 그린다(창이 좁으면 밀림 없음).
         // 그래서 표가 폭에 꽉 차면 넓은 창에서는 우측, 좁은 창에서는 좌측 테두리가 경계에 걸려 잘린다.
         // 우측 패딩은 밀림(8px)까지 흡수해야 하므로 좌측보다 크게 준다.
-        container.style.cssText = `width:${PRINT_W_PX}px; padding:6px 16px 8px 6px;`
+        container.style.cssText = `width:${PRINT_W_PX}px; padding:8px 20px 18px 10px;`
           + ' box-sizing:border-box; background:#fff; color:#000; font-family:"Malgun Gothic", sans-serif;';
         // reportShell()과 동일한 스타일(표 테두리·색상·레이아웃)을 적용해야 실제 저장 PDF도 화면/인쇄본과 동일하게 예쁘게 나옴
         // ('.print-shell-export'로 스코핑하여 편집 화면 UI에는 영향이 가지 않도록 함)
@@ -4582,7 +4605,8 @@
           // windowWidth/scrollX 등을 강제하면 창이 넓을 때 내용이 좌측으로 몰려 잘린다 → 기본값 사용
           html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-          pagebreak: { mode: ['css', 'legacy'] }
+          // 표 행이 페이지 경계에서 반으로 잘리지 않게 한다(내용이 한 장을 넘길 때 대비)
+          pagebreak: { mode: ['css', 'legacy'], avoid: ['tr'] }
         };
         html2pdf().set(opt).from(container).toPdf().get('pdf').then(async (pdf) => {
           // 매 페이지 우측 하단에 한전 로고 워터마크 + 하단 중앙에 페이지 번호 스탬프
@@ -4594,10 +4618,11 @@
               pdf.setPage(p);
               const pw = pdf.internal.pageSize.getWidth();
               const ph = pdf.internal.pageSize.getHeight();
-              pdf.addImage(wm.dataUrl, 'PNG', pw - wMM - 6, ph - hMM - 6, wMM, hMM);
+              // 프린터의 인쇄 불가 여백(보통 5mm 내외)에 걸려 잘리지 않도록 10mm 안쪽에 배치
+              pdf.addImage(wm.dataUrl, 'PNG', pw - wMM - 10, ph - hMM - 10, wMM, hMM);
               pdf.setFontSize(8);
               pdf.setTextColor(140);
-              pdf.text(`${p} / ${totalPages}`, pw / 2, ph - 5, { align: 'center' });
+              pdf.text(`${p} / ${totalPages}`, pw / 2, ph - 10, { align: 'center' });
             }
           } catch (e) {
             console.warn('워터마크/페이지번호 스탬프 실패(본문은 정상 저장됨):', e);
