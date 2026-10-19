@@ -1036,8 +1036,24 @@
     function effCrit(it){ return (it.critP && isPType()) ? it.critP : it.crit; }
     // 검사자가 직접 '해당없음'으로 지정할 수 있는 항목(naOption) — 예: 상연결 접속재 일체형
     function naSelected(it){ return it.naOption===true && !!((STATE||{})[it.key]||{}).naOpt; }
-    // 자동형 전용(autoOnly)·P형 전용(pOnly)·검사자 지정(naOption) 항목은 대상이 아니면 '해당없음'
-    function isNA(it){ return (it.autoOnly===true && !isAuto()) || (it.pOnly===true && !isPType()) || naSelected(it); }
+    // 처내시험 주기항목 — 취부금구 도금시험(가공, 반기 1회 · 처내시험).
+    // '이번 검수 시 제출'을 체크하면 시료를 처내시험으로 보내는 것이므로 현장에서 두께를
+    // 측정하지 않고 '해당없음(처내시험)'으로 기록한다.
+    function isInHouseTest(it){
+      if(!it || !it.plating) return false;
+      const pd=periodicOf(it);
+      return !!(pd && /처내시험/.test(pd.note||'') && periodicState(it).done);
+    }
+    // 자동형 전용(autoOnly)·P형 전용(pOnly)·검사자 지정(naOption)·처내시험 제출 항목은 '해당없음'
+    function isNA(it){ return (it.autoOnly===true && !isAuto()) || (it.pOnly===true && !isPType()) || naSelected(it) || isInHouseTest(it); }
+    // 화면·출력물에 찍을 '해당없음' 문구
+    function naLabel(it){ return isInHouseTest(it) ? '해당없음(처내시험)' : '해당없음'; }
+    // 시험결과 칸에 표시할 해당없음 사유
+    function naReason(it){
+      if(isInHouseTest(it)) return '처내시험 제출 — 해당없음 (현장 수치입력 불필요)';
+      if(it.pOnly===true && !isPType()) return '광고물 부착방지(P)형 전용 · 해당없음';
+      return '자동형 전용 · 해당없음';
+    }
     function orderedItems(sd){ const its=visibleItems(sd); return [...its.filter(i=>i.full&&!isNA(i)), ...its.filter(i=>!(i.full&&!isNA(i)))]; }
     function isExempt(it){ return (CUR.grade==='S'||CUR.grade==='A') && it.exemptSA===true; }
     function baseQty(){ return Number((STATE.__base||{}).qty)||0; }
@@ -1920,7 +1936,7 @@
     function itemResultBlock(it){
       const st=STATE[it.key]||{};
       if(naSelected(it)) return `<div>${naOptionBox(it)}<div class="muted" style="font-size:12px">해당없음 — 시험 대상 아님</div></div>`;
-      if(isNA(it)) return `<span class="muted" style="font-size:12px">자동형 전용 · 해당없음</span>`;
+      if(isNA(it)) return `<span class="muted" style="font-size:12px">${naReason(it)}</span>`;
       // 주기시험 전용 항목(예: 내한성 시험) — 제출여부·일자·첨부 없이 아래 주기시험 상자에만 기입한다
       if(it.periodicOnly) return `<span class="muted" style="font-size:12px">주기시험 항목 — 아래 주기시험란에 기입</span>`;
       if(it.full){
@@ -2300,9 +2316,9 @@
       const items=orderedItems(sd);
       const rows=items.map(it=>{
         const exempt=isExempt(it); const na=isNA(it);
-        const samp = na?'해당없음':((it.full||isFullSample(it))?'전량':(it.phaseConn?'A·B·C상<br>각 3개소':(it.cert?(it.cycle||'-'):((it.sampNote||sampCount(it)+'대')+(it.sampAdd?'<br><span class="muted" style="font-size:10px">'+it.sampAdd+'</span>':'')))));
+        const samp = na?naLabel(it):((it.full||isFullSample(it))?'전량':(it.phaseConn?'A·B·C상<br>각 3개소':(it.cert?(it.cycle||'-'):((it.sampNote||sampCount(it)+'대')+(it.sampAdd?'<br><span class="muted" style="font-size:10px">'+it.sampAdd+'</span>':'')))));
         // naOption 항목은 해당없음이어도 체크박스를 보여야 하므로 itemResultBlock에 맡긴다
-        const result = (na && !it.naOption)? `<span class="muted" style="font-size:12px">자동형 전용 · 해당없음</span>` : (exempt? `<span class="tag-exempt">완화 면제</span>` : itemResultBlock(it));
+        const result = (na && !it.naOption)? `<span class="muted" style="font-size:12px">${naReason(it)}</span>` : (exempt? `<span class="tag-exempt">완화 면제</span>` : itemResultBlock(it));
         const pdef=periodicOf(it); const due=pdef&&periodicDue(it);
         const ps=periodicState(it);
         const periodicBox = pdef ? `
@@ -2866,6 +2882,7 @@
       CUR.spec.steps.forEach(sd=>{ results[sd.key]={ title:sd.title, overall:stepOverall(sd), remark:(STATE['__remark_'+sd.key]||{}).v||'',
         items:orderedItems(sd).map(it=>{ const st=STATE[it.key]||{}; const na=isNA(it);
           return { key:it.key, name:it.name, ref:it.ref, crit:effCrit(it), exempt:isExempt(it), na,
+            naText: na?naLabel(it):undefined,
             kind: it.full?'full':it.cert?'cert':it.phaseConn?'phaseConn':it.pdPhase?'pdPhase':it.plating?'plating':it.paintTest?'paintTest':it.minTrip?'minTrip':it.tcTest?'tcTest':it.seqTest?'seqTest':it.resistance?'resistance':(it.thr||it.range)?'measureAuto':it.measureManual?'measureManual':'jdg', certFiles: st.certFiles||[],
             thrV: it.paintTest?pnThrV(it):undefined,
             noOp: it.minTrip?!!it.noOp:undefined,
@@ -2881,7 +2898,7 @@
                        prevLot:ps.prevLot||'', prevDate:ps.prevDate||'', due:periodicDue(it) }; })(),
             mcr: (function(){ if(!it.resistance) return undefined;
               const pk=mcrPick(it); return pk?{ label:pk.set.label, vals:pk.set.vals }:undefined; })(),
-            samp: na?'해당없음':((it.full||isFullSample(it))?'전량':(it.cert?(it.cycle||'-'):((it.sampNote||sampCount(it)+'대')+(it.sampAdd?' · '+it.sampAdd:'')))),
+            samp: na?naLabel(it):((it.full||isFullSample(it))?'전량':(it.cert?(it.cycle||'-'):((it.sampNote||sampCount(it)+'대')+(it.sampAdd?' · '+it.sampAdd:'')))),
             full: st.full||null, cert: it.docOnly?null:(st.cert||null), docOnly: !!it.docOnly, unit: it.unit||'',
             serials: na?[]:(st.serials||[]), res: na?{}:resForQIR(it,st), jdg: na?'':itemJudged(it) }; }) }; });
       return { schema:'kepco-qir-switchgear.v0.2', spec_id:CUR.spec.id, gsNo:CUR.spec.gsNo, material:CUR.spec.name,
@@ -2922,6 +2939,7 @@
         (sObj.items||[]).forEach(it=>{
           xml+=`      <Item key="${escXml(it.key)}" name="${escXml(it.name)}" ref="${escXml(it.ref)}">\n`;
           xml+=`        <Kind>${escXml(it.kind)}</Kind>\n        <Crit>${escXml(it.crit)}</Crit>\n        <Exempt>${escXml(it.exempt)}</Exempt>\n        <NA>${escXml(it.na)}</NA>\n        <Samp>${escXml(it.samp)}</Samp>\n        <Judgement>${escXml(it.jdg)}</Judgement>\n`;
+          if(it.naText){ xml+=`        <NaText>${escXml(it.naText)}</NaText>\n`; }
           if(it.noGapji){ xml+=`        <NoGapji>true</NoGapji>\n`; }
           if(it.docOnly){ xml+=`        <DocOnly>true</DocOnly>\n`; }
           if(it.naOpt!==undefined){ xml+=`        <NaOption>${escXml(it.naOpt)}</NaOption>\n`; }
@@ -2962,6 +2980,7 @@
           const key=iEl.getAttribute('key'), name=iEl.getAttribute('name'), ref=iEl.getAttribute('ref');
           const kind=getTxt(iEl,'Kind'), crit=getTxt(iEl,'Crit'), exempt=getTxt(iEl,'Exempt')==='true', na=getTxt(iEl,'NA')==='true';
           const samp=getTxt(iEl,'Samp'), jdg=getTxt(iEl,'Judgement'), noGapji=getTxt(iEl,'NoGapji')==='true', docOnly=getTxt(iEl,'DocOnly')==='true';
+          const naText=getTxt(iEl,'NaText')||undefined;
           const naOptEl=iEl.querySelector('NaOption');
           const naOpt = naOptEl ? (naOptEl.textContent.trim()==='true') : undefined;
           let full=null, cert=null;
@@ -2992,7 +3011,7 @@
             snEl.querySelectorAll('Fields Field').forEach(fEl=>{ fields[fEl.getAttribute('name')]=fEl.textContent.trim(); });
             res[sn]={ val: (val!=='' && !isNaN(val)) ? Number(val) : val, jdg:rJdg, fields };
           });
-          items.push({ key, name, ref, crit, kind, samp, exempt, na, full, cert, certFiles, unit, shield, openAdd, naOpt, simpleJdg, periodic, mcr, noGapji, docOnly, serials, res, jdg });
+          items.push({ key, name, ref, crit, kind, samp, exempt, na, naText, full, cert, certFiles, unit, shield, openAdd, naOpt, simpleJdg, periodic, mcr, noGapji, docOnly, serials, res, jdg });
         });
         results[sKey]={ title:sTitle, overall:getTxt(sEl,'Overall'), remark:getTxt(sEl,'Remark'), items };
       });
@@ -3079,7 +3098,7 @@
     }
     function itemLabel(it){ return `${it.name}${it.crit?` [${it.crit}]`:''}`; }
     function cellVal(it,sn){
-      if(it.na) return '해당없음';
+      if(it.na) return it.naText || '해당없음';
       if(it.exempt) return '면제';
       const parentStep = (CUR && CUR.spec) ? CUR.spec.steps.find(sd => sd.items && sd.items.some(i => i.key === it.key)) : null;
       if (parentStep && isStepSkipped(parentStep)) {
@@ -3256,7 +3275,7 @@
       </table>`;
     }
     function gapjiItemVal(it){
-      if(it.na) return '<span class="na">해당없음</span>';
+      if(it.na) return `<span class="na">${it.naText || '해당없음'}</span>`;
       if(it.exempt) return '<span class="na">시험면제</span>';
       if(it.kind==='cert'){
         const dt=(it.cert||{}).date?`<br><span style="font-size:10px;color:#555">(${it.cert.date})</span>`:
@@ -3936,7 +3955,7 @@
         (grp.items || []).forEach(it => {
           if (it.noGapji) return;                       // 제출서류는 갑지 시트 제외(별도 시트로 출력)
           let resVal;
-          if (it.na) resVal = '해당없음';
+          if (it.na) resVal = it.naText || '해당없음';
           else if (it.exempt) resVal = '시험면제';
           else if (it.kind === 'cert') {
             const dt = (it.cert || {}).date || '';
