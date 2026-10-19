@@ -673,13 +673,14 @@
             { key:'ai', name:'전류계측 정밀도 시험', ref:'7.2.23', crit:'1.0급·10P20', autoOnly:true, sampFn:S.per(10), exemptSA:true },
             // 도장시험 — 두께(일반형 60㎛↑ / 광고물 부착방지 P형 120㎛↑)·밀착성·충돌·부착력을 한 항목에서 확인
             { key:'paint', name:'도장시험', ref:'7.2.26', crit:'두께 60㎛ 이상 · 밀착성·충돌·부착력 이상없음', critP:'광고물 부착방지(P)형 — 두께 120㎛ 이상 · 밀착성·충돌·부착력 이상없음', unit:'㎛', paintTest:true, thr:{v:60,dir:'ge'}, thrP:{v:120,dir:'ge'}, sampFn:S.note15_dry },
-            { key:'conn', name:'상연결 접속재 시험', ref:'7.2.15', crit:'절연층 최소두께 12㎜ 이상', phaseConn:true, unit:'mm', thr:{v:12,dir:'ge'}, sampFn:S.per(10) },
+            { key:'conn', name:'상연결 접속재 시험', ref:'7.2.15', crit:'절연층 최소두께 12㎜ 이상', phaseConn:true, naOption:true, naOptionLabel:'일체형(접속재 일체 성형) — 해당시험 해당없음', unit:'mm', thr:{v:12,dir:'ge'}, sampFn:S.per(10) },
             { key:'connector', name:'접속재 시험', ref:'7.2.24', crit:'IEEE Std 386/성적서', cert:true, noDate:true, cycle:'성적서 대체' },
             // 내한성 시험 — 매 검수가 아니라 주기시험(반기 1회)으로만 시행한다
             { key:'coldres', name:'내한성 시험', ref:'7.2.24', crit:'부싱 및 접속재 내한성 — 주기시험 항목', cert:true, noDate:true, noFile:true, periodicOnly:true, cycle:'반기 1회' },
             { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.2.25', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
             { key:'pt', name:'전압변성장치(PT) 시험', ref:'7.2.27', crit:'IEC 61869-3/성적서(검수 매50대)', cert:true, cycle:'성적서 대체', autoOnly:true },
-            { key:'oil', name:'절연유 PCB 성적서', ref:'7.2.28', crit:'폴리염화비페닐(PCB) 미함유 확인', cert:true, noFile:true, noDate:true, cycle:'반기 1회' },
+            // 주기시험(반기)은 절연유 처내시험이고, 이 항목은 1년 주기 PCB 시험성적서를 첨부한다
+            { key:'oil', name:'절연유 특성시험 · PCB 성적서', ref:'7.2.28', crit:'폴리염화비페닐(PCB) 미함유 — PCB 시험성적서(년 1회) 첨부', cert:true, noDate:true, cycle:'년 1회 · PCB 성적서 첨부' },
           ]},
         ],
         exemptKeys:['imp_wv','av','ai'],
@@ -713,7 +714,7 @@
             { key:'ai', name:'전류계측 정밀도 시험', ref:'7.2.24', crit:'1.0급·10P20', sampFn:S.per(20), exemptSA:true },
             // 도장시험 — 두께(일반형 60㎛↑ / 광고물 부착방지 P형 120㎛↑)·밀착성·충돌·부착력을 한 항목에서 확인
             { key:'paint', name:'도장시험', ref:'7.2.29', crit:'두께 60㎛ 이상 · 밀착성·충돌·부착력 이상없음', critP:'광고물 부착방지(P)형 — 두께 120㎛ 이상 · 밀착성·충돌·부착력 이상없음', unit:'㎛', paintTest:true, thr:{v:60,dir:'ge'}, thrP:{v:120,dir:'ge'}, sampFn:S.note15_dry },
-            { key:'conn', name:'상연결 접속재 시험', ref:'7.2.16', crit:'절연층 최소두께 12㎜ 이상', phaseConn:true, unit:'mm', thr:{v:12,dir:'ge'}, sampFn:S.per(20) },
+            { key:'conn', name:'상연결 접속재 시험', ref:'7.2.16', crit:'절연층 최소두께 12㎜ 이상', phaseConn:true, naOption:true, naOptionLabel:'일체형(접속재 일체 성형) — 해당시험 해당없음', unit:'mm', thr:{v:12,dir:'ge'}, sampFn:S.per(20) },
             { key:'connector', name:'접속재 시험', ref:'7.2.13', crit:'IEEE 386', cert:true, noDate:true, cycle:'성적서 대체' },
             // 내한성 시험 — 매 검수가 아니라 주기시험(반기 1회)으로만 시행한다
             { key:'coldres', name:'내한성 시험', ref:'7.2.13', crit:'부싱 및 접속재 내한성 — 주기시험 항목', cert:true, noDate:true, noFile:true, periodicOnly:true, cycle:'반기 1회' },
@@ -753,7 +754,7 @@
             { key:'ai', name:'전류계측 정밀도 시험', ref:'7.2.24', crit:'1.0급·10P20(5~120%)', sampFn:S.per(10), exemptSA:true },
             // 도장시험 — 두께(일반형 60㎛↑ / 광고물 부착방지 P형 120㎛↑)·밀착성·충돌·부착력을 한 항목에서 확인
             { key:'paint', name:'도장시험', ref:'7.2.29', crit:'두께 60㎛ 이상 · 밀착성·충돌·부착력 이상없음', critP:'광고물 부착방지(P)형 — 두께 120㎛ 이상 · 밀착성·충돌·부착력 이상없음', unit:'㎛', paintTest:true, thr:{v:60,dir:'ge'}, thrP:{v:120,dir:'ge'}, sampFn:S.note15_dry },
-            { key:'conn', name:'상연결 접속재 시험', ref:'7.2.16', crit:'절연층 최소두께 12㎜ 이상', phaseConn:true, unit:'mm', thr:{v:12,dir:'ge'}, sampFn:S.per(10) },
+            { key:'conn', name:'상연결 접속재 시험', ref:'7.2.16', crit:'절연층 최소두께 12㎜ 이상', phaseConn:true, naOption:true, naOptionLabel:'일체형(접속재 일체 성형) — 해당시험 해당없음', unit:'mm', thr:{v:12,dir:'ge'}, sampFn:S.per(10) },
             { key:'connector', name:'접속재 시험', ref:'7.2.13', crit:'IEEE 386', cert:true, noDate:true, cycle:'성적서 대체' },
             // 내한성 시험 — 매 검수가 아니라 주기시험(반기 1회)으로만 시행한다
             { key:'coldres', name:'내한성 시험', ref:'7.2.13', crit:'부싱 및 접속재 내한성 — 주기시험 항목', cert:true, noDate:true, noFile:true, periodicOnly:true, cycle:'반기 1회' },
@@ -1028,12 +1029,15 @@
     // 자동형 전용 항목은 숨기지 않고 항상 표시하되, 수동형에서는 '해당없음'으로 처리(isNA)
     function visibleItems(sd){ return sd.items; }
     // 광고물 부착방지 도장(-P) 품목 여부 — 도장 두께 기준과 부착방지 도료 시험 적용 대상
-    function isPType(){ const v=String((CUR||{}).variant||''); return /-P(?![A-Za-z0-9])/.test(v)||v.includes('광고물'); }
+    function isPTypeVariant(v){ v=String(v||''); return /-P(?![A-Za-z0-9])/.test(v)||v.includes('광고물'); }
+    function isPType(){ return isPTypeVariant((CUR||{}).variant); }
     // P형에서 기준이 달라지는 항목은 thrP/critP를 우선 적용
     function effThr(it){ return (it.thrP && isPType()) ? it.thrP : it.thr; }
     function effCrit(it){ return (it.critP && isPType()) ? it.critP : it.crit; }
-    // 자동형 전용(autoOnly)·P형 전용(pOnly) 항목은 대상이 아니면 '해당없음'
-    function isNA(it){ return (it.autoOnly===true && !isAuto()) || (it.pOnly===true && !isPType()); }
+    // 검사자가 직접 '해당없음'으로 지정할 수 있는 항목(naOption) — 예: 상연결 접속재 일체형
+    function naSelected(it){ return it.naOption===true && !!((STATE||{})[it.key]||{}).naOpt; }
+    // 자동형 전용(autoOnly)·P형 전용(pOnly)·검사자 지정(naOption) 항목은 대상이 아니면 '해당없음'
+    function isNA(it){ return (it.autoOnly===true && !isAuto()) || (it.pOnly===true && !isPType()) || naSelected(it); }
     function orderedItems(sd){ const its=visibleItems(sd); return [...its.filter(i=>i.full&&!isNA(i)), ...its.filter(i=>!(i.full&&!isNA(i)))]; }
     function isExempt(it){ return (CUR.grade==='S'||CUR.grade==='A') && it.exemptSA===true; }
     function baseQty(){ return Number((STATE.__base||{}).qty)||0; }
@@ -1227,7 +1231,7 @@
       { grp:'지중', key:'ap_body',   cycle:'반기', note:'절연유 주입량 · 극간거리(접지부) · 공장시험' },
       { grp:'지중', key:'coldres',   cycle:'반기', note:'부싱 및 접속재 내한성 · 1회로분(3대) · 처내시험' },
       { grp:'지중', key:'steel',     cycle:'년',   note:'공인시험기관 시험성적서 제출' },
-      { grp:'지중', key:'oil',       cycle:'반기', note:'처내시험' },
+      { grp:'지중', key:'oil',       cycle:'반기', note:'절연유 처내시험 (PCB 성적서는 년 1회 별도 첨부)' },
     ];
     const CYCLE_LABEL = { '분기':'분기 1회', '반기':'반기 1회', '년':'년 1회' };
     function periodicGroup(){ return ((CUR||{}).spec||{}).install==='가공' ? '가공' : '지중'; }
@@ -1286,24 +1290,29 @@
     // ===== 지상기기 도장시험(paintTest) — 한 항목에서 4가지를 확인 =====
     // 두께는 실측 평균값(일반형 60㎛↑ / 광고물 부착방지 P형 120㎛↑ — effThr로 자동 전환),
     // 밀착성·충돌·부착력은 양호/불량으로 기입한다. 넷 다 채워야 항목 판정이 확정된다.
+    // 밀착성·충돌·부착력은 ES-9905-0015(광고물 부착방지 도료) 시험이므로 P형에만 해당.
+    // 일반형은 도장막 두께만 확인하고 나머지 3개는 '해당없음'으로 자동 처리한다.
     const PAINT_ROWS=[
       { k:'pn_thk',  lab:'도장막 두께',  type:'num', crit:'' },
-      { k:'pn_adh',  lab:'밀착성시험',   type:'jdg', crit:'KS M ISO 2409 등급 1 이하' },
-      { k:'pn_imp',  lab:'충돌시험',     type:'jdg', crit:'ES-9905-0015 만족' },
-      { k:'pn_bond', lab:'부착력시험',   type:'jdg', crit:'ES-9905-0015 만족' },
+      { k:'pn_adh',  lab:'밀착성시험',   type:'jdg', crit:'KS M ISO 2409 등급 1 이하', pOnly:true },
+      { k:'pn_imp',  lab:'충돌시험',     type:'jdg', crit:'ES-9905-0015 만족',          pOnly:true },
+      { k:'pn_bond', lab:'부착력시험',   type:'jdg', crit:'ES-9905-0015 만족',          pOnly:true },
     ];
+    // 현재 품목(P형 여부)에 실제로 적용되는 확인항목만 추림
+    function pnRows(){ return PAINT_ROWS.filter(rw=> !rw.pOnly || isPType()); }
+    function pnRowNA(rw){ return !!rw.pOnly && !isPType(); }
     function pnThrV(it){ const th=effThr(it); return th?Number(th.v):60; }
     function pnRowCrit(it,rw,u){ return rw.type==='num' ? (pnThrV(it)+(u||'㎛')+' 이상') : rw.crit; }
     function pnFields(st,sn){ return (((st.res||{})[sn])||{}).fields||{}; }
     function pnFilled(st,sn){ const f=pnFields(st,sn);
-      return PAINT_ROWS.every(rw=> rw.type==='num'
+      return pnRows().every(rw=> rw.type==='num'
         ? (f[rw.k]!==undefined && String(f[rw.k]).trim()!=='' && isFinite(Number(f[rw.k])))
         : !!f[rw.k]); }
     function pnAuto(it,st,sn){
       if(!pnFilled(st,sn)) return '';
       const f=pnFields(st,sn);
       if(Number(f.pn_thk) < pnThrV(it)) return '불량';
-      return PAINT_ROWS.filter(rw=>rw.type==='jdg').every(rw=>f[rw.k]==='양호') ? '양호' : '불량';
+      return pnRows().filter(rw=>rw.type==='jdg').every(rw=>f[rw.k]==='양호') ? '양호' : '불량';
     }
 
     // 쉼표(,) 및 물결(~) 혼용 제조번호 파싱
@@ -1900,8 +1909,17 @@
 
     // ===== 시험 스텝 (제조번호별 결과) =====
     function ensureRes(key){ STATE[key]=STATE[key]||{}; STATE[key].res=STATE[key].res||{}; return STATE[key]; }
+    // 검사자 지정 '해당없음' 체크박스 — 체크를 풀 수 있어야 하므로 해당없음 상태에서도 함께 그린다
+    function naOptionBox(it){
+      if(!it.naOption) return '';
+      return `<label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;margin-bottom:6px">
+        <input type="checkbox" data-k="${it.key}" data-f="na-option" ${naSelected(it)?'checked':''}>
+        ${it.naOptionLabel||'해당없음으로 처리'}
+      </label>`;
+    }
     function itemResultBlock(it){
       const st=STATE[it.key]||{};
+      if(naSelected(it)) return `<div>${naOptionBox(it)}<div class="muted" style="font-size:12px">해당없음 — 시험 대상 아님</div></div>`;
       if(isNA(it)) return `<span class="muted" style="font-size:12px">자동형 전용 · 해당없음</span>`;
       // 주기시험 전용 항목(예: 내한성 시험) — 제출여부·일자·첨부 없이 아래 주기시험 상자에만 기입한다
       if(it.periodicOnly) return `<span class="muted" style="font-size:12px">주기시험 항목 — 아래 주기시험란에 기입</span>`;
@@ -1979,7 +1997,7 @@
       // 상연결 접속재 — 제조번호별 A·B·C상 각 3개소(9칸) 두께 실측 → 최소값 자동판정
       if(it.phaseConn){
         const u=it.unit?`(${it.unit})`:'';
-        return serials.map(sn=>{
+        return naOptionBox(it)+serials.map(sn=>{
           const f=pcFields(st,sn); const mn=pcMin(st,sn); const aj=pcAuto(it,st,sn);
           const grid=`<table class="rgrid tbl"><tr><th style="min-width:96px;white-space:nowrap">상 \\ 측정개소</th><th>1개소${u}</th><th>2개소${u}</th><th>3개소${u}</th></tr>
             ${PHASES.map(p=>`<tr><th>${p}상</th>${[1,2,3].map(i=>
@@ -2151,9 +2169,11 @@
           return `<div style="margin-bottom:8px"><div class="muted" style="font-size:11px;margin-bottom:3px">제조번호 <b>${sn}</b></div>
             <table class="rgrid tbl"><tr><th style="min-width:88px">확인항목</th><th>기준</th><th>결과</th></tr>
               ${PAINT_ROWS.map(rw=>`<tr><td>${rw.lab}</td><td>${pnRowCrit(it,rw,u)}</td>
-                <td>${rw.type==='num'
-                  ? `<input data-k="${it.key}" data-sn="${sn}" data-fld="${rw.k}" value="${f[rw.k]||''}" style="width:90px" placeholder="평균(${u})">`
-                  : selBox2(it.key,sn,rw.k,['','양호','불량'],f[rw.k]||'')}</td></tr>`).join('')}
+                <td>${pnRowNA(rw)
+                  ? '<span class="muted" style="font-size:12px">해당없음</span>'
+                  : (rw.type==='num'
+                      ? `<input data-k="${it.key}" data-sn="${sn}" data-fld="${rw.k}" value="${f[rw.k]||''}" style="width:90px" placeholder="평균(${u})">`
+                      : selBox2(it.key,sn,rw.k,['','양호','불량'],f[rw.k]||''))}</td></tr>`).join('')}
             </table>
             <div class="row" style="gap:10px;margin-top:4px;align-items:center">
               <span class="muted" style="font-size:11px">판정 <span data-pnauto="${it.key}|${sn}" class="autojdg ${aj==='양호'?'aj-good':aj==='불량'?'aj-bad':'aj-none'}">${aj||'-'}</span></span>
@@ -2281,7 +2301,8 @@
       const rows=items.map(it=>{
         const exempt=isExempt(it); const na=isNA(it);
         const samp = na?'해당없음':((it.full||isFullSample(it))?'전량':(it.phaseConn?'A·B·C상<br>각 3개소':(it.cert?(it.cycle||'-'):((it.sampNote||sampCount(it)+'대')+(it.sampAdd?'<br><span class="muted" style="font-size:10px">'+it.sampAdd+'</span>':'')))));
-        const result = na? `<span class="muted" style="font-size:12px">자동형 전용 · 해당없음</span>` : (exempt? `<span class="tag-exempt">완화 면제</span>` : itemResultBlock(it));
+        // naOption 항목은 해당없음이어도 체크박스를 보여야 하므로 itemResultBlock에 맡긴다
+        const result = (na && !it.naOption)? `<span class="muted" style="font-size:12px">자동형 전용 · 해당없음</span>` : (exempt? `<span class="tag-exempt">완화 면제</span>` : itemResultBlock(it));
         const pdef=periodicOf(it); const due=pdef&&periodicDue(it);
         const ps=periodicState(it);
         const periodicBox = pdef ? `
@@ -2425,6 +2446,12 @@
           };
           el.addEventListener('input', updateGasDef);
           el.addEventListener('change', updateGasDef);
+        }
+        else if(f==='na-option'){
+          el.addEventListener('change',()=>{
+            const s=STATE[k]=STATE[k]||{}; s.naOpt=el.checked;
+            renderStep();                      // 해당없음 전환 → 발취·판정 표시 갱신
+          });
         }
         else if(f==='pd-shield' || f==='pd-openadd'){
           el.addEventListener('change',()=>{
@@ -2844,6 +2871,7 @@
             noOp: it.minTrip?!!it.noOp:undefined,
             tcTol: (it.tcTest||it.seqTest)?(it.tcTol||'rc'):undefined, tcPcts: it.tcTest?tcPcts(it):undefined,
             shield: it.pdPhase?!!st.shield:undefined, openAdd: it.pdPhase?!!st.openAdd:undefined, noGapji: !!it.noGapji,
+            naOpt: it.naOption?!!st.naOpt:undefined,
             periodicOnly: it.periodicOnly?true:undefined,
             // 주회로 저항은 적용된 업체 기준치 세트를 함께 남겨 출력물에 표기한다
             simpleJdg: ((it.tcTest||it.seqTest)&&it.simpleJdg)?true:undefined,
@@ -2896,6 +2924,7 @@
           xml+=`        <Kind>${escXml(it.kind)}</Kind>\n        <Crit>${escXml(it.crit)}</Crit>\n        <Exempt>${escXml(it.exempt)}</Exempt>\n        <NA>${escXml(it.na)}</NA>\n        <Samp>${escXml(it.samp)}</Samp>\n        <Judgement>${escXml(it.jdg)}</Judgement>\n`;
           if(it.noGapji){ xml+=`        <NoGapji>true</NoGapji>\n`; }
           if(it.docOnly){ xml+=`        <DocOnly>true</DocOnly>\n`; }
+          if(it.naOpt!==undefined){ xml+=`        <NaOption>${escXml(it.naOpt)}</NaOption>\n`; }
           if(it.full){ xml+=`        <Full jdg="${escXml(it.full.jdg)}"><BadSerials>${(it.full.badSerials||[]).map(b=>`<Bad>${escXml(b)}</Bad>`).join('')}</BadSerials></Full>\n`; }
           if(it.cert){ xml+=`        <Cert submit="${escXml(it.cert.submit)}" date="${escXml(it.cert.date)}"/>\n`; }
           // 첨부파일(성적서·제출서류)도 저장해야 불러왔을 때 첨부가 유지되고 필수 제출 판정이 살아남음
@@ -2933,6 +2962,8 @@
           const key=iEl.getAttribute('key'), name=iEl.getAttribute('name'), ref=iEl.getAttribute('ref');
           const kind=getTxt(iEl,'Kind'), crit=getTxt(iEl,'Crit'), exempt=getTxt(iEl,'Exempt')==='true', na=getTxt(iEl,'NA')==='true';
           const samp=getTxt(iEl,'Samp'), jdg=getTxt(iEl,'Judgement'), noGapji=getTxt(iEl,'NoGapji')==='true', docOnly=getTxt(iEl,'DocOnly')==='true';
+          const naOptEl=iEl.querySelector('NaOption');
+          const naOpt = naOptEl ? (naOptEl.textContent.trim()==='true') : undefined;
           let full=null, cert=null;
           const fullEl=iEl.querySelector('Full');
           if(fullEl){ full={ jdg:fullEl.getAttribute('jdg')||'', badSerials:Array.from(fullEl.querySelectorAll('BadSerials Bad')).map(b=>b.textContent.trim()) }; }
@@ -2961,7 +2992,7 @@
             snEl.querySelectorAll('Fields Field').forEach(fEl=>{ fields[fEl.getAttribute('name')]=fEl.textContent.trim(); });
             res[sn]={ val: (val!=='' && !isNaN(val)) ? Number(val) : val, jdg:rJdg, fields };
           });
-          items.push({ key, name, ref, crit, kind, samp, exempt, na, full, cert, certFiles, unit, shield, openAdd, simpleJdg, periodic, mcr, noGapji, docOnly, serials, res, jdg });
+          items.push({ key, name, ref, crit, kind, samp, exempt, na, full, cert, certFiles, unit, shield, openAdd, naOpt, simpleJdg, periodic, mcr, noGapji, docOnly, serials, res, jdg });
         });
         results[sKey]={ title:sTitle, overall:getTxt(sEl,'Overall'), remark:getTxt(sEl,'Remark'), items };
       });
@@ -3033,6 +3064,7 @@
       Object.values(q.results||{}).forEach(g=>{ g.items.forEach(it=>{ STATE[it.key]={ serials:it.serials||[], res:it.res||{}, full:it.full||undefined, cert:it.cert||undefined,
         certFiles:it.certFiles||undefined, shield:(it.shield!==undefined?it.shield:undefined),
         openAdd:(it.openAdd!==undefined?it.openAdd:undefined), mcr:it.mcr||undefined,
+        naOpt:(it.naOpt!==undefined?it.naOpt:undefined),
         periodic:it.periodic||undefined }; }); });
       activeStep=0;
     }
@@ -3353,9 +3385,12 @@
       const u = it.unit || '㎛';
       const thr = it.thrV || 60;
       const head = `<tr><th style="width:18%">확인항목</th><th style="width:22%">기준</th>${serials.map(sn => `<th>${sn}</th>`).join('')}</tr>`;
+      const pType = isPTypeVariant(q && q.variant);
       const body = PAINT_ROWS.map(rw => {
         const crit = rw.type === 'num' ? (thr + u + ' 이상') : rw.crit;
+        const na = !!rw.pOnly && !pType;                   // 일반형은 ES-9905-0015 시험 비대상
         return `<tr><td class="item">${rw.lab}</td><td>${crit}</td>${serials.map(sn => {
+          if (na) return '<td>해당없음</td>';
           const v = (((it.res || {})[sn] || {}).fields || {})[rw.k];
           return `<td>${(v === undefined || v === null || v === '') ? '-' : v}</td>`;
         }).join('')}</tr>`;
@@ -4112,11 +4147,14 @@
         ['확인항목', '기준'].forEach((x, i) => { xlsStyle(hr.getCell(i + 1), { bold: true, bg: XLS_COLOR.headerBg }); hr.getCell(i + 1).value = x; });
         serials.forEach((sn, i) => { xlsStyle(hr.getCell(i + 3), { bold: true, bg: XLS_COLOR.headerBg }); hr.getCell(i + 3).value = sn; });
         let rr = 3;
+        const pTypeX = isPTypeVariant(q && q.variant);
         PAINT_ROWS.forEach(rw => {
           const row = ws.getRow(rr);
+          const na = !!rw.pOnly && !pTypeX;                // 일반형은 ES-9905-0015 시험 비대상
           xlsStyle(row.getCell(1), { align: 'left', size: 9.5 }); row.getCell(1).value = rw.lab;
           xlsStyle(row.getCell(2), { size: 9.5 }); row.getCell(2).value = rw.type === 'num' ? (thr + u + ' 이상') : rw.crit;
           serials.forEach((sn, i) => {
+            if (na) { xlsStyle(row.getCell(i + 3), { size: 9.5, color: XLS_COLOR.gray }); row.getCell(i + 3).value = '해당없음'; return; }
             const v = ((it.res[sn] || {}).fields || {})[rw.k];
             const empty = (v === undefined || v === null || v === '');
             xlsStyle(row.getCell(i + 3), Object.assign({ size: 9.5 }, rw.type === 'jdg' && !empty ? xlsJudgeStyle(v) : {}));
