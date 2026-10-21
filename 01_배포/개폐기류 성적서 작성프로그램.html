@@ -766,7 +766,7 @@
         exemptKeys:['imp_wv','av','ai'],
       },
       {
-        id:'POLE', gsNo:'ES-5925-0004', name:'25.8kV 에폭시 주상개폐기(Eco)',
+        id:'POLE', gsNo:'ES-5925-0004', name:'Eco-부하개폐기(가공용)',
         install:'가공', unit:'대', keywords:['에폭시','주상개폐기','부하개폐기','가공','진공','vi','pole'],
         variants:[ {value:'25.8kV 630A 수동 DS 일반선로(126848)',mode:'수동'}, {value:'25.8kV 630A 자동 DS 일반선로(126849)',mode:'자동'},
                    {value:'25.8kV 630A 수동 DS 대용량선로(126906)',mode:'수동'}, {value:'25.8kV 630A 자동 DS 대용량선로(126907)',mode:'자동'} ],
@@ -3035,9 +3035,18 @@
 
     // ===== 저장(XML) =====
     // 저장 파일명 규칙 — 로컬 저장·클라우드 업로드가 같은 이름을 쓰도록 한 곳에서 생성
-    function qirFileName(q){
-      return `${q.inspection_type||'검사'}_${q.maker||''}_${(q.test_dates.start||'').replace(/-/g,'')}_${q.lot_no||''}_${q.spec_id}.xml`;
+    // 출력물 공통 파일명 — 로트번호_자재명_수량_제조사_시험날짜 (XLSX·XML 동일)
+    function fileSafe(s){ return String(s===undefined||s===null?'':s).replace(/[\\/:*?"<>|]/g,'').trim(); }
+    function reportFileBase(q){
+      const qty = Number(q.qty) || ((q.pool_list||[]).length) || 0;
+      const d = (((q.test_dates||{}).start) || fmtToday()).replace(/-/g,'');
+      return [ fileSafe(q.lot_no) || '로트미상',
+               fileSafe(q.material) || '개폐기',
+               qty + '대',
+               fileSafe(q.maker) || '제조사미상',
+               d ].join('_');
     }
+    function qirFileName(q){ return `${reportFileBase(q)}.xml`; }
     // 저장 대상(파일명 + XML + Blob)을 만들어 준다. 로컬 저장과 원격 전송이 이 결과를 공유한다.
     function buildQIRFile(q){
       const xmlStr=qirToXML(q||buildQIR());
@@ -4570,9 +4579,7 @@
         });
       }
 
-      const lotTag = q.lot_no || '발취';
-      const dateTag = (td.start || new Date().toISOString().slice(0, 10)).replace(/-/g, '');
-      const fileName = `${lotTag}_${q.material || '개폐기'}_${pool.length}대_${dateTag}.xlsx`;
+      const fileName = `${reportFileBase(q)}.xlsx`;
       const buf = await wb.xlsx.writeBuffer();
       const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       const url = URL.createObjectURL(blob);
