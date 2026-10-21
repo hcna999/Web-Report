@@ -1878,6 +1878,7 @@
               <input id="sampleInsp" value="${(STATE.__base||{}).insp||''}" placeholder="성명 입력" style="width:90px;padding:4px 6px">
             </div>
             <button class="btn" data-drawall="1">🎲 전체 자동 랜덤 발취</button>
+            <button class="btn secondary" data-printsamp="1">🖨 발취내역 출력</button>
           </div>
         </div>
         <table class="tbl"><thead><tr><th style="width:34%">발취 대상 항목</th><th style="width:12%">발취수량</th><th>발취 제조번호 선택</th></tr></thead>
@@ -1903,6 +1904,7 @@
       host.querySelectorAll('[data-draw]').forEach(b=>b.onclick=()=>{ const k=b.dataset.draw; const it=findItem(k);
         STATE[k]=STATE[k]||{}; STATE[k].serials=draw(sampCount(it)); renderStep(); });
       host.querySelector('[data-drawall]')?.addEventListener('click',()=>{ allSampledItems().forEach(it=>{ STATE[it.key]=STATE[it.key]||{}; STATE[it.key].serials=draw(sampCount(it)); }); renderStep(); });
+      host.querySelector('[data-printsamp]')?.addEventListener('click',()=>printSampling());
       host.querySelectorAll('[data-addsn]').forEach(b=>b.onclick=()=>{ const k=b.dataset.addsn; STATE[k]=STATE[k]||{}; STATE[k].serials=STATE[k].serials||[]; STATE[k].serials.push(''); renderStep(); });
       host.querySelectorAll('[data-del]').forEach(x=>x.onclick=()=>{ const k=x.dataset.del,i=Number(x.dataset.i); STATE[k].serials.splice(i,1); renderStep(); });
       host.querySelectorAll('select[data-sn], input[data-sn]').forEach(inp=>inp.addEventListener('change',()=>{ const k=inp.dataset.sn,i=Number(inp.dataset.i); STATE[k].serials[i]=inp.value.trim(); updateSummary(); buildStepper(); setupKeyboardAccess(); }));
@@ -2620,11 +2622,13 @@
     function itemJudged(it){
       const st=STATE[it.key]||{};
       if(it.full) return (st.full||{}).jdg||'';
-      // 주기시험 전용 항목 — 이번 검수 제출 또는 같은 주기 내 이전 로트 제출이면 양호
+      // 주기시험 전용 항목 — 이번 검수 제출 또는 이전 로트 제출 이력이 기입되면 양호.
+      // '주기 도래'는 다음 검수 때 시험할 때가 됐다는 안내(테두리 경고)일 뿐이므로
+      // 판정을 막지 않는다. 기입이 아예 없을 때만 미판정('')으로 둔다.
       if(it.periodicOnly){
         const ps=st.periodic||{};
         if(ps.done) return '양호';
-        return (ps.prevLot && ps.prevDate && !periodicDue(it)) ? '양호' : '';
+        return (ps.prevLot && ps.prevDate) ? '양호' : '';
       }
       if(it.cert){
         if(it.docOnly) return ((st.certFiles||[]).length>0)?'양호':'';   // 필수 제출 — 파일 첨부로 판정
@@ -4665,6 +4669,56 @@
       }
     }
 
+    // ===== 발취(샘플링) 내역 인쇄 =====
+    // 발취 화면에서 바로 출력해 현장 입회자에게 제시·보관하는 용도.
+    function samplingPrintHTML(){
+      const b=STATE.__base||{}, pList=pool();
+      const fulls=allFullItems(), samps=allSampledItems();
+      const dateStr = (b.sdate&&b.edate&&b.sdate!==b.edate) ? `${b.sdate} ~ ${b.edate}` : (b.sdate||b.edate||'-');
+      const poolTxt = pList.length<=12 ? `전량 (${pList.join(', ')})` : `전량 ${pList.length}대 (제조번호 전체)`;
+      const body=(list,serialTxt)=> list.map((it,i)=>`<tr>
+          <td style="width:7%">${i+1}</td>
+          <td class="item" style="width:38%">${it.name}<div style="font-size:10px;color:#666">${it.ref||''}</div></td>
+          <td style="width:13%">${serialTxt(it).qty}</td>
+          <td class="item">${serialTxt(it).sn}</td></tr>`).join('');
+      const head=`<tr><th>연번</th><th>시험항목</th><th>발취수량</th><th>발취 제조번호</th></tr>`;
+      const sampRows=body(samps, it=>{
+        const sns=((STATE[it.key]||{}).serials||[]).filter(Boolean);
+        return { qty: it.sampNote?it.sampNote:(sampCount(it)+'대'),
+                 sn: sns.length?sns.join(', '):'<span class="bad">미발취</span>' };
+      });
+      const fullRows=body(fulls, ()=>({ qty:'전량', sn:poolTxt }));
+      const sec=(title,rows)=> rows ? `<h2 style="font-size:12.5px;margin:12px 0 4px">${title}</h2>
+        <table class="mx"><thead>${head}</thead><tbody>${rows}</tbody></table>` : '';
+      const now=new Date(), pad=n=>String(n).padStart(2,'0');
+      const stamp=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+      return `<h1>발 취 (샘 플 링) 내 역</h1>
+        <table class="hdr">
+          <tr><td class="lbl">검사로트번호</td><td colspan="3">: ${b.lot||'-'}</td></tr>
+          <tr><td class="lbl">품    명</td><td>: ${CUR.spec.name}</td>
+              <td class="lbl2">제 작 회 사</td><td>: ${b.maker||'-'}</td></tr>
+          <tr><td class="lbl">규    격</td><td>: ${CUR.variant||'-'}</td>
+              <td class="lbl2">시험년월일</td><td>: ${dateStr}</td></tr>
+          <tr><td class="lbl">수    량</td><td>: ${b.qty||0} 대 (제조번호 ${pList.length}개)</td>
+              <td class="lbl2">품 질 등 급</td><td>: ${CUR.grade} (등급 배수 반영)</td></tr>
+        </table>
+        ${sec('■ 발취검사 항목 (검사자 지정 제조번호)', sampRows)}
+        ${sec('■ 전수검사 항목 (전량 · 발취 불필요)', fullRows)}
+        <table class="foot" style="margin-top:14px">
+          <tr><td style="width:50%">발취 입회자 : ${signCell(b.insp, (STATE.__sign||{}).inspector)}</td>
+              <td>시 험 자 : ${b.test||'-'}</td></tr>
+          <tr><td colspan="2" style="font-size:10.5px;color:#555">발취 일시 : ${stamp}</td></tr>
+        </table>`;
+    }
+    function printSampling(){
+      if(!CUR || !CUR.spec){ alert('규격을 먼저 선택하세요.'); return; }
+      const title=`${(STATE.__base||{}).lot||''} 발취(샘플링) 내역`;
+      const w=window.open('','_blank');
+      if(!w){ alert('팝업이 차단되어 인쇄창을 열지 못했습니다. 팝업 차단을 해제해 주세요.'); return; }
+      w.document.write(reportShell(title, samplingPrintHTML()));
+      w.document.close();
+      setTimeout(()=>w.print(), 400);
+    }
     function printReport(q,kind){
       const inner = gapjiHTML(q)+'<div class="pgbreak"></div>'+euljiHTML(q)+attachmentsHTML(q);
       const title = `${q.lot_no||''}${q.material?'_'+q.material:''} 시험성적서`;
