@@ -2337,6 +2337,16 @@
         st.serials.forEach(sn=>{ const r=st.res[sn]=st.res[sn]||{}; if(!r.jdg) r.jdg='양호'; });
       });
     }
+    // ===== 시행 체크(메모용) =====
+    // 하루에 여러 건을 창 여러 개로 동시에 검수할 때 "이 시험을 실제로 했는지"를 표시해 두는 칸.
+    // 판정·합격 여부(itemJudged/stepOverall/finalJudgement)와는 완전히 분리되어 있어
+    // 체크하지 않아도 결과에 영향이 없다.
+    function doneChkTargets(sd){ return visibleItems(sd).filter(it=>!isExempt(it) && !isNA(it)); }
+    function doneChkCount(sd){
+      const list=doneChkTargets(sd);
+      const n=list.filter(it=>!!(STATE[it.key]||{}).doneChk).length;
+      return `${n}/${list.length}`;
+    }
     function renderTestStep(sd){
       syncFullSampleSerials();
       ensureDefaults(sd);
@@ -2361,7 +2371,12 @@
               <input type="date" data-k="${it.key}" data-f="pr-date" value="${ps.prevDate||''}" style="width:140px;padding:3px 6px" ${ps.done?'disabled':''}>
             </span>
           </div>` : '';
+        const chk = !!(STATE[it.key]||{}).doneChk;
         return `<tr${due?' style="outline:2px solid #f59e0b;outline-offset:-2px"':''}>
+          <td style="vertical-align:top">
+            <input type="checkbox" data-k="${it.key}" data-f="donechk" ${chk?'checked':''}
+              title="실제 시험을 시행했는지 표시하는 메모용입니다. 판정·합격 여부에는 전혀 영향이 없습니다."
+              style="width:17px;height:17px;cursor:pointer"></td>
           <td style="text-align:left;vertical-align:top">${it.name}<div class="muted" style="font-size:11px">${it.ref}${it.autoOnly?' · 자동형':''}${it.pOnly?' · 광고물 부착방지(P)형':''}</div></td>
           <td style="vertical-align:top">${effCrit(it)}</td>
           <td style="vertical-align:top">${samp}${pdef?`<div class="muted" style="font-size:10px;margin-top:2px">주기 ${CYCLE_LABEL[pdef.cycle]}</div>`:''}</td>
@@ -2369,9 +2384,10 @@
       }).join('');
       const overall=stepOverall(sd);
       return `<div class="card">
-        <h3>${activeStep+1}) ${sd.title} <span class="badge">${CUR.mode}형 · 등급 ${CUR.grade}</span></h3>
-        <table class="tbl"><thead><tr><th style="width:24%">시험/검사 항목</th><th style="width:22%">판정기준</th><th style="width:10%">발취/주기</th><th style="width:44%">시험결과(제조번호별)</th></tr></thead>
-          <tbody>${rows||'<tr><td colspan=4 class="muted">해당 항목 없음</td></tr>'}</tbody></table>
+        <h3>${activeStep+1}) ${sd.title} <span class="badge">${CUR.mode}형 · 등급 ${CUR.grade}</span>
+          <span id="doneChkCount" class="badge" style="background:#eef4fc;color:#0d47a1" title="시행 체크는 메모용이며 판정에 영향을 주지 않습니다">시행확인 ${doneChkCount(sd)}</span></h3>
+        <table class="tbl"><thead><tr><th style="width:5%" title="시행 여부 메모(판정 무관)">시행</th><th style="width:22%">시험/검사 항목</th><th style="width:20%">판정기준</th><th style="width:9%">발취/주기</th><th style="width:44%">시험결과(제조번호별)</th></tr></thead>
+          <tbody>${rows||'<tr><td colspan=5 class="muted">해당 항목 없음</td></tr>'}</tbody></table>
         <div class="split2" style="margin-top:12px">
           <div class="field"><label>종합 판정(자동)</label><input id="stepOverallInput" value="${overall}" readonly></div>
           <div class="field"><label>비고</label><input data-k="__remark_${sd.key}" data-f="v" value="${(STATE['__remark_'+sd.key]||{}).v||''}"></div>
@@ -2426,6 +2442,15 @@
             }
             renderStep();
           };
+        }
+        else if(f==='donechk'){
+          // 메모용 체크 — 판정 계산에 전혀 쓰이지 않으므로 재렌더 없이 카운터만 갱신한다
+          el.addEventListener('change', ()=>{
+            (STATE[k]=STATE[k]||{}).doneChk = el.checked;
+            const c=$('doneChkCount');
+            if(c) c.textContent='시행확인 '+doneChkCount(sd);
+            saveDraftSoon();
+          });
         }
         else if(f==='pr-done' || f==='pr-lot' || f==='pr-date'){
           const evt = (f==='pr-done')?'change':'input';
@@ -2918,6 +2943,7 @@
         items:orderedItems(sd).map(it=>{ const st=STATE[it.key]||{}; const na=isNA(it);
           return { key:it.key, name:it.name, ref:it.ref, crit:effCrit(it), exempt:isExempt(it), na,
             naText: na?naLabel(it):undefined,
+            doneChk: st.doneChk?true:undefined,     // 시행 체크(메모용) — 판정과 무관
             kind: it.full?'full':it.cert?'cert':it.phaseConn?'phaseConn':it.pdPhase?'pdPhase':it.plating?'plating':it.paintTest?'paintTest':it.minTrip?'minTrip':it.tcTest?'tcTest':it.seqTest?'seqTest':it.resistance?'resistance':(it.thr||it.range)?'measureAuto':it.measureManual?'measureManual':'jdg', certFiles: st.certFiles||[],
             thrV: it.paintTest?pnThrV(it):undefined,
             noOp: it.minTrip?!!it.noOp:undefined,
@@ -2975,6 +3001,7 @@
           xml+=`      <Item key="${escXml(it.key)}" name="${escXml(it.name)}" ref="${escXml(it.ref)}">\n`;
           xml+=`        <Kind>${escXml(it.kind)}</Kind>\n        <Crit>${escXml(it.crit)}</Crit>\n        <Exempt>${escXml(it.exempt)}</Exempt>\n        <NA>${escXml(it.na)}</NA>\n        <Samp>${escXml(it.samp)}</Samp>\n        <Judgement>${escXml(it.jdg)}</Judgement>\n`;
           if(it.naText){ xml+=`        <NaText>${escXml(it.naText)}</NaText>\n`; }
+          if(it.doneChk){ xml+=`        <DoneChk>true</DoneChk>\n`; }
           if(it.noGapji){ xml+=`        <NoGapji>true</NoGapji>\n`; }
           if(it.docOnly){ xml+=`        <DocOnly>true</DocOnly>\n`; }
           if(it.naOpt!==undefined){ xml+=`        <NaOption>${escXml(it.naOpt)}</NaOption>\n`; }
@@ -3016,6 +3043,7 @@
           const kind=getTxt(iEl,'Kind'), crit=getTxt(iEl,'Crit'), exempt=getTxt(iEl,'Exempt')==='true', na=getTxt(iEl,'NA')==='true';
           const samp=getTxt(iEl,'Samp'), jdg=getTxt(iEl,'Judgement'), noGapji=getTxt(iEl,'NoGapji')==='true', docOnly=getTxt(iEl,'DocOnly')==='true';
           const naText=getTxt(iEl,'NaText')||undefined;
+          const doneChk=getTxt(iEl,'DoneChk')==='true'||undefined;
           const naOptEl=iEl.querySelector('NaOption');
           const naOpt = naOptEl ? (naOptEl.textContent.trim()==='true') : undefined;
           let full=null, cert=null;
@@ -3046,7 +3074,7 @@
             snEl.querySelectorAll('Fields Field').forEach(fEl=>{ fields[fEl.getAttribute('name')]=fEl.textContent.trim(); });
             res[sn]={ val: (val!=='' && !isNaN(val)) ? Number(val) : val, jdg:rJdg, fields };
           });
-          items.push({ key, name, ref, crit, kind, samp, exempt, na, naText, full, cert, certFiles, unit, shield, openAdd, naOpt, simpleJdg, periodic, mcr, noGapji, docOnly, serials, res, jdg });
+          items.push({ key, name, ref, crit, kind, samp, exempt, na, naText, doneChk, full, cert, certFiles, unit, shield, openAdd, naOpt, simpleJdg, periodic, mcr, noGapji, docOnly, serials, res, jdg });
         });
         results[sKey]={ title:sTitle, overall:getTxt(sEl,'Overall'), remark:getTxt(sEl,'Remark'), items };
       });
@@ -3127,7 +3155,7 @@
       Object.values(q.results||{}).forEach(g=>{ g.items.forEach(it=>{ STATE[it.key]={ serials:it.serials||[], res:it.res||{}, full:it.full||undefined, cert:it.cert||undefined,
         certFiles:it.certFiles||undefined, shield:(it.shield!==undefined?it.shield:undefined),
         openAdd:(it.openAdd!==undefined?it.openAdd:undefined), mcr:it.mcr||undefined,
-        naOpt:(it.naOpt!==undefined?it.naOpt:undefined),
+        naOpt:(it.naOpt!==undefined?it.naOpt:undefined), doneChk:it.doneChk||undefined,
         periodic:it.periodic||undefined }; }); });
       activeStep=0;
     }
