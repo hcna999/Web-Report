@@ -995,11 +995,20 @@
       return n ? byspec.filter(e=>e.circuits===n) : byspec.filter(e=>!e.circuits);
     }
     function mcrPick(it){
-      const sets=mcrSets(); if(!sets.length) return null;
+      const sets=mcrSets();
       const st=STATE[it.key]||{};
+      if(!sets.length){
+        // 불러온 성적서 — 그 사이 업체명·규격 표기가 바뀌어 기준치를 다시 찾지 못하면
+        // 저장 당시 적용했던 기준치를 그대로 쓴다(편집화면과 출력물이 어긋나지 않게).
+        // 업체·규격을 바꾸면 clearLoadedMcr()로 지워지므로 엉뚱한 기준치가 남지 않는다.
+        const saved=st.mcr;
+        return (saved && saved.vals) ? { sets:[saved], idx:0, set:saved, restored:true } : null;
+      }
       const i=Math.min(Math.max(Number(st.mcrSet)||0,0), sets.length-1);
       return { sets, idx:i, set:sets[i] };
     }
+    // 기본정보에서 업체·규격을 바꾸면 불러온 성적서의 기준치 캐시를 버린다
+    function clearLoadedMcr(){ Object.keys(STATE).forEach(k=>{ if(STATE[k] && STATE[k].mcr) delete STATE[k].mcr; }); }
     // 측정값이 모두 채워지고 전부 기준치 이하이면 양호
     function mcrAuto(it,st,sn){
       const pick=mcrPick(it); if(!pick) return '';
@@ -1794,8 +1803,8 @@
         $('f_mode').value=CUR.mode+'형'+(circuits()?' · '+circuits()+'회로':''); updateSummary();
       };
       ['f_lot','f_qty','f_serials_input','f_sdate','f_edate','f_insp','f_test','f_itype'].forEach(id=>$(id).addEventListener('input',save));
-      $('f_variant').addEventListener('change',save);
-      $('f_maker').addEventListener('change',()=>{ const name=$('f_maker').value; CUR.grade=makerGrade(name,CUR.spec.id);
+      $('f_variant').addEventListener('change',()=>{ clearLoadedMcr(); save(); });
+      $('f_maker').addEventListener('change',()=>{ const name=$('f_maker').value; clearLoadedMcr(); CUR.grade=makerGrade(name,CUR.spec.id);
         CUR.gradeSource=name?(makerHasGrade(name,CUR.spec.id)?'업체 등급표(품목별)':'기본값 B — 등급을 직접 선택하세요'):'기본값'; $('f_grade').value=CUR.grade; updateGradeUI(); save(); });
       $('f_grade').addEventListener('change',()=>{ CUR.grade=$('f_grade').value; CUR.gradeSource='직접수정'; updateGradeUI(); save(); });
       updateGradeUI();
