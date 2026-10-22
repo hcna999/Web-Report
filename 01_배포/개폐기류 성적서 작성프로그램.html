@@ -1628,8 +1628,7 @@
       };
       activeStep=0;
       $('screenMain').style.display='none'; $('screenDetail').style.display='block';
-      $('detailTitle').textContent=spec.name+' 성적서 작성';
-      renderStep(); updateSummary();
+      renderStep(); updateSummary();          // 제목은 updateSummary()가 세팅
     }
 
     // ===== 스텝퍼 =====
@@ -1725,15 +1724,23 @@
     }
 
     // ===== Step0: 기본정보 =====
+    // 불러온 성적서의 값이 현재 목록에 없어도 그대로 유지한다.
+    // (목록에 없으면 브라우저가 첫 항목을 고르고, 칸을 한 번만 건드려도 그 값으로 덮어써진다)
+    function optionsWithSaved(list, saved, placeholder){
+      const opts = (placeholder!==undefined ? [`<option value="">${placeholder}</option>`] : [])
+        .concat(list.map(v=>`<option value="${escapeHtml(v)}" ${saved===v?'selected':''}>${escapeHtml(v)}</option>`));
+      if(saved && list.indexOf(saved)<0)
+        opts.push(`<option value="${escapeHtml(saved)}" selected>${escapeHtml(saved)} (저장값 · 현재 목록에 없음)</option>`);
+      return opts.join('');
+    }
     function renderBasic(){
       const b=STATE.__base||{};
       // 등급 자동 채움 데이터(MAKERS의 g)를 제거했으므로 아래는 항상 기본값 B로 떨어짐(검사자 직접 선택)
       if(b.maker && CUR.gradeSource!=='직접수정'){ CUR.grade=makerGrade(b.maker,CUR.spec.id); CUR.gradeSource=makerHasGrade(b.maker,CUR.spec.id)?'업체 등급표(품목별)':'기본값 B — 등급을 직접 선택하세요'; }
-      const variantOpts=CUR.spec.variants.map(v=>`<option ${b.variant===v.value?'selected':''}>${v.value}</option>`).join('');
+      const variantOpts=optionsWithSaved(CUR.spec.variants.map(v=>v.value), b.variant);
       // 업체별 등급 데이터를 제거했으므로 업체명 뒤에 [등급]을 붙이지 않음
       // (붙이면 전 업체가 일괄 [B]로 표시되어 "모든 업체가 B등급"이라는 잘못된 정보가 됨)
-      const makerOpts=['<option value="">선택하세요</option>'].concat(
-        MAKERS.map(m=>`<option value="${m.name}" ${b.maker===m.name?'selected':''}>${m.name}</option>`)).join('');
+      const makerOpts=optionsWithSaved(MAKERS.map(m=>m.name), b.maker, '선택하세요');
       return `<div class="card">
         <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px">
           <h3 style="margin:0">○ 기본 정보</h3>
@@ -1766,7 +1773,7 @@
           <div class="field"><label>시험자 성명</label><input id="f_test" value="${b.test||''}"></div>
         </div>
         <div class="split2">
-          <div class="field"><label>검사 유형</label><select id="f_itype">${['정기검사','면제검사','재검사'].map(t=>`<option ${b.itype===t?'selected':''}>${t}</option>`).join('')}</select></div>
+          <div class="field"><label>검사 유형</label><select id="f_itype">${optionsWithSaved(['정기검사','면제검사','재검사'], b.itype)}</select></div>
           <div class="field"><label>조작형식(규격 자동판별)</label><input id="f_mode" value="${CUR.mode}형${circuits()?' · '+circuits()+'회로':''}" readonly></div>
         </div>
         <div class="toast" id="gradeInfoBox"></div>
@@ -1781,10 +1788,17 @@
           return;
         }
         STATE.__base = STATE.__base || {};
+        const before = STATE.__base.maker || '';
         if(p.maker) STATE.__base.maker = p.maker;
         if(p.test) STATE.__base.test = p.test;
         if(p.insp) STATE.__base.insp = p.insp;
-        renderStep();
+        // 업체가 바뀌면 등급·주회로 저항 기준치도 그 업체 기준으로 다시 잡아야 한다
+        if(p.maker && p.maker !== before){
+          clearLoadedMcr();
+          CUR.grade = makerGrade(p.maker, CUR.spec.id);
+          CUR.gradeSource = makerHasGrade(p.maker, CUR.spec.id) ? '업체 등급표(품목별)' : '기본값 B — 등급을 직접 선택하세요';
+        }
+        renderStep(); updateSummary();
         alert('📂 저장된 기본정보(제조업체, 시험자, 입회자)를 불러왔습니다!');
       });
       const save=()=>{
@@ -1799,7 +1813,9 @@
         STATE.__base={ lot:$('f_lot').value.trim(), variant:$('f_variant').value, qty,
           maker:$('f_maker').value, serialsInput:sInput, serialList:list, sdate:$('f_sdate').value, edate:$('f_edate').value,
           insp:$('f_insp').value.trim(), test:$('f_test').value.trim(), itype:$('f_itype').value };
-        CUR.variant=$('f_variant').value; CUR.mode=CUR.spec.variants.find(v=>v.value===CUR.variant)?.mode||'수동';
+        CUR.variant=$('f_variant').value;
+        // 목록에 없는(옛 표기) 규격이면 불러온 조작형식을 유지한다 — '수동'으로 바뀌면 자동형 항목이 통째로 사라진다
+        CUR.mode=CUR.spec.variants.find(v=>v.value===CUR.variant)?.mode || CUR.mode || '수동';
         $('f_mode').value=CUR.mode+'형'+(circuits()?' · '+circuits()+'회로':''); updateSummary();
       };
       ['f_lot','f_qty','f_serials_input','f_sdate','f_edate','f_insp','f_test','f_itype'].forEach(id=>$(id).addEventListener('input',save));
@@ -2872,6 +2888,12 @@
     // ===== 요약 =====
     function updateSummary(){
       const b=STATE.__base||{};
+      // 제목도 함께 갱신한다 — XML 불러오기·임시본 복원 경로에서 제목을 세팅하지 않아
+      // 기본 문구('개폐기류 성적서 작성')가 그대로 남아 있던 문제
+      const tEl=$('detailTitle');
+      if(tEl && CUR && CUR.spec){
+        tEl.textContent = CUR.spec.name + ' 성적서 작성' + (b.lot ? ` · ${b.lot}` : '');
+      }
       $('sumLot').textContent=b.lot||'-';
       $('sumMaker').textContent=(b.maker||'-')+(b.maker?` [${CUR.grade}]`:'');
       $('sumSpec').textContent=CUR.variant||'-';
