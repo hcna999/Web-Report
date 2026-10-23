@@ -705,7 +705,7 @@
           { key:'func', title:'동작·기능시험', items:[
             { key:'novolt', name:'무전압 개폐시험', ref:'7.2.6', crit:'검수 10회 이상없음', full:true },
             { key:'mintrip', name:'최소동작전류 시험', ref:'7.2.19', crit:'정정치 ±10%(3상중1상)', unit:'A', minTrip:true, sampFn:S.per(20) },
-            { key:'tc', name:'T-C 특성시험', ref:'7.2.20', crit:'150/300/500/1000%', unit:'ms', tcTest:true, tcTol:'rc', tcPcts:[150,300,500,1000], sampFn:S.per(20) },
+            { key:'tc', name:'T-C 특성시험', ref:'7.2.20', crit:'150/300/500/1000% 요소별 이상없음', unit:'ms', tcTest:true, simpleJdg:true, tcTol:'rc', tcPcts:[150,300,500,1000], sampFn:S.per(20) },
             { key:'ctrl_ac', name:'제어회로 상용주파 내전압', ref:'7.2.21.1', crit:'IEC 62271-111 6.10항', sampFn:S.per(20) },
             { key:'sys', name:'시스템 연결동작 시험', ref:'7.2.22', crit:'6.6항(무전압개폐 3회)', full:true },
           ]},
@@ -721,6 +721,8 @@
             { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.2.26', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
             { key:'steel_t', name:'강판두께 측정', ref:'7.2.26', crit:'외함 2.0㎜↑·베이스 3.0㎜↑', full:true },
             { key:'pt', name:'전압변성장치(PT) 시험', ref:'7.2.30', crit:'본체·케이블 내전압/부분방전', cert:true, cycle:'성적서 대체' },
+            // 주기시험(반기)은 절연유 처내시험이고, 이 항목은 1년 주기 PCB 시험성적서를 첨부한다
+            { key:'oil', name:'절연유 특성시험 · PCB 성적서', ref:'-', crit:'폴리염화비페닐(PCB) 미함유 — PCB 시험성적서(년 1회) 첨부', cert:true, noDate:true, cycle:'년 1회 · PCB 성적서 첨부' },
           ]},
         ],
         exemptKeys:['imp_wv','av','ai'],
@@ -745,7 +747,7 @@
           { key:'func', title:'동작·기능시험', items:[
             { key:'novolt', name:'무전압 개폐시험', ref:'7.2.6', crit:'검수 10회 이상없음', full:true },
             { key:'mintrip', name:'최소동작전류 시험', ref:'7.2.19', crit:'정정치 ±10%(3상중1상·최소/중간/최대)', unit:'A', minTrip:true, sampFn:S.per(10) },
-            { key:'tc', name:'T-C 특성시험', ref:'7.2.20', crit:'150/300/500/1000%', unit:'ms', tcTest:true, tcTol:'rc', tcPcts:[150,300,500,1000], sampFn:S.per(10) },
+            { key:'tc', name:'T-C 특성시험', ref:'7.2.20', crit:'150/300/500/1000% 요소별 이상없음', unit:'ms', tcTest:true, simpleJdg:true, tcTol:'rc', tcPcts:[150,300,500,1000], sampFn:S.per(10) },
             { key:'ctrl_ac', name:'제어회로 상용주파 내전압', ref:'7.2.21.1', crit:'IEC 62271-111 6.10항', sampFn:S.per(10) },
             { key:'sys', name:'시스템 연결동작 시험', ref:'7.2.22', crit:'6.3.4·6.8항(방향성 보호기능 포함)', full:true },
           ]},
@@ -761,6 +763,8 @@
             { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.2.26', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
             { key:'steel_t', name:'강판두께 측정', ref:'7.2.26', crit:'외함 2.0㎜↑·베이스 3.0㎜↑', full:true },
             { key:'pt', name:'전압변성장치(PT) 시험', ref:'7.2.30', crit:'50kV 유도내전압·부분방전 20pC(검수 매50대)', cert:true, cycle:'성적서 대체' },
+            // 주기시험(반기)은 절연유 처내시험이고, 이 항목은 1년 주기 PCB 시험성적서를 첨부한다
+            { key:'oil', name:'절연유 특성시험 · PCB 성적서', ref:'-', crit:'폴리염화비페닐(PCB) 미함유 — PCB 시험성적서(년 1회) 첨부', cert:true, noDate:true, cycle:'년 1회 · PCB 성적서 첨부' },
           ]},
         ],
         exemptKeys:['imp_wv','av','ai'],
@@ -997,6 +1001,9 @@
     function mcrPick(it){
       const sets=mcrSets();
       const st=STATE[it.key]||{};
+      // 불러온 성적서에 담긴 세트가 현재 목록에 없으면(자료 갱신 등) 저장본을 그대로 쓴다
+      if(sets.length && st.mcr && st.mcr.label && !sets.some(e=>e.label===st.mcr.label))
+        return { sets:[st.mcr], idx:0, set:st.mcr, restored:true };
       if(!sets.length){
         // 불러온 성적서 — 그 사이 업체명·규격 표기가 바뀌어 기준치를 다시 찾지 못하면
         // 저장 당시 적용했던 기준치를 그대로 쓴다(편집화면과 출력물이 어긋나지 않게).
@@ -2507,7 +2514,9 @@
             else { s.periodic.prevDate=el.value; renderStep(); }
           });
         }
-        else if(f==='mcr-set'){ el.addEventListener('change',()=>{ STATE[k]=STATE[k]||{}; STATE[k].mcrSet=Number(el.value)||0; renderStep(); }); }
+        else if(f==='mcr-set'){ el.addEventListener('change',()=>{ STATE[k]=STATE[k]||{};
+          STATE[k].mcrSet=Number(el.value)||0; delete STATE[k].mcr;   // 검사자가 직접 고르면 저장본 복원값은 버린다
+          renderStep(); }); }
         else if(f==='cert-submit'){ el.addEventListener('change',()=>{ STATE[k]=STATE[k]||{}; STATE[k].cert=STATE[k].cert||{}; STATE[k].cert.submit=el.value; updateStepCalc(sd); }); }
         else if(f==='cert-date'){ el.addEventListener('change',()=>{ STATE[k]=STATE[k]||{}; STATE[k].cert=STATE[k].cert||{}; STATE[k].cert.date=el.value; updateStepCalc(sd); }); }
         else if(f==='cert-file-btn'){
@@ -3208,6 +3217,15 @@
         openAdd:(it.openAdd!==undefined?it.openAdd:undefined), mcr:it.mcr||undefined,
         naOpt:(it.naOpt!==undefined?it.naOpt:undefined), doneChk:it.doneChk||undefined,
         periodic:it.periodic||undefined }; }); });
+      // 주회로 저항 '기준치 세트'를 저장 당시 고른 것으로 되돌린다.
+      // (세트 번호를 저장하지 않아, 업체에 자동/수동처럼 세트가 여러 개면 언제나
+      //  첫 세트(예: 수동)로 열리던 문제 — 신성산전 등)
+      CUR.spec.steps.forEach(sd=>sd.items.forEach(it=>{
+        if(!it.resistance) return;
+        const st=STATE[it.key]; if(!st || !st.mcr || !st.mcr.label) return;
+        const i=mcrSets().findIndex(e=>e.label===st.mcr.label);
+        if(i>=0){ st.mcrSet=i; delete st.mcr; }   // 현재 자료에서 찾으면 복원값은 불필요
+      }));
       activeStep=0;
     }
     // (메인 화면의 저장 파일(XML) 불러오기 UI는 제거됨 — xmlToQIR/loadQIRObj는 내부 로직에서 계속 사용)
