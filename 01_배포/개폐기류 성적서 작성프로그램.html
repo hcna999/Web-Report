@@ -1662,7 +1662,8 @@
           <button class="btn" data-nav="${Math.min(total-1,activeStep+1)}" ${activeStep===total-1?'disabled':''}>다음 →</button>
         </div>
         ${failBtn}
-        <div class="row" style="gap:8px">
+        <div class="row" style="gap:8px;align-items:center">
+          ${payloadBadge()}
           <button class="btn secondary" data-savexml="1" title="작성 중인 내용을 XML 파일로 저장합니다(사진·첨부 포함)">💾 중간저장(XML)</button>
         </div>
       </div>`;
@@ -2533,20 +2534,24 @@
             STATE[k].certFiles = STATE[k].certFiles || [];
             let count = 0;
             files.forEach(file => {
-              const reader = new FileReader();
-              reader.onload = (evt) => {
+              // 이미지 첨부는 저장 용량을 위해 축소(1800px·JPEG 0.82)한다. PDF 등은 원본 유지.
+              const push = (dataUrl) => {
                 STATE[k].certFiles.push({
                   id: 'file_' + Date.now() + '_' + Math.random().toString(36).substring(2,6),
                   name: file.name,
                   type: file.type,
-                  dataUrl: evt.target.result
+                  dataUrl: dataUrl
                 });
                 count++;
-                if (count === files.length) {
-                  renderStep();
-                }
+                if (count === files.length) renderStep();
               };
-              reader.readAsDataURL(file);
+              if (/^image\//i.test(file.type || '')) {
+                compressImage(file, 1800, 0.82).then(u => push(u || ''));
+              } else {
+                const reader = new FileReader();
+                reader.onload = (evt) => push(evt.target.result);
+                reader.readAsDataURL(file);
+              }
             });
           };
         }
@@ -2784,19 +2789,20 @@
         if(!isNA(it)&&!isExempt(it)&&!it.docOnly&&!it.noGapji) out.push(it.name); }); });
       return [...new Set(out)];
     }
-    // 사진 용량 축소(최대 1280px, JPEG 0.75) — 실패 시 원본 유지
-    function compressImage(file){
+    // 이미지 용량 축소 — 실패 시 원본 유지.
+    // 시험사진은 1280px/0.75, 성적서 스캔 첨부는 글자 가독성을 위해 1800px/0.82.
+    function compressImage(file, MAXPX, QUALITY){
       return new Promise(resolve=>{
         const fr=new FileReader();
         fr.onload=()=>{
           const img=new Image();
           img.onload=()=>{
             try{
-              const MAX=1280; let {width:w,height:h}=img;
+              const MAX=MAXPX||1280; let {width:w,height:h}=img;
               if(w>MAX||h>MAX){ const r=Math.min(MAX/w,MAX/h); w=Math.round(w*r); h=Math.round(h*r); }
               const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
               cv.getContext('2d').drawImage(img,0,0,w,h);
-              resolve(cv.toDataURL('image/jpeg',0.75));
+              resolve(cv.toDataURL('image/jpeg', QUALITY||0.75));
             }catch(e){ resolve(fr.result); }
           };
           img.onerror=()=>resolve(fr.result);
@@ -3183,9 +3189,59 @@
       try{ await window.QIR_UPLOADER(file); return { ok:true }; }
       catch(e){ console.warn('QIR 자동 전송 실패(로컬 저장은 정상):', e); return { ok:false, error:e }; }
     }
+    // ===== 저장 파일 용량 관리 =====
+    // 첨부(공인기관 성적서 스캔·PDF)가 쌓이면 XML·XLSX가 수백 MB가 될 수 있어
+    // 저장 직전에 용량을 확인하고, 무엇이 큰지 알려준다.
+    const MAX_SAVE_MB = 100;
+    function fmtSize(bytes){
+      const mb = bytes/1048576;
+      return mb>=1 ? mb.toFixed(1)+'MB' : Math.max(1,Math.round(bytes/1024))+'KB';
+    }
+    // dataURL 의 실제 바이트 수(base64는 원본의 약 4/3)
+    function dataUrlBytes(u){
+      const i = String(u||'').indexOf(',');
+      return i<0 ? 0 : Math.floor((String(u).length - i - 1) * 3 / 4);
+    }
+    // 첨부·사진을 용량 큰 순으로
+    function payloadBreakdown(){
+      const rows=[];
+      (STATE.__photos||[]).forEach((ph,i)=>{
+        if(ph && ph.src) rows.push({ name:`시험사진 ${i+1}`, bytes:dataUrlBytes(ph.src) });
+      });
+      Object.keys(STATE).forEach(k=>{
+        const st=STATE[k]; if(!st || !Array.isArray(st.certFiles)) return;
+        const it=(CUR&&CUR.spec)?CUR.spec.steps.flatMap(x=>x.items).find(i=>i.key===k):null;
+        st.certFiles.forEach(f=>rows.push({
+          name: ((it&&it.name)||k)+' — '+(f.name||'첨부'), bytes:dataUrlBytes(f.dataUrl) }));
+      });
+      return rows.sort((a,b)=>b.bytes-a.bytes);
+    }
+    function payloadTotal(){ return payloadBreakdown().reduce((a,r)=>a+r.bytes,0); }
+    // 저장 버튼 옆 용량 표시 — 한도에 가까워지면 미리 알 수 있게
+    function payloadBadge(){
+      let b=0; try{ b=payloadTotal(); }catch(e){ return ''; }
+      if(!b) return '';
+      const warn = b >= MAX_SAVE_MB*1048576*0.7;
+      return `<span style="font-size:11px;${warn?'color:#b45309;font-weight:700':'color:var(--muted)'}"
+        title="사진·첨부 합계 — XML·엑셀 저장 용량의 대부분입니다 (한도 ${MAX_SAVE_MB}MB)"
+        >첨부 ${fmtSize(b)}${warn?` / ${MAX_SAVE_MB}MB`:''}</span>`;
+    }
+    // 저장 직전 확인 — 한도를 넘으면 큰 첨부를 알려주고 계속할지 묻는다
+    function checkSaveSize(bytes, kind){
+      if(bytes <= MAX_SAVE_MB*1048576) return true;
+      const top = payloadBreakdown().slice(0,5)
+        .map((r,i)=>`  ${i+1}. ${r.name} — ${fmtSize(r.bytes)}`).join(String.fromCharCode(10));
+      return confirm(
+        `${kind} 파일이 ${fmtSize(bytes)} 로 한도(${MAX_SAVE_MB}MB)를 넘었습니다.`+String.fromCharCode(10)+
+        String.fromCharCode(10)+'용량이 큰 첨부:'+String.fromCharCode(10)+top+String.fromCharCode(10)+
+        String.fromCharCode(10)+
+        '큰 PDF 첨부를 줄이거나 나눠서 저장하는 것을 권합니다.'+String.fromCharCode(10)+
+        '그래도 이대로 저장할까요?');
+    }
     async function saveQIR(){
       const q=buildQIR();
       const file=buildQIRFile(q);
+      if(!checkSaveSize(file.blob.size, 'XML 저장')) return;
       const a=document.createElement('a');
       a.href=URL.createObjectURL(file.blob); a.download=file.name; a.click();
       setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
@@ -4714,6 +4770,7 @@
       const fileName = `${reportFileBase(q)}.xlsx`;
       const buf = await wb.xlsx.writeBuffer();
       const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      if (!checkSaveSize(blob.size, 'XLSX 출력')) return;
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url; a.download = fileName; document.body.appendChild(a); a.click();
