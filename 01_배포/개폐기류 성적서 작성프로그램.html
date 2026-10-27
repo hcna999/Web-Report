@@ -600,6 +600,53 @@
         exemptKeys:['imp_wv','av','ai','seal'],
       },
       {
+        id:'HSSB', gsNo:'GS-5925-0162', name:'25.8kV 고속도다회로차단기(지중용)',
+        install:'지상', unit:'대', keywords:['고속도','다회로','차단기','지중','지상','hssb','고속도다회로차단기','128294','128455'],
+        variants:[ {value:'44-2B-A-125 4회로 2차단형(128294)',mode:'자동',circuits:4}, {value:'44-2B-A-125-P 4회로 2차단형 광고물(128295)',mode:'자동',circuits:4},
+                   {value:'44-3B-A-125 4회로 3차단형(128455)',mode:'자동',circuits:4}, {value:'44-3B-A-125-P 4회로 3차단형 광고물(128456)',mode:'자동',circuits:4},
+                   {value:'33-1B-A-125 3회로 1차단형(128457)',mode:'자동',circuits:3}, {value:'33-1B-A-125-P 3회로 1차단형 광고물(128458)',mode:'자동',circuits:3},
+                   {value:'33-2B-A-125 3회로 2차단형(128459)',mode:'자동',circuits:3}, {value:'33-2B-A-125-P 3회로 2차단형 광고물(128460)',mode:'자동',circuits:3} ],
+        steps:[
+          { key:'appear', title:'외관·구조검사', items:[
+            { key:'ap_body', name:'구조 및 외관검사(차단부)', ref:'7.2.1', crit:'IEC 62271-100 6.1항·5항 만족(외관 전량)', full:true },
+            { key:'ap_sw', name:'구조 및 외관검사(개폐부)', ref:'7.3.1', crit:'5항 만족(외관 전량)', full:true },
+            { key:'ap_ctrl', name:'제어함 구조 및 외관검사', ref:'7.4.8', crit:'5항 만족(외관 전량)', full:true },
+          ]},
+          { key:'insul', title:'절연·부분방전시험', items:[
+            { key:'ac_wv', name:'상용주파 내전압시험(차단부)', ref:'7.2.2.1', crit:'검수 48kV·건조 1분(절연캡 취부·접지 상태)', full:true },
+            { key:'ac_wv_sw', name:'상용주파 내전압시험(개폐부)', ref:'7.3.2.1', crit:'검수 48kV·건조 1분(절연캡 취부·접지 상태)', full:true },
+            { key:'imp_wv', name:'충격파 내전압시험(차단부)', ref:'7.2.2.2', crit:'상간·대지간 125kV · 동상단자간 125kV(1.2×50㎲)', sampFn:S.per(20), exemptSA:true },
+            { key:'imp_wv_sw', name:'충격파 내전압시험(개폐부)', ref:'7.3.2.2', crit:'상간·대지간 125kV · 동상단자간 165kV(1.2×50㎲)', sampFn:S.per(20), exemptSA:true },
+            { key:'pd', name:'부분방전시험(차단부)', ref:'7.2.2.3', crit:'20pC 이하(측정전압 상간 28.4kV · 극간/대지간 16.4kV)', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, sampFn:S.per(20) },
+            { key:'pd_sw', name:'부분방전시험(개폐부)', ref:'7.3.2.3', crit:'20pC 이하(측정전압 상간 28.4kV · 극간/대지간 16.4kV)', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, sampFn:S.per(20) },
+            { key:'mr', name:'주회로 저항측정(차단부)', ref:'7.2.3', crit:'단자쌍별 측정(µΩ, 인정시험 온도상승전 값의 1.2배 이하)', resistance:'underground', sampFn:S.per(20), sampAdd:'무전압개폐시험 시행 후 측정' },
+            { key:'mr_sw', name:'주회로 저항측정(개폐부)', ref:'7.3.3', crit:'단자쌍별 측정(µΩ, 인정시험 온도상승전 값의 1.2배 이하)', resistance:'underground', sampFn:S.per(20), sampAdd:'무전압개폐시험 시행 후 측정' },
+            { key:'ir', name:'절연저항 측정', ref:'7.4.2', crit:'ES-5925-0001 만족', sampFn:S.per(20) },
+            { key:'ctrl_ac', name:'제어회로 상용주파 내전압', ref:'7.4.9', crit:'제어회로 절연 — 개발시험 성적서 대체 가능', sampFn:S.per(20) },
+          ]},
+          { key:'func', title:'동작·기능시험', items:[
+            { key:'novolt', name:'무전압 개폐시험(차단부)', ref:'7.2.16', crit:'검수 10회 이상없음', full:true },
+            { key:'novolt_sw', name:'무전압 개폐시험(개폐부)', ref:'7.3.12', crit:'검수 10회 이상없음', full:true },
+            { key:'sys', name:'시스템 연결동작시험', ref:'7.4.12', crit:'무전압 개폐동작 검수 3회', sampFn:S.per(20) },
+          ]},
+          { key:'meas', title:'계측·기타', items:[
+            { key:'av', name:'전압계측 정밀도 시험', ref:'7.4.13', crit:'ES-5895-0002 만족', sampFn:S.per(20), exemptSA:true },
+            { key:'ai', name:'전류계측 정밀도 시험', ref:'7.4.14', crit:'ES-5895-0002 만족', sampFn:S.per(20), exemptSA:true },
+            { key:'tight', name:'기밀시험(차단부)', ref:'7.2.7', crit:'연누기율 0.5% 이하(72시간 이상, 정격 가스압력)', unit:'%/년', thr:{v:0.5,dir:'le'}, gasLeak:true, sampFn:S.note4_dry },
+            { key:'tight_sw', name:'기밀시험(개폐부)', ref:'7.3.7', crit:'연누기율 0.5% 이하(72시간 이상, 정격 가스압력)', unit:'%/년', thr:{v:0.5,dir:'le'}, gasLeak:true, sampFn:S.note4_dry },
+            { key:'press', name:'압력 시험', ref:'7.4.4', crit:'KS B 6750-3 만족', sampFn:S.note7_dry },
+            { key:'gasvent', name:'가스방출장치 동작시험', ref:'7.4.7', crit:'동작 이상없음(동일 시료를 지그에 부착하여 시행)', sampFn:S.per(100) },
+            { key:'gaspure', name:'가스순도시험', ref:'7.4.18', crit:'IEC 60376 만족 — 공인기관 성적서(1년 이내) 대체 가능', cert:true, cycle:'성적서 대체' },
+            { key:'paint', name:'도장시험', ref:'7.4.17', crit:'두께 60㎛ 이상 · 밀착성(검수 제외)', critP:'광고물 부착방지(P)형 — ES-9905-0015 만족(두께 120㎛ 이상)', unit:'㎛', paintTest:true, thr:{v:60,dir:'ge'}, thrP:{v:120,dir:'ge'}, sampFn:S.note15_dry },
+            { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.4.16', crit:'KS D 3705 / Mill Sheet', cert:true, cycle:'성적서 대체' },
+            { key:'steel_t', name:'강판두께 측정', ref:'7.4.16', crit:'승인도면 기준 만족', sampFn:S.per(20) },
+            { key:'pt', name:'PT 50kV 유도내전압시험', ref:'7.4.19', crit:'50kV 유도내전압(검수 매50대) — PT 제조업체 성적서 대체 가능', cert:true, cycle:'성적서 대체' },
+            { key:'pt_pd', name:'PT 부분방전시험', ref:'7.4.20', crit:'PT 부분방전(검수 매50대) — PT 제조업체 성적서 대체 가능', cert:true, cycle:'성적서 대체' },
+          ]},
+        ],
+        exemptKeys:['imp_wv','imp_wv_sw','av','ai'],
+      },
+      {
         id:'DRYAIR', gsNo:'GS-5925-0157', name:'25.8kV Dry-air 절연 부하개폐기(지중용)',
         install:'지중', unit:'대', keywords:['dry','부하개폐기','지중','드라이에어'],
         variants:[ {value:'3회로 수동형(127432)',mode:'수동',circuits:3}, {value:'3회로 자동형(127433)',mode:'자동',circuits:3},
@@ -773,15 +820,17 @@
         id:'POLE', gsNo:'ES-5925-0004', name:'Eco-부하개폐기(가공용)',
         install:'가공', unit:'대', keywords:['에폭시','주상개폐기','부하개폐기','가공','진공','vi','pole'],
         variants:[ {value:'25.8kV 630A 수동 DS 일반선로(126848)',mode:'수동'}, {value:'25.8kV 630A 자동 DS 일반선로(126849)',mode:'자동'},
-                   {value:'25.8kV 630A 수동 DS 대용량선로(126906)',mode:'수동'}, {value:'25.8kV 630A 자동 DS 대용량선로(126907)',mode:'자동'} ],
+                   {value:'25.8kV 630A 수동 DS 대용량선로(126906)',mode:'수동'}, {value:'25.8kV 630A 자동 DS 대용량선로(126907)',mode:'자동'},
+                   {value:'25.8kV 630A 수동 내염진해 일반선로(128184)',mode:'수동'}, {value:'25.8kV 630A 자동 내염진해 일반선로(128185)',mode:'자동'},
+                   {value:'25.8kV 630A 수동 내염진해 대용량선로(128186)',mode:'수동'}, {value:'25.8kV 630A 자동 내염진해 대용량선로(128187)',mode:'자동'} ],
         steps:[
           { key:'appear', title:'외관·구조검사', items:[
             { key:'ap_body', name:'구조 및 외관검사(본체)', ref:'7.3.1', crit:'5·6항 만족(외관 전량)', full:true },
             { key:'ap_ctrl', name:'제어함 구조 및 외관검사', ref:'7.3.14', crit:'6항 만족(외관 전량)', full:true, autoOnly:true },
           ]},
           { key:'insul', title:'절연·부분방전시험', items:[
-            { key:'ac_wv', name:'상용주파 내전압시험', ref:'7.3.6.1', crit:'극간 66kV · 대지간 60kV · 상간 60kV(건조 1분, 검수 주수생략)', full:true },
-            { key:'imp_wv', name:'충격파 내전압시험', ref:'7.3.6.2', crit:'극간 165kV · 대지간 150kV · 상간 150kV(1.2×50㎲)', sampFn:S.note2_efi, exemptSA:true },
+            { key:'ac_wv', name:'상용주파 내전압시험', ref:'7.3.6.1', crit:'극간 66kV · 대지간 60kV · 상간 60kV(건조 1분, 검수 주수생략)', critSalt:'내염진해형 — 극간 66kV · 대지간 70kV · 상간 70kV(건조 1분, 검수 주수생략)', full:true },
+            { key:'imp_wv', name:'충격파 내전압시험', ref:'7.3.6.2', crit:'극간 165kV · 대지간 150kV · 상간 150kV(1.2×50㎲)', critSalt:'내염진해형 — 극간 165kV · 대지간 170kV · 상간 170kV(1.2×50㎲)', sampFn:S.note2_efi, exemptSA:true },
             { key:'pd', name:'부분방전시험', ref:'7.3.8', crit:'20pC 이하', unit:'pC', thr:{v:20,dir:'le'}, pdPhase:true, sampFn:S.per(20) },
             { key:'mr', name:'주회로 저항측정', ref:'7.3.10', crit:'상별 측정(µΩ)', resistance:'overhead', sampFn:S.note2_efi },
             { key:'seal', name:'본체 밀봉시험', ref:'7.3.11', crit:'IP X8 1h 침수 후 건조내전압 — 극간 66kV · 대지간 60kV · 상간 60kV', sampFn:S.per(50) },
@@ -1047,9 +1096,15 @@
     // 광고물 부착방지 도장(-P) 품목 여부 — 도장 두께 기준과 부착방지 도료 시험 적용 대상
     function isPTypeVariant(v){ v=String(v||''); return /-P(?![A-Za-z0-9])/.test(v)||v.includes('광고물'); }
     function isPType(){ return isPTypeVariant((CUR||{}).variant); }
+    // 내염진해형(해안 염해지역용) — 내전압 기준이 일반형보다 높다
+    function isSaltType(){ return String((CUR||{}).variant||'').includes('내염진해'); }
     // P형에서 기준이 달라지는 항목은 thrP/critP를 우선 적용
     function effThr(it){ return (it.thrP && isPType()) ? it.thrP : it.thr; }
-    function effCrit(it){ return (it.critP && isPType()) ? it.critP : it.crit; }
+    function effCrit(it){
+      if(it.critP && isPType()) return it.critP;
+      if(it.critSalt && isSaltType()) return it.critSalt;
+      return it.crit;
+    }
     // 검사자가 직접 '해당없음'으로 지정할 수 있는 항목(naOption) — 예: 상연결 접속재 일체형
     function naSelected(it){ return it.naOption===true && !!((STATE||{})[it.key]||{}).naOpt; }
     // 처내시험 주기항목 — 취부금구 도금시험(가공, 반기 1회 · 처내시험).
@@ -1538,7 +1593,7 @@
     // ===== 메인 목록 =====
     function renderSpecList(filter=''){
       const host=$('resultList'); host.innerHTML=''; const f=filter.trim().toLowerCase();
-      const ORDER={POLE:0,EPOXY:1,EFI:2,REC:3,DREC:4,PREC:5,EMCB:6,DEMCB:7,DRYAIR:8,AIRPAD:9};
+      const ORDER={POLE:0,EPOXY:1,EFI:2,REC:3,DREC:4,PREC:5,EMCB:6,DEMCB:7,HSSB:8,DRYAIR:9,AIRPAD:10};
       const list=SPECS.filter(s=>!f||s.name.toLowerCase().includes(f)||s.keywords.some(k=>k.includes(f))||s.gsNo.toLowerCase().includes(f)).sort((a,b)=>(ORDER[a.id]??99)-(ORDER[b.id]??99));
       $('resultCount').textContent=list.length+'건';
       if(!selectedSpec && list.length > 0){
