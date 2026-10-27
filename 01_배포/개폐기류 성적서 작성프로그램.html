@@ -1315,7 +1315,12 @@
     const PERIODIC_TESTS = [
       { grp:'가공', key:'steel',     cycle:'년',   note:'공인시험기관 시험성적서 제출' },
       { grp:'가공', key:'plate',     cycle:'반기', note:'처내시험' },
-      { grp:'지중', key:'ap_body',   cycle:'반기', note:'절연유 주입량 · 극간거리(접지부) · 공장시험' },
+      // 구조 및 외관검사의 반기 확인은 GS-5925-0011(에폭시 지상개폐기) 표6 주(15)
+      //   "접지부의 절연성능 확인을 위하여 년 2회, 검수시험시 생산중인 부품에서 임의 발취(1회로분)하여
+      //    하우징에 주입된 절연유의 주입량 및 개방시 극간이격거리를 승인도면과 대조"
+      // 에 근거한다. 에폭시 다회로차단기(0012)·방향성(0141)에는 같은 조항이 없어 제외.
+      { grp:'지중', key:'ap_body',   cycle:'반기', note:'절연유 주입량 · 극간거리(접지부) · 공장시험',
+        specs:['EPOXY','DRYAIR','AIRPAD'] },
       { grp:'지중', key:'coldres',   cycle:'분기', note:'부싱 및 접속재 내한성 · 1회로분(3대) · 처내시험' },
       { grp:'지중', key:'steel',     cycle:'년',   note:'공인시험기관 시험성적서 제출' },
       { grp:'지중', key:'oil',       cycle:'반기', note:'절연유 처내시험 (PCB 성적서는 년 1회 별도 첨부)' },
@@ -1325,7 +1330,9 @@
     function periodicOf(it){
       if(!it || !CUR || !CUR.spec) return null;
       const g=periodicGroup();
-      return PERIODIC_TESTS.find(x=>x.grp===g && x.key===it.key) || null;
+      // specs가 지정된 항목은 해당 규격에서만 주기시험으로 본다(구매규격에 조항이 있는 규격만)
+      return PERIODIC_TESTS.find(x=> x.grp===g && x.key===it.key
+        && (!x.specs || x.specs.indexOf(CUR.spec.id)>=0)) || null;
     }
     // 날짜를 주기 구간 코드로 (예: 2026-05-13 → 분기 2026Q2 / 반기 2026H1 / 년 2026)
     function periodCode(dateStr, cycle){
