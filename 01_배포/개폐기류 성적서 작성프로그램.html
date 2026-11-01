@@ -1041,6 +1041,11 @@
         last.items.push({ key:'partsdoc', name:'핵심부품 등록서 및 사용부품 확인서', ref:'-', crit:'',
           cert:true, docOnly:true, cycle:'필수 제출', noGapji:true });
       }
+      // 품질보증서 — 면제검사일 때만 받는 필수 제출서류(itypeOnly)
+      if(!last.items.some(i=>i.key==='qadoc')){
+        last.items.push({ key:'qadoc', name:'품질보증서', ref:'-', crit:'',
+          cert:true, docOnly:true, cycle:'필수 제출(면제검사)', noGapji:true, itypeOnly:'면제검사' });
+      }
     });
 
     // ===== 상태 =====
@@ -1111,7 +1116,11 @@
     }
     function isAuto(){ return CUR.mode==='자동'; }
     // 자동형 전용 항목은 숨기지 않고 항상 표시하되, 수동형에서는 '해당없음'으로 처리(isNA)
-    function visibleItems(sd){ return sd.items; }
+    // itypeOnly가 지정된 항목(예: 면제검사 전용 품질보증서)은 해당 검사유형일 때만 보인다
+    function visibleItems(sd){
+      const itype=(STATE.__base||{}).itype||'';
+      return sd.items.filter(it=>!it.itypeOnly || it.itypeOnly===itype);
+    }
     // 광고물 부착방지 도장(-P) 품목 여부 — 도장 두께 기준과 부착방지 도료 시험 적용 대상
     function isPTypeVariant(v){ v=String(v||''); return /-P(?![A-Za-z0-9])/.test(v)||v.includes('광고물'); }
     function isPType(){ return isPTypeVariant((CUR||{}).variant); }
