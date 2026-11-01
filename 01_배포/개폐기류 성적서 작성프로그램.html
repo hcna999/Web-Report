@@ -205,6 +205,15 @@
     .stepBtn.active, .step-chip.active {
       background: rgba(125, 211, 252, .14); color: rgba(255, 255, 255, .9); border-color: rgba(125, 211, 252, .3);
     }
+    /* 입력·시행체크가 모두 끝난 시험 스텝 — 다시 들어갈 필요 없음 */
+    .step-chip.done {
+      background: rgba(34, 197, 94, .18); color: #bbf7d0; border-color: rgba(34, 197, 94, .5);
+    }
+    .step-chip.done.bad {
+      background: rgba(239, 68, 68, .16); color: #fecaca; border-color: rgba(239, 68, 68, .5);
+    }
+    .step-chip.done.active { box-shadow: inset 0 0 0 2px rgba(34, 197, 94, .45); }
+    .step-chip.done.bad.active { box-shadow: inset 0 0 0 2px rgba(239, 68, 68, .45); }
 
     .nav-btn {
       font-weight: 700 !important; padding: 10px 20px !important; font-size: 14px !important;
@@ -379,6 +388,12 @@
       background: rgba(37, 99, 235, 0.12);
       color: #1d4ed8;
       border-color: rgba(37, 99, 235, 0.4);
+    }
+    html[data-theme="light"] .step-chip.done {
+      background: #dcfce7; color: #15803d; border-color: #86efac;
+    }
+    html[data-theme="light"] .step-chip.done.bad {
+      background: #fee2e2; color: #b91c1c; border-color: #fca5a5;
     }
     
     .pole-content-wrapper { display: grid; grid-template-columns: 1fr 280px; gap: 16px; }
@@ -1706,11 +1721,28 @@
 
     // ===== 스텝퍼 =====
     function stepTitles(){ return ['기본정보','발취(샘플링)', ...CUR.spec.steps.map(s=>s.title), '시험 사진','최종 확인']; }
+    // 시험 스텝이 '다시 들어갈 필요 없는' 상태인지 —
+    // 대상 항목의 판정이 모두 확정되고(작성중 아님), 시행 체크도 전부 끝난 경우
+    function stepFullyDone(sd){
+      if(!sd || !CUR || !CUR.spec) return false;
+      if(isStepSkipped(sd)) return false;
+      const list = visibleItems(sd).filter(it=>!isExempt(it) && !isNA(it));
+      if(!list.length) return false;
+      if(!list.every(it=>{ const j=itemJudged(it); return j && j!=='작성중'; })) return false;
+      return list.every(it=>!!(STATE[it.key]||{}).doneChk);
+    }
     function buildStepper(){
       const host=$('stepper'); host.innerHTML='';
-      stepTitles().forEach((t,i)=>{ const c=document.createElement('div'); c.className='step-chip'+(i===activeStep?' active':'');
+      const BASE=2, sdList=(CUR&&CUR.spec)?CUR.spec.steps:[];   // 0=기본정보, 1=발취 다음부터 시험 스텝
+      stepTitles().forEach((t,i)=>{ const c=document.createElement('div');
+        const sd=sdList[i-BASE];
+        const done=sd?stepFullyDone(sd):false;
+        c.className='step-chip'+(i===activeStep?' active':'')
+          + (done ? (stepOverall(sd)==='불합격' ? ' done bad' : ' done') : '');
+        if(done) c.title='입력·시행체크 완료 — 다시 확인하지 않아도 됩니다';
         c.dataset.stepindex = i;
-        c.textContent=(i+1)+') '+t; c.onclick=()=>{ activeStep=i; renderStep(); }; host.appendChild(c); });
+        c.textContent=(i+1)+') '+t+(done?' ✓':'');
+        c.onclick=()=>{ activeStep=i; renderStep(); }; host.appendChild(c); });
     }
     function isStepSkipped(sd){
       if(!STATE.__earlyTerminated) return false;
@@ -2569,6 +2601,7 @@
             (STATE[k]=STATE[k]||{}).doneChk = el.checked;
             const c=$('doneChkCount');
             if(c) c.textContent='시행확인 '+doneChkCount(sd);
+            buildStepper();            // 전부 체크되면 스텝 칩 색이 바뀐다
             saveDraftSoon();
           });
         }
