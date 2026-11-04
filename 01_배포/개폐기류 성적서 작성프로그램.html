@@ -778,13 +778,9 @@
             { key:'paint', name:'도장시험', ref:'7.2.29', crit:'두께 60㎛ 이상 · 밀착성·충돌·부착력 이상없음', critP:'광고물 부착방지(P)형 — 두께 120㎛ 이상 · 밀착성·충돌·부착력 이상없음', unit:'㎛', paintTest:true, thr:{v:60,dir:'ge'}, thrP:{v:120,dir:'ge'}, sampFn:S.note15_dry },
             { key:'conn', name:'상연결 접속재 시험', ref:'7.2.16', crit:'절연층 최소두께 12㎜ 이상', phaseConn:true, naOption:true, naOptionLabel:'일체형(접속재 일체 성형) — 해당시험 해당없음', unit:'mm', thr:{v:12,dir:'ge'}, sampFn:S.per(20) },
             { key:'connector', name:'접속재 시험', ref:'7.2.13', crit:'IEEE 386', cert:true, noDate:true, cycle:'성적서 대체' },
-            // 내한성 시험 — 매 검수가 아니라 주기시험(분기 1회)으로만 시행한다
-            { key:'coldres', name:'내한성 시험', ref:'7.2.13', crit:'부싱 및 접속재 내한성 — 주기시험 항목', cert:true, noDate:true, noFile:true, periodicOnly:true, cycle:'분기 1회' },
             { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.2.26', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
             { key:'steel_t', name:'강판두께 측정', ref:'7.2.26', crit:'외함 2.0㎜↑·베이스 3.0㎜↑', full:true },
             { key:'pt', name:'전압변성장치(PT) 시험', ref:'7.2.30', crit:'본체·케이블 내전압/부분방전', cert:true, cycle:'성적서 대체' },
-            // 주기시험(반기)은 절연유 처내시험이고, 이 항목은 1년 주기 PCB 시험성적서를 첨부한다
-            { key:'oil', name:'절연유 특성시험 · PCB 성적서', ref:'-', crit:'폴리염화비페닐(PCB) 미함유 — PCB 시험성적서(년 1회) 첨부', cert:true, noDate:true, cycle:'년 1회 · PCB 성적서 첨부' },
           ]},
         ],
         exemptKeys:['imp_wv','av','ai'],
@@ -820,13 +816,9 @@
             { key:'paint', name:'도장시험', ref:'7.2.29', crit:'두께 60㎛ 이상 · 밀착성·충돌·부착력 이상없음', critP:'광고물 부착방지(P)형 — 두께 120㎛ 이상 · 밀착성·충돌·부착력 이상없음', unit:'㎛', paintTest:true, thr:{v:60,dir:'ge'}, thrP:{v:120,dir:'ge'}, sampFn:S.note15_dry },
             { key:'conn', name:'상연결 접속재 시험', ref:'7.2.16', crit:'절연층 최소두께 12㎜ 이상', phaseConn:true, naOption:true, naOptionLabel:'일체형(접속재 일체 성형) — 해당시험 해당없음', unit:'mm', thr:{v:12,dir:'ge'}, sampFn:S.per(10) },
             { key:'connector', name:'접속재 시험', ref:'7.2.13', crit:'IEEE 386', cert:true, noDate:true, cycle:'성적서 대체' },
-            // 내한성 시험 — 매 검수가 아니라 주기시험(분기 1회)으로만 시행한다
-            { key:'coldres', name:'내한성 시험', ref:'7.2.13', crit:'부싱 및 접속재 내한성 — 주기시험 항목', cert:true, noDate:true, noFile:true, periodicOnly:true, cycle:'분기 1회' },
             { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.2.26', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
             { key:'steel_t', name:'강판두께 측정', ref:'7.2.26', crit:'외함 2.0㎜↑·베이스 3.0㎜↑', full:true },
             { key:'pt', name:'전압변성장치(PT) 시험', ref:'7.2.30', crit:'50kV 유도내전압·부분방전 20pC(검수 매50대)', cert:true, cycle:'성적서 대체' },
-            // 주기시험(반기)은 절연유 처내시험이고, 이 항목은 1년 주기 PCB 시험성적서를 첨부한다
-            { key:'oil', name:'절연유 특성시험 · PCB 성적서', ref:'-', crit:'폴리염화비페닐(PCB) 미함유 — PCB 시험성적서(년 1회) 첨부', cert:true, noDate:true, cycle:'년 1회 · PCB 성적서 첨부' },
           ]},
         ],
         exemptKeys:['imp_wv','av','ai'],
@@ -1141,6 +1133,31 @@
       if(it.critP && isPType()) return it.critP;
       if(it.critSalt && isSaltType()) return it.critSalt;
       return it.crit;
+    }
+    // 파일 첨부 UI — 성적서(cert) 항목과 가스누설 시험 사진에 공용으로 쓴다.
+    // 저장 위치는 STATE[key].certFiles 로 동일해서 기존 업로드·삭제 핸들러가 그대로 동작한다.
+    function fileChips(it){
+      const files=(STATE[it.key]||{}).certFiles||[];
+      if(!files.length) return '<span class="muted" style="font-size:11px">첨부 없음</span>';
+      return files.map((file,idx)=>{
+        const isPdf=file.type && file.type.includes('pdf');
+        const icon=isPdf?'<span class="pdf-ic">📄 PDF</span>':'🖼️ 이미지';
+        const nm=String(file.name||'');
+        return `<div class="cert-file-chip" style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,0.08);padding:3px 8px;border-radius:4px;font-size:11px">
+          ${icon} <span title="${nm}">${nm.length>15?nm.substring(0,12)+'...':nm}</span>
+          <span class="x" data-k="${it.key}" data-f="cert-file-del" data-idx="${idx}" style="cursor:pointer;color:#f87171;font-weight:bold;margin-left:4px">×</span>
+        </div>`;
+      }).join('');
+    }
+    function photoAttachBox(it, label, btnText){
+      return `<div style="margin-top:8px;padding:6px 8px;border:1px dashed var(--line);border-radius:6px">
+        <div class="row" style="gap:8px;align-items:center;flex-wrap:wrap">
+          <span class="muted" style="font-size:11px">${label}</span>
+          <input type="file" accept="image/*,.pdf,application/pdf" multiple id="file_input_${it.key}" data-k="${it.key}" data-f="cert-file-input" style="display:none">
+          <button class="btn mini secondary" data-k="${it.key}" data-f="cert-file-btn">${btnText}</button>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px">${fileChips(it)}</div>
+      </div>`;
     }
     // 검사자가 직접 '해당없음'으로 지정할 수 있는 항목(naOption) — 예: 상연결 접속재 일체형
     function naSelected(it){ return it.naOption===true && !!((STATE||{})[it.key]||{}).naOpt; }
@@ -2240,7 +2257,7 @@
               <td style="font-weight:600">${v!==null?v.toFixed(4):'-'}</td>
               <td><span class="autojdg ${aj==='양호'?'aj-good':aj==='불량'?'aj-bad':'aj-none'}">${aj||'-'}</span></td></tr>`;
           }).join('')}</table>`;
-        return defBox+table;
+        return defBox+table+photoAttachBox(it,'가스누설 시험 사진·성적서 (판정에는 영향 없음)','📷 사진 첨부');
       }
       // 최소동작전류시험 — 정정치 입력 → 허용범위(±10%) 자동 계산 → 측정치와 비교
       if(it.minTrip){
@@ -3729,7 +3746,12 @@
     function certItemsList(q) {
       const out = [];
       Object.values(q.results || {}).forEach(grp => {
-        (grp.items || []).forEach(it => { if (it.kind === 'cert' && !it.na && !it.periodicOnly) out.push(it); });
+        (grp.items || []).forEach(it => {
+          if (it.na) return;
+          if (it.kind === 'cert' && !it.periodicOnly) { out.push(it); return; }
+          // 가스누설 시험처럼 cert가 아니어도 사진을 첨부했으면 별첨으로 함께 낸다
+          if ((it.certFiles || []).length) out.push(it);
+        });
       });
       return out;
     }
@@ -4019,9 +4041,12 @@
             <h1>${it.name}</h1>
             <div style="border:1px solid #000;padding:8px 12px;margin-top:10px;margin-bottom:12px;font-size:9.5pt;background:#f8fafc;display:flex;justify-content:space-between;align-items:center">
               ${it.docOnly ? '<span><b>구분:</b> 필수 제출서류</span>'
-                           : `<span><b>판정기준:</b> ${it.crit || '-'}</span>
-                              <span><b>제출여부:</b> ${(it.cert||{}).submit || '미제출'}</span>
-                              <span><b>제출일자:</b> ${(it.cert||{}).date || '-'}</span>`}
+                : it.kind !== 'cert'
+                  ? `<span><b>판정기준:</b> ${it.crit || '-'}</span>
+                     <span><b>발취:</b> ${it.samp || '-'}</span>`
+                  : `<span><b>판정기준:</b> ${it.crit || '-'}</span>
+                     <span><b>제출여부:</b> ${(it.cert||{}).submit || '미제출'}</span>
+                     <span><b>제출일자:</b> ${(it.cert||{}).date || '-'}</span>`}
             </div>
             <div style="text-align:center;margin-top:40px;color:#888">첨부된 파일이 없습니다.</div>
           </div>`;
@@ -4033,8 +4058,10 @@
             <h1>${it.name}${files.length > 1 ? ` (${fi + 1}/${files.length})` : ''}</h1>
             <div style="border:1px solid #000;padding:8px 12px;margin-top:10px;margin-bottom:12px;font-size:9.5pt;background:#f8fafc;display:flex;justify-content:space-between;align-items:center">
               ${it.docOnly ? '<span><b>구분:</b> 필수 제출서류</span>'
-                           : `<span><b>판정기준:</b> ${it.crit || '-'}</span>
-                              <span><b>제출일자:</b> ${(it.cert||{}).date || '-'}</span>`}
+                : it.kind !== 'cert'
+                  ? `<span><b>판정기준:</b> ${it.crit || '-'}</span>`
+                  : `<span><b>판정기준:</b> ${it.crit || '-'}</span>
+                     <span><b>제출일자:</b> ${(it.cert||{}).date || '-'}</span>`}
               <span><b>파일명:</b> ${file.name}</span>
             </div>
             <div style="text-align:center;margin-top:10px">`;
@@ -4840,6 +4867,10 @@
         ws.getCell(1, 1).value = it.name + (it.crit ? ' [' + it.crit + ']' : '');
         const metaLines = it.docOnly
           ? [ ['구분', '필수 제출서류'],
+              ['첨부파일 수', String(files.length) + '건'] ]
+          : it.kind !== 'cert'
+          ? [ ['판정기준', it.crit || '-'],
+              ['발취', it.samp || '-'],
               ['첨부파일 수', String(files.length) + '건'] ]
           : [ ['판정기준', it.crit || '-'],
               ['제출여부', (it.cert || {}).submit || '미제출'],
