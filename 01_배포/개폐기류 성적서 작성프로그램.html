@@ -1788,6 +1788,7 @@
     // 모든 단계 공통 바인딩(중간저장 버튼) — renderStep 끝에서 호출
     function bindStepCommon(){
       document.querySelectorAll('[data-savexml]').forEach(b=>{ b.onclick=saveQIR; });
+      document.querySelectorAll('[data-shrink]').forEach(b=>{ b.onclick=()=>shrinkAllAttachments(); });
       const host=$('stepHost');
       if(host && !host.dataset.draftBound){
         host.dataset.draftBound='1';
@@ -2663,7 +2664,12 @@
                 if (count === files.length) renderStep();
               };
               if (/^image\//i.test(file.type || '')) {
-                compressImage(file, 1800, 0.82).then(u => push(u || ''));
+                compressImage(file, 1800, 0.82).then(r => {
+                  if (r && !r.ok) alert('※ ' + (file.name || '이미지') +
+                    ' 은(는) 자동 축소에 실패해 원본 크기로 첨부됩니다.' + String.fromCharCode(10) +
+                    '저장 파일이 매우 커질 수 있으니, 가능하면 작은 해상도로 다시 스캔해 첨부해 주세요.');
+                  push((r && r.dataUrl) || '');
+                });
               } else {
                 const reader = new FileReader();
                 reader.onload = (evt) => push(evt.target.result);
@@ -2906,28 +2912,68 @@
         if(!isNA(it)&&!isExempt(it)&&!it.docOnly&&!it.noGapji) out.push(it.name); }); });
       return [...new Set(out)];
     }
-    // 이미지 용량 축소 — 실패 시 원본 유지.
-    // 시험사진은 1280px/0.75, 성적서 스캔 첨부는 글자 가독성을 위해 1800px/0.82.
-    function compressImage(file, MAXPX, QUALITY){
-      return new Promise(resolve=>{
-        const fr=new FileReader();
-        fr.onload=()=>{
-          const img=new Image();
-          img.onload=()=>{
-            try{
-              const MAX=MAXPX||1280; let {width:w,height:h}=img;
-              if(w>MAX||h>MAX){ const r=Math.min(MAX/w,MAX/h); w=Math.round(w*r); h=Math.round(h*r); }
-              const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
-              cv.getContext('2d').drawImage(img,0,0,w,h);
-              resolve(cv.toDataURL('image/jpeg', QUALITY||0.75));
-            }catch(e){ resolve(fr.result); }
-          };
-          img.onerror=()=>resolve(fr.result);
-          img.src=fr.result;
-        };
-        fr.onerror=()=>resolve('');
-        fr.readAsDataURL(file);
-      });
+    // 이미지 축소 — 수천만 화소 스캔본에서도 동작하도록 createImageBitmap(디코딩 단계 축소)을
+    // 우선 쓰고, 실패하면 <img>+canvas로, 그마저 실패하면 원본을 쓰되 ok:false로 알린다.
+    // (예전 구현은 실패 시 조용히 원본을 넣어 4928x6960 스캔 6장이 그대로 저장된 적이 있다)
+    //   반환: { dataUrl, ok }
+    async function compressImage(file, MAXPX, QUALITY){
+      const MAX = MAXPX || 1280, Q = QUALITY || 0.75;
+      const readOrig = () => new Promise(res=>{ const fr=new FileReader();
+        fr.onload=()=>res(fr.result); fr.onerror=()=>res(''); fr.readAsDataURL(file); });
+      const toJpeg = (src,w,h)=>{ const cv=document.createElement('canvas');
+        cv.width=w; cv.height=h; cv.getContext('2d').drawImage(src,0,0,w,h);
+        return cv.toDataURL('image/jpeg', Q); };
+      const fit = (w,h)=>{ if(w<=MAX && h<=MAX) return [w,h];
+        const r=Math.min(MAX/w, MAX/h);
+        return [Math.max(1,Math.round(w*r)), Math.max(1,Math.round(h*r))]; };
+
+      let dim=null;
+      try{
+        dim = await new Promise((res,rej)=>{ const u=URL.createObjectURL(file); const im=new Image();
+          im.onload=()=>{ const d=[im.naturalWidth||im.width, im.naturalHeight||im.height];
+            URL.revokeObjectURL(u); res(d); };
+          im.onerror=()=>{ URL.revokeObjectURL(u); rej(new Error('decode')); };
+          im.src=u; });
+      }catch(e){ console.warn('이미지 크기 확인 실패:', file && file.name, e); }
+
+      if(dim){
+        const [w,h]=fit(dim[0], dim[1]);
+        // 이미 충분히 작으면 그대로 둔다(재인코딩으로 화질만 깎이지 않게)
+        if(w===dim[0] && h===dim[1] && file.size<=700*1024) return { dataUrl: await readOrig(), ok:true };
+        try{
+          if(typeof createImageBitmap==='function'){
+            const bmp=await createImageBitmap(file,{resizeWidth:w, resizeHeight:h, resizeQuality:'high'});
+            const out=toJpeg(bmp,w,h); if(bmp.close) bmp.close();
+            if(out && out.length>100) return { dataUrl:out, ok:true };
+          }
+        }catch(e){ console.warn('createImageBitmap 축소 실패:', file && file.name, e); }
+        try{
+          const u=URL.createObjectURL(file);
+          const out=await new Promise((res,rej)=>{ const im=new Image();
+            im.onload=()=>{ try{ res(toJpeg(im,w,h)); }catch(err){ rej(err); } finally { URL.revokeObjectURL(u); } };
+            im.onerror=()=>{ URL.revokeObjectURL(u); rej(new Error('decode')); };
+            im.src=u; });
+          if(out && out.length>100) return { dataUrl:out, ok:true };
+        }catch(e){ console.warn('이미지 축소 실패 — 원본을 사용합니다:', file && file.name, e); }
+      }
+      return { dataUrl: await readOrig(), ok:false };
+    }
+    // 이미 STATE에 들어 있는 dataURL을 다시 축소 (불러온 성적서·구버전으로 넣은 원본 정리용)
+    async function shrinkDataUrl(dataUrl, MAXPX, QUALITY){
+      const src=String(dataUrl||'');
+      if(!/^data:image\//i.test(src)) return src;              // PDF 등은 그대로
+      const MAX=MAXPX||1280, Q=QUALITY||0.75;
+      try{
+        const im=await new Promise((res,rej)=>{ const x=new Image();
+          x.onload=()=>res(x); x.onerror=()=>rej(new Error('decode')); x.src=src; });
+        let w=im.naturalWidth||im.width, h=im.naturalHeight||im.height;
+        if(w<=MAX && h<=MAX && src.length<=900*1024) return src;
+        if(w>MAX||h>MAX){ const r=Math.min(MAX/w,MAX/h); w=Math.max(1,Math.round(w*r)); h=Math.max(1,Math.round(h*r)); }
+        const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+        cv.getContext('2d').drawImage(im,0,0,w,h);
+        const out=cv.toDataURL('image/jpeg', Q);
+        return (out && out.length < src.length) ? out : src;
+      }catch(e){ console.warn('재축소 실패:', e); return src; }
     }
     function renderPhotos(){
       const photos=ensurePhotos();
@@ -2965,7 +3011,7 @@
       host.querySelectorAll('input[data-phf="file"]').forEach(el=>{
         el.onchange=async e=>{
           const f=e.target.files&&e.target.files[0]; if(!f) return;
-          photos[Number(el.dataset.ph)].src=await compressImage(f);
+          photos[Number(el.dataset.ph)].src=(await compressImage(f)).dataUrl;
           renderStep();
         };
       });
@@ -3334,14 +3380,39 @@
       return rows.sort((a,b)=>b.bytes-a.bytes);
     }
     function payloadTotal(){ return payloadBreakdown().reduce((a,r)=>a+r.bytes,0); }
+    // 이미 들어가 있는 첨부·사진 이미지를 한 번에 다시 축소한다.
+    // (구버전으로 넣었거나 축소에 실패해 원본이 들어간 성적서를 불러와 정리할 때)
+    async function shrinkAllAttachments(){
+      const before=payloadTotal();
+      let n=0;
+      for(const ph of (STATE.__photos||[])){
+        if(!ph || !ph.src) continue;
+        const out=await shrinkDataUrl(ph.src, 1280, 0.75);
+        if(out!==ph.src){ ph.src=out; n++; }
+      }
+      for(const k of Object.keys(STATE)){
+        const st=STATE[k]; if(!st || !Array.isArray(st.certFiles)) continue;
+        for(const f of st.certFiles){
+          const out=await shrinkDataUrl(f.dataUrl, 1800, 0.82);
+          if(out!==f.dataUrl){ f.dataUrl=out; f.type='image/jpeg'; n++; }
+        }
+      }
+      const after=payloadTotal();
+      renderStep();
+      alert(n ? `이미지 ${n}건을 줄였습니다.${String.fromCharCode(10)}첨부 합계 ${fmtSize(before)} → ${fmtSize(after)}`
+              : '더 줄일 이미지가 없습니다. (PDF 첨부는 화질 보존을 위해 줄이지 않습니다)');
+    }
     // 저장 버튼 옆 용량 표시 — 한도에 가까워지면 미리 알 수 있게
     function payloadBadge(){
       let b=0; try{ b=payloadTotal(); }catch(e){ return ''; }
       if(!b) return '';
       const warn = b >= MAX_SAVE_MB*1048576*0.7;
+      const big  = b >= 10*1048576;
       return `<span style="font-size:11px;${warn?'color:#b45309;font-weight:700':'color:var(--muted)'}"
         title="사진·첨부 합계 — XML·엑셀 저장 용량의 대부분입니다 (한도 ${MAX_SAVE_MB}MB)"
-        >첨부 ${fmtSize(b)}${warn?` / ${MAX_SAVE_MB}MB`:''}</span>`;
+        >첨부 ${fmtSize(b)}${warn?` / ${MAX_SAVE_MB}MB`:''}</span>`
+        + (big ? `<button class="btn mini secondary" data-shrink="1"
+             title="첨부·사진 이미지를 다시 축소합니다(PDF는 그대로)">🗜 이미지 줄이기</button>` : '');
     }
     // 저장 직전 확인 — 한도를 넘으면 큰 첨부를 알려주고 계속할지 묻는다
     function checkSaveSize(bytes, kind){
@@ -4140,6 +4211,9 @@
       return out;
     }
     // dataURL 이미지를 시트에 삽입. 이미지가 아니면(PDF 등) false 반환.
+    // 엑셀 표시 상자는 최대 460x300px이라 1600px이면 충분하다.
+    // 원본 그대로 넣으면 스캔 1장에 13MB씩 들어가므로 삽입 직전에 줄인다.
+    async function xlsShrink(dataUrl){ return await shrinkDataUrl(dataUrl, 1600, 0.82); }
     function xlsAddImage(wb, ws, dataUrl, anchor) {
       const m = /^data:image\/(png|jpe?g|gif|bmp|webp);base64,([\s\S]+)$/i.exec(String(dataUrl || '').trim());
       if (!m) return false;
@@ -4178,8 +4252,9 @@
       xlsAutoHeight(cap, [{ text: cap.getCell(1).value, width: 14 + 40 + 16 }], { size: 9.5, min: 18 });
       for (let r = startRow + 1; r <= startRow + 12; r++) ws.getRow(r).height = 20;
       // 첨부 이미지도 같은 상자(460×300) 안에서 원본 비율을 유지해 축소한다.
-      const box = await xlsImgBox(file.dataUrl, 460, 300);
-      return xlsAddImage(wb, ws, file.dataUrl,
+      const small = await xlsShrink(file.dataUrl);
+      const box = await xlsImgBox(small, 460, 300);
+      return xlsAddImage(wb, ws, small,
         { tl: { col: 0.02, row: startRow + 0.02 }, ext: { width: box.w, height: box.h } });
     }
 
@@ -4860,8 +4935,9 @@
             // (ExcelJS는 열 폭을 실제 렌더 폭과 다른 값으로 환산하므로 분수 좌표로는 가운데 정렬이 되지 않는다)
             const cellW = xlsColPx(44), cellH = xlsRowPx(150);
             for (let ci = 0; ci < pair.length; ci++) {
-              const box = await xlsImgBox(pair[ci].dataUrl, cellW - 12, cellH - 10);
-              xlsAddImage(wb, ws, pair[ci].dataUrl,
+              const small = await xlsShrink(pair[ci].dataUrl);
+              const box = await xlsImgBox(small, cellW - 12, cellH - 10);
+              xlsAddImage(wb, ws, small,
                 { tl: { col: ci + 0.02, row: rr - 1 + 0.02 }, ext: { width: box.w, height: box.h } });
             }
             rr++;
