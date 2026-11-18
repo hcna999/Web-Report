@@ -3399,21 +3399,35 @@
     function payloadTotal(){ return payloadBreakdown().reduce((a,r)=>a+r.bytes,0); }
     // 이미 들어가 있는 첨부·사진 이미지를 한 번에 다시 축소한다.
     // (구버전으로 넣었거나 축소에 실패해 원본이 들어간 성적서를 불러와 정리할 때)
-    async function shrinkAllAttachments(){
-      const before=payloadTotal();
+    // STATE 안의 사진·첨부 이미지를 주어진 해상도/품질로 줄인다. 바뀐 건수를 돌려준다.
+    // (사진은 첨부보다 작게 — 첨부는 성적서 스캔이라 글자 가독성이 필요하다)
+    async function shrinkImagesInState(maxPx, quality){
       let n=0;
+      const phPx=Math.min(maxPx, 1280), phQ=Math.max(0.6, quality-0.07);
       for(const ph of (STATE.__photos||[])){
         if(!ph || !ph.src) continue;
-        const out=await shrinkDataUrl(ph.src, 1280, 0.75);
+        const out=await shrinkDataUrl(ph.src, phPx, phQ);
         if(out!==ph.src){ ph.src=out; n++; }
       }
       for(const k of Object.keys(STATE)){
         const st=STATE[k]; if(!st || !Array.isArray(st.certFiles)) continue;
         for(const f of st.certFiles){
-          const out=await shrinkDataUrl(f.dataUrl, 1800, 0.82);
+          const out=await shrinkDataUrl(f.dataUrl, maxPx, quality);
           if(out!==f.dataUrl){ f.dataUrl=out; f.type='image/jpeg'; n++; }
         }
       }
+      return n;
+    }
+    // 한도를 넘을 때 단계적으로 더 줄인다(앞 단계로 충분하면 거기서 멈춘다)
+    const SHRINK_STAGES = [
+      { px:1800, q:0.82 },
+      { px:1400, q:0.78 },
+      { px:1100, q:0.72 },
+      { px:900,  q:0.66 },
+    ];
+    async function shrinkAllAttachments(){
+      const before=payloadTotal();
+      const n=await shrinkImagesInState(1800, 0.82);
       const after=payloadTotal();
       renderStep();
       alert(n ? `이미지 ${n}건을 줄였습니다.${String.fromCharCode(10)}첨부 합계 ${fmtSize(before)} → ${fmtSize(after)}`
@@ -3444,9 +3458,22 @@
         '그래도 이대로 저장할까요?');
     }
     async function saveQIR(){
-      const q=buildQIR();
-      const file=buildQIRFile(q);
-      if(!checkSaveSize(file.blob.size, 'XML 저장')) return;
+      let file=buildQIRFile(buildQIR());
+      // 한도를 넘으면 이미지를 단계적으로 줄여 100MB 아래로 맞춘 뒤 저장한다.
+      // (PDF 첨부는 줄이지 않으므로 PDF만으로 넘칠 때는 종전처럼 확인을 받는다)
+      if(file.blob.size > MAX_SAVE_MB*1048576){
+        const before=file.blob.size; let n=0, fitted=false;
+        for(const stg of SHRINK_STAGES){
+          n += await shrinkImagesInState(stg.px, stg.q);
+          file = buildQIRFile(buildQIR());
+          if(file.blob.size <= MAX_SAVE_MB*1048576){ fitted=true; break; }
+        }
+        try{ renderStep(); }catch(e){}
+        if(fitted){
+          alert(`저장 파일이 ${MAX_SAVE_MB}MB를 넘어 이미지 ${n}건을 자동으로 줄였습니다.`+String.fromCharCode(10)
+            +`${fmtSize(before)} → ${fmtSize(file.blob.size)}`);
+        } else if(!checkSaveSize(file.blob.size, 'XML 저장')) return;
+      }
       const a=document.createElement('a');
       a.href=URL.createObjectURL(file.blob); a.download=file.name; a.click();
       setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
