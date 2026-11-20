@@ -475,10 +475,8 @@
           <h2 style="margin:0;font-size:17px">작성 이어하기</h2>
           <span id="draftNotice" class="muted" style="font-size:11px"></span>
         </div>
+        <div id="draftList" style="margin-bottom:8px"></div>
         <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center">
-          <button class="btn" id="btnResumeDraft" disabled>▶ 이어서 작성</button>
-          <button class="btn secondary" id="btnClearDraft" disabled>🗑️ 임시본 삭제</button>
-          <span style="width:12px"></span>
           <input type="file" id="qirFileInput" accept=".xml,text/xml,application/xml" style="display:none">
           <button class="btn secondary" id="btnLoadQIR">📂 저장파일(XML) 불러오기</button>
           <span class="muted" style="font-size:11px">임시본은 이 브라우저에만 저장되며 사진·첨부파일은 포함되지 않습니다. 사진까지 남기려면 작성 화면의 <b>중간저장(XML)</b>을 쓰세요.</span>
@@ -1502,8 +1500,47 @@
     // ===== 작성 중 자동저장 =====
     // 브라우저에 남기는 임시본. 사진·첨부파일은 용량이 커서(사진 4장만 해도 160KB, PDF 첨부는 MB 단위)
     // localStorage 한도(약 5MB)를 금방 넘기므로 제외한다. 그 둘까지 남기려면 '저장(XML)'을 쓴다.
-    const DRAFT_KEY = "kepco_draft_v1";
+    // 임시본은 탭마다 따로 저장한다. 종전에는 키가 하나뿐이라 창을 여러 개 띄우면
+    // 서로 덮어써서 마지막에 건드린 1건만 남았다.
+    // 탭 번호는 sessionStorage에 두므로 새로고침·탭 해제(메모리 절약) 후에도 그 탭에 남는다.
+    const DRAFT_PREFIX = "kepco_draft_v1";
+    const DRAFT_KEY_LEGACY = "kepco_draft_v1";          // 예전 단일 키 (한 번만 이어받는다)
+    const DRAFT_MAX_AGE_DAYS = 21;                      // 오래된 임시본은 자동 정리
+    const TAB_ID = (function(){
+      try{
+        let t=sessionStorage.getItem('kepco_tab_id');
+        if(!t){ t=Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+                sessionStorage.setItem('kepco_tab_id', t); }
+        return t;
+      }catch(e){ return 'single'; }
+    })();
+    const DRAFT_KEY = DRAFT_PREFIX + '__' + TAB_ID;
     let draftTimer = null;
+    // 저장된 임시본 전체 (최근 순)
+    function listDrafts(){
+      const out=[];
+      try{
+        for(let i=0;i<localStorage.length;i++){
+          const k=localStorage.key(i);
+          if(!k || k.indexOf(DRAFT_PREFIX)!==0) continue;
+          try{
+            const d=JSON.parse(localStorage.getItem(k));
+            if(d && d.specId) out.push(Object.assign({__key:k, __mine:(k===DRAFT_KEY)}, d));
+          }catch(e){}
+        }
+      }catch(e){}
+      out.sort((a,b)=> String(b.at||'').localeCompare(String(a.at||'')));
+      return out;
+    }
+    // 오래된 임시본 정리 — 저장공간이 꽉 차는 것을 막는다
+    function pruneDrafts(){
+      const limit=Date.now()-DRAFT_MAX_AGE_DAYS*86400000;
+      listDrafts().forEach(d=>{
+        if(d.__key===DRAFT_KEY) return;
+        const t=new Date(d.at).getTime();
+        if(isFinite(t) && t<limit){ try{ localStorage.removeItem(d.__key); }catch(e){} }
+      });
+    }
     function draftSnapshot(){
       if(!CUR || !CUR.spec) return null;
       const st={};
@@ -1521,12 +1558,31 @@
     function saveDraft(){
       try{
         const snap=draftSnapshot(); if(!snap) return;
-        localStorage.setItem(DRAFT_KEY, JSON.stringify(snap));
+        try{
+          localStorage.setItem(DRAFT_KEY, JSON.stringify(snap));
+        }catch(e1){
+          // 용량이 차면 내 것이 아닌 오래된 임시본부터 지우고 한 번 더 시도
+          const olds=listDrafts().filter(d=>!d.__mine).reverse();
+          for(const d of olds){
+            try{ localStorage.removeItem(d.__key); }catch(e){}
+            try{ localStorage.setItem(DRAFT_KEY, JSON.stringify(snap)); return; }catch(e){}
+          }
+          throw e1;
+        }
       }catch(e){ console.warn('자동저장 실패(용량 초과 등):', e); }
     }
     function saveDraftSoon(){ clearTimeout(draftTimer); draftTimer=setTimeout(saveDraft, 400); }
-    function getDraft(){ try{ const r=localStorage.getItem(DRAFT_KEY); return r?JSON.parse(r):null; }catch(e){ return null; } }
-    function clearDraft(){ try{ localStorage.removeItem(DRAFT_KEY); }catch(e){} }
+    // 이 탭의 임시본. 없으면 예전 단일 키에 남아 있던 것을 한 번 이어받는다.
+    function getDraft(){
+      try{
+        const r=localStorage.getItem(DRAFT_KEY);
+        if(r) return JSON.parse(r);
+        const old=localStorage.getItem(DRAFT_KEY_LEGACY);
+        if(old){ localStorage.setItem(DRAFT_KEY, old); localStorage.removeItem(DRAFT_KEY_LEGACY); return JSON.parse(old); }
+        return null;
+      }catch(e){ return null; }
+    }
+    function clearDraft(key){ try{ localStorage.removeItem(key||DRAFT_KEY); }catch(e){} }
     function restoreDraft(d){
       const spec=SPECS.find(s=>s.id===d.specId); if(!spec){ alert('저장된 임시본의 규격을 찾을 수 없습니다.'); return false; }
       CUR={ spec, variant:d.variant, mode:d.mode, grade:d.grade||'B', gradeSource:d.gradeSource||'-' };
@@ -1609,29 +1665,50 @@
 
     // ===== 작성 이어하기 UI =====
     function updateDraftUI(){
-      const d=getDraft(); const note=$('draftNotice');
-      const ok=!!(d && d.specId && SPECS.some(s=>s.id===d.specId));
-      if($('btnResumeDraft')) $('btnResumeDraft').disabled=!ok;
-      if($('btnClearDraft')) $('btnClearDraft').disabled=!ok;
+      getDraft();                       // 예전 단일 키 이어받기
+      pruneDrafts();
+      const list=listDrafts().filter(d=>SPECS.some(s=>s.id===d.specId));
+      const note=$('draftNotice'), host=$('draftList');
       if(note){
-        if(!ok){ note.textContent='저장된 임시본 없음'; note.style.color=''; }
-        else {
-          const sp=SPECS.find(s=>s.id===d.specId);
-          const b=(d.state||{}).__base||{};
-          note.textContent=`${sp.name} · 로트 ${b.lot||'-'} · ${draftAgeText(d.at)} 자동저장`;
-          note.style.color='#059669';
-        }
+        note.textContent = list.length ? `임시본 ${list.length}건` : '저장된 임시본 없음';
+        note.style.color = list.length ? '#059669' : '';
       }
-    }
-    function initDraftUI(){
-      $('btnResumeDraft')?.addEventListener('click', ()=>{
-        const d=getDraft(); if(!d) return;
+      if(!host) return;
+      if(!list.length){
+        host.innerHTML='<div class="muted" style="font-size:12px">저장된 임시본이 없습니다.</div>';
+        return;
+      }
+      host.innerHTML = list.map(d=>{
+        const sp=SPECS.find(s=>s.id===d.specId);
+        const b=(d.state||{}).__base||{};
+        const mine=d.__mine?'<span class="badge" style="background:#dcfce7;color:#15803d">이 창</span>':'';
+        return `<div class="row" style="gap:8px;align-items:center;justify-content:space-between;
+             padding:6px 8px;border:1px solid var(--line);border-radius:8px;margin-bottom:5px">
+          <div style="font-size:12px;min-width:0">
+            <b>${sp.name}</b> ${mine}
+            <div class="muted" style="font-size:11px">로트 ${b.lot||'-'} · 수량 ${b.qty||'-'} · ${draftAgeText(d.at)} 자동저장</div>
+          </div>
+          <div class="row" style="gap:6px;flex:none">
+            <button class="btn mini" data-draftopen="${d.__key}">▶ 이어서 작성</button>
+            <button class="btn mini secondary" data-draftdel="${d.__key}">🗑️</button>
+          </div>
+        </div>`;
+      }).join('');
+      host.querySelectorAll('[data-draftopen]').forEach(btn=>btn.onclick=()=>{
+        const d=listDrafts().find(x=>x.__key===btn.dataset.draftopen); if(!d) return;
+        // 다른 탭에서 만든 임시본을 열면 이 탭이 이어받는다(이후 자동저장은 이 탭 칸에)
+        if(d.__key!==DRAFT_KEY){
+          try{ localStorage.setItem(DRAFT_KEY, localStorage.getItem(d.__key));
+               localStorage.removeItem(d.__key); }catch(e){}
+        }
         if(restoreDraft(d)) console.info('임시본 복원:', d.at);
       });
-      $('btnClearDraft')?.addEventListener('click', ()=>{
-        if(!confirm('저장된 임시본을 삭제할까요? 되돌릴 수 없습니다.')) return;
-        clearDraft(); updateDraftUI();
+      host.querySelectorAll('[data-draftdel]').forEach(btn=>btn.onclick=()=>{
+        if(!confirm('이 임시본을 삭제할까요? 되돌릴 수 없습니다.')) return;
+        clearDraft(btn.dataset.draftdel); updateDraftUI();
       });
+    }
+    function initDraftUI(){
       $('btnLoadQIR')?.addEventListener('click', ()=>$('qirFileInput')?.click());
       $('qirFileInput')?.addEventListener('change', e=>{
         const f=e.target.files && e.target.files[0]; if(!f) return;
