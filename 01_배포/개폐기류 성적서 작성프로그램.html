@@ -653,8 +653,8 @@
             { key:'paint', name:'도장시험', ref:'7.4.17', crit:'두께 60㎛ 이상 · 밀착성(검수 제외)', critP:'광고물 부착방지(P)형 — ES-9905-0015 만족(두께 120㎛ 이상)', unit:'㎛', paintTest:true, thr:{v:60,dir:'ge'}, thrP:{v:120,dir:'ge'}, sampFn:S.note15_dry },
             { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.4.16', crit:'KS D 3705 / Mill Sheet', cert:true, cycle:'성적서 대체' },
             { key:'steel_t', name:'강판두께 측정', ref:'7.4.16', crit:'승인도면 기준 만족', sampFn:S.per(20) },
-            { key:'pt', name:'PT 50kV 유도내전압시험', ref:'7.4.19', crit:'50kV 유도내전압(검수 매50대) — PT 제조업체 성적서 대체 가능', cert:true, cycle:'성적서 대체' },
-            { key:'pt_pd', name:'PT 부분방전시험', ref:'7.4.20', crit:'PT 부분방전(검수 매50대) — PT 제조업체 성적서 대체 가능', cert:true, cycle:'성적서 대체' },
+            { key:'pt', name:'PT 50kV 유도내전압시험', ref:'7.4.19', crit:'50kV 유도내전압(검수 매50대) — PT 제조업체 성적서 대체 가능', cert:true, noDate:true, cycle:'성적서 대체' },
+            { key:'pt_pd', name:'PT 부분방전시험', ref:'7.4.20', crit:'PT 부분방전(검수 매50대) — PT 제조업체 성적서 대체 가능', cert:true, noDate:true, cycle:'성적서 대체' },
           ]},
         ],
         exemptKeys:['imp_wv','imp_wv_sw','av','ai'],
@@ -693,7 +693,7 @@
             // 도장시험 — 두께(일반형 60㎛↑ / 광고물 부착방지 P형 120㎛↑)·밀착성·충돌·부착력을 한 항목에서 확인
             { key:'paint', name:'도장시험', ref:'7.2.34', crit:'두께 60㎛ 이상 · 밀착성·충돌·부착력 이상없음', critP:'광고물 부착방지(P)형 — 두께 120㎛ 이상 · 밀착성·충돌·부착력 이상없음', unit:'㎛', paintTest:true, thr:{v:60,dir:'ge'}, thrP:{v:120,dir:'ge'}, sampFn:S.note15_dry },
             { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.2.31', crit:'KS D 3705', cert:true, cycle:'년 1회' },
-            { key:'pt', name:'전압변성장치(PT) 시험', ref:'7.2.20', crit:'IEC 61869-3/PT업체 성적서(검수 매50대)', cert:true, cycle:'성적서 대체', autoOnly:true },
+            { key:'pt', name:'전압변성장치(PT) 시험', ref:'7.2.20', crit:'IEC 61869-3/PT업체 성적서(검수 매50대)', cert:true, noDate:true, cycle:'성적서 대체', autoOnly:true },
             { key:'oring', name:'밀봉재(O-링) 재질시험', ref:'7.2.19', crit:'KS B 2805 3종/4종C(성적서)', cert:true, cycle:'성적서 대체' },
           ]},
         ],
@@ -738,7 +738,7 @@
             // 내한성 시험 — 매 검수가 아니라 주기시험(분기 1회)으로만 시행한다
             { key:'coldres', name:'내한성 시험', ref:'7.2.24', crit:'부싱 및 접속재 내한성 — 주기시험 항목', cert:true, noDate:true, noFile:true, periodicOnly:true, cycle:'분기 1회' },
             { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.2.25', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
-            { key:'pt', name:'전압변성장치(PT) 시험', ref:'7.2.27', crit:'IEC 61869-3/성적서(검수 매50대)', cert:true, cycle:'성적서 대체', autoOnly:true },
+            { key:'pt', name:'전압변성장치(PT) 시험', ref:'7.2.27', crit:'IEC 61869-3/성적서(검수 매50대)', cert:true, noDate:true, cycle:'성적서 대체', autoOnly:true },
             // 주기시험(반기)은 절연유 처내시험이고, 이 항목은 1년 주기 PCB 시험성적서를 첨부한다
             { key:'oil', name:'절연유 특성시험 · PCB 성적서', ref:'7.2.28', crit:'폴리염화비페닐(PCB) 미함유 — PCB 시험성적서(년 1회) 첨부', cert:true, noDate:true, cycle:'년 1회 · PCB 성적서 첨부' },
           ]},
@@ -778,7 +778,7 @@
             { key:'connector', name:'접속재 시험', ref:'7.2.13', crit:'IEEE 386', cert:true, noDate:true, cycle:'성적서 대체' },
             { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.2.26', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
             { key:'steel_t', name:'강판두께 측정', ref:'7.2.26', crit:'외함 2.0㎜↑·베이스 3.0㎜↑', full:true },
-            { key:'pt', name:'전압변성장치(PT) 시험', ref:'7.2.30', crit:'본체·케이블 내전압/부분방전', cert:true, cycle:'성적서 대체' },
+            { key:'pt', name:'전압변성장치(PT) 시험', ref:'7.2.30', crit:'본체·케이블 내전압/부분방전', cert:true, noDate:true, cycle:'성적서 대체' },
           ]},
         ],
         exemptKeys:['imp_wv','av','ai'],
@@ -816,7 +816,7 @@
             { key:'connector', name:'접속재 시험', ref:'7.2.13', crit:'IEEE 386', cert:true, noDate:true, cycle:'성적서 대체' },
             { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.2.26', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'성적서 대체' },
             { key:'steel_t', name:'강판두께 측정', ref:'7.2.26', crit:'외함 2.0㎜↑·베이스 3.0㎜↑', full:true },
-            { key:'pt', name:'전압변성장치(PT) 시험', ref:'7.2.30', crit:'50kV 유도내전압·부분방전 20pC(검수 매50대)', cert:true, cycle:'성적서 대체' },
+            { key:'pt', name:'전압변성장치(PT) 시험', ref:'7.2.30', crit:'50kV 유도내전압·부분방전 20pC(검수 매50대)', cert:true, noDate:true, cycle:'성적서 대체' },
           ]},
         ],
         exemptKeys:['imp_wv','av','ai'],
@@ -893,7 +893,7 @@
             { key:'bushingvolt', name:'부싱단자 전압시험', ref:'7.2.38', crit:'유기전압 50V·누설 0.5mA 이하', sampFn:S.per(10) },
             // 도장시험 — 두께(일반형 60㎛↑ / 광고물 부착방지 P형 120㎛↑)·밀착성·충돌·부착력을 한 항목에서 확인
             { key:'paint', name:'도장시험', ref:'7.2.34', crit:'두께 60㎛ 이상 · 밀착성·충돌·부착력 이상없음', critP:'광고물 부착방지(P)형 — 두께 120㎛ 이상 · 밀착성·충돌·부착력 이상없음', unit:'㎛', paintTest:true, thr:{v:60,dir:'ge'}, thrP:{v:120,dir:'ge'}, sampFn:S.note15_dry },
-            { key:'pt', name:'전압변성장치(PT) 시험', ref:'7.2.20', crit:'IEC 61869-3/원제조사 성적서(검수 매50대)', cert:true, cycle:'성적서 대체' },
+            { key:'pt', name:'전압변성장치(PT) 시험', ref:'7.2.20', crit:'IEC 61869-3/원제조사 성적서(검수 매50대)', cert:true, noDate:true, cycle:'성적서 대체' },
             { key:'oring', name:'밀봉재(O-링) 재질시험', ref:'7.2.19', crit:'KS B 2805 3종/4종C(성적서)', cert:true, cycle:'성적서 대체' },
             { key:'solid', name:'고체절연물 물성시험(에폭시/PC)', ref:'7.2.39', crit:'표5 전항목(원제조사 성적서)', cert:true, cycle:'성적서 대체' },
             { key:'steel', name:'강판 재질시험(기계·화학)', ref:'7.2.31', crit:'KS D 3705/Mill Sheet', cert:true, cycle:'Mill Sheet 대체' },
@@ -3780,15 +3780,27 @@
         </tr>
       </table>`;
     }
-    function gapjiItemVal(it){
+    // 주기시험 시행일 — 갑지(HTML·엑셀)에 함께 표기한다.
+    // '이번 검수 시 제출'이면 이번 검수의 시험일, 아니면 입력한 이전 시행일자.
+    function periodicStamp(it, q){
+      const pr = it && it.periodic; if(!pr) return '';
+      if(pr.done){
+        const d = ((q||{}).test_dates||{}).start || '';
+        return d ? `주기시험 ${d} 시행` : '주기시험 금차 시행';
+      }
+      return pr.prevDate ? `주기시험 ${pr.prevDate}` : '';
+    }
+    function gapjiItemVal(it, q){
       if(it.na) return `<span class="na">${it.naText || '해당없음'}</span>`;
       if(it.exempt) return '<span class="na">시험면제</span>';
+      const ps = periodicStamp(it, q);
+      const psTag = ps ? `<br><span style="font-size:10px;color:#555">(${ps})</span>` : '';
       if(it.kind==='cert'){
         const dt=(it.cert||{}).date?`<br><span style="font-size:10px;color:#555">(${it.cert.date})</span>`:
                   ((it.cert||{}).submit==='미제출'?'<br><span style="color:#c00;font-size:10px">(미제출)</span>':'');
-        return `<span style="font-size:10.5px">공인기관 성적서 대체, 별첨</span>${dt}`;
+        return `<span style="font-size:10.5px">공인기관 성적서 대체, 별첨</span>${dt}${psTag}`;
       }
-      return jbP(it.jdg);
+      return jbP(it.jdg)+psTag;
     }
     function gapjiHTML(q){
       const items=flatItems(q).filter(it=>!it.noGapji);   // 제출서류(핵심부품 등록서 등)는 갑지 제외
@@ -3796,8 +3808,8 @@
       const L=items.slice(0,half), R=items.slice(half);
       const rows=[]; for(let i=0;i<half;i++){
         const l=L[i], r=R[i];
-        const lc = l?`<td class="item">${itemLabel(l)}</td><td class="val">${gapjiItemVal(l)}</td>`:'<td class="item"></td><td class="val"></td>';
-        const rc = r?`<td class="item">${itemLabel(r)}</td><td class="val">${gapjiItemVal(r)}</td>`:'<td class="item"></td><td class="val"></td>';
+        const lc = l?`<td class="item">${itemLabel(l)}</td><td class="val">${gapjiItemVal(l,q)}</td>`:'<td class="item"></td><td class="val"></td>';
+        const rc = r?`<td class="item">${itemLabel(r)}</td><td class="val">${gapjiItemVal(r,q)}</td>`:'<td class="item"></td><td class="val"></td>';
         rows.push(`<tr>${lc}${rc}</tr>`);
       }
       const jdgTxt = (q.final||{}).judgement;
@@ -4482,7 +4494,10 @@
             resVal = '공인기관 성적서 대체, 별첨' + (dt ? ' (' + dt + ')' : '');
           }
           else resVal = it.jdg || '-';
-          allItems.push([it.name + (it.crit ? ' [' + it.crit + ']' : ''), resVal]);
+          const jdgBase = resVal;                       // 글자색 판정은 꼬리말 붙이기 전 값으로
+          const ps = (it.na || it.exempt) ? '' : periodicStamp(it, q);   // 해당없음·시험면제는 표기 안 함(갑지 HTML과 동일)
+          if (ps) resVal = resVal + '\n(' + ps + ')';
+          allItems.push([it.name + (it.crit ? ' [' + it.crit + ']' : ''), resVal, jdgBase]);
         });
       });
       const half = Math.ceil(allItems.length / 2);
@@ -4491,9 +4506,9 @@
         const rItem = allItems[i + half] || ['', ''];
         const row = wsGapji.getRow(r);
         xlsStyle(row.getCell(1), { align: 'left', size: 9.5 }); row.getCell(1).value = l[0];
-        xlsStyle(row.getCell(2), Object.assign({ size: 9.5 }, xlsJudgeStyle(l[1]))); row.getCell(2).value = l[1];
+        xlsStyle(row.getCell(2), Object.assign({ size: 9.5 }, xlsJudgeStyle(l[2] !== undefined ? l[2] : l[1]))); row.getCell(2).value = l[1];
         xlsStyle(row.getCell(3), { align: 'left', size: 9.5 }); row.getCell(3).value = rItem[0];
-        xlsStyle(row.getCell(4), Object.assign({ size: 9.5 }, xlsJudgeStyle(rItem[1]))); row.getCell(4).value = rItem[1];
+        xlsStyle(row.getCell(4), Object.assign({ size: 9.5 }, xlsJudgeStyle(rItem[2] !== undefined ? rItem[2] : rItem[1]))); row.getCell(4).value = rItem[1];
         xlsAutoHeight(row, [
           { text: l[0], width: GAPJI_W[0] }, { text: l[1], width: GAPJI_W[1] },
           { text: rItem[0], width: GAPJI_W[2] }, { text: rItem[1], width: GAPJI_W[3] }
