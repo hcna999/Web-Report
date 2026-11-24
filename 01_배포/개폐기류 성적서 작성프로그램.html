@@ -1210,6 +1210,25 @@
       if(!den||!isFinite(den)) return null;
       return P*31536000*(meas-atm)*Vv*pct/den*100;
     }
+    // 기밀시험 — 입력 즉시 연간누설량·판정을 다시 계산해 화면과 상태에 반영한다.
+    // (다른 측정항목(pd_·pc_·pn_ 등)과 달리 갱신 코드가 없어, 값을 넣어도 표의
+    //  연간누설량·판정이 '-'로 남아 있던 문제를 바로잡는다.)
+    function gasRefresh(it, s, root){
+      if(!it || !s) return;
+      const scope = root || document;
+      (s.serials||[]).forEach(sn=>{
+        const r=(s.res||{})[sn]; if(!r) return;
+        const gv=gasLeakVal(s,sn);
+        r.val = (gv!==null? gv : '');
+        const aj = (gv!==null)? autoVal(it, gv) : '';
+        r.jdg = aj;
+        const vEl=scope.querySelector(`[data-gasval="${it.key}|${sn}"]`);
+        if(vEl) vEl.textContent = (gv!==null? gv.toFixed(4) : '-');
+        const jEl=scope.querySelector(`[data-gasjdg="${it.key}|${sn}"] .autojdg`);
+        if(jEl){ jEl.textContent = aj||'-';
+          jEl.className = 'autojdg '+(aj==='양호'?'aj-good':aj==='불량'?'aj-bad':'aj-none'); }
+      });
+    }
     // 발취 대상 여부(전수·주기제출 제외)
     function isSampled(it){ return !it.full && !it.cert && !it.fullSample; }
     // 전수 발취 항목: 측정은 제조번호별로 하되 대상이 전량이라 발취 화면에서 고르지 않고 자동 배정한다.
@@ -2331,8 +2350,8 @@
               <td><input data-k="${it.key}" data-sn="${sn}" data-fld="gas_atm" value="${f.gas_atm||''}" style="width:68px"></td>
               <td><input data-k="${it.key}" data-sn="${sn}" data-fld="gas_meas" value="${f.gas_meas||''}" style="width:68px"></td>
               <td><input data-k="${it.key}" data-sn="${sn}" data-fld="gas_time" value="${f.gas_time||''}" style="width:68px"></td>
-              <td style="font-weight:600">${v!==null?v.toFixed(4):'-'}</td>
-              <td><span class="autojdg ${aj==='양호'?'aj-good':aj==='불량'?'aj-bad':'aj-none'}">${aj||'-'}</span></td></tr>`;
+              <td style="font-weight:600" data-gasval="${it.key}|${sn}">${v!==null?v.toFixed(4):'-'}</td>
+              <td data-gasjdg="${it.key}|${sn}"><span class="autojdg ${aj==='양호'?'aj-good':aj==='불량'?'aj-bad':'aj-none'}">${aj||'-'}</span></td></tr>`;
           }).join('')}</table>`;
         return defBox+table+photoAttachBox(it,'가스누설 시험 사진·성적서 (판정에는 영향 없음)','📷 사진 첨부');
       }
@@ -2786,7 +2805,8 @@
           const updateGasDef = ()=>{
             STATE[k]=STATE[k]||{}; STATE[k].gasDef=STATE[k].gasDef||{}; STATE[k].gasDef[el.dataset.gk]=el.value;
             const s=STATE[k];
-            (s.serials||[]).forEach(sn=>{ if(s.res&&s.res[sn]){ const gv=gasLeakVal(s,sn); s.res[sn].val=(gv!==null?gv:''); } });
+            const item=(CUR.spec.steps.flatMap(x=>x.items)).find(i=>i.key===k);
+            gasRefresh(item, s, host);                        // 기본값이 바뀌면 전 제조번호 재계산
             updateStepCalc(sd);
           };
           el.addEventListener('input', updateGasDef);
@@ -2820,7 +2840,10 @@
           if(fld==='jdg') s.res[sn].jdg=el.value;
           else if(fld==='__val') s.res[sn].val=el.value;
           else { s.res[sn].fields=s.res[sn].fields||{}; s.res[sn].fields[fld]=el.value;
-            if(fld.indexOf('gas_')===0){ const gv=gasLeakVal(s,sn); s.res[sn].val=(gv!==null?gv:''); }
+            if(fld.indexOf('gas_')===0){                      // 기밀시험: 연간누설량·판정 즉시 갱신
+              const item=(CUR.spec.steps.flatMap(x=>x.items)).find(i=>i.key===k);
+              gasRefresh(item, s, host);
+            }
             if(fld.indexOf('sq_')===0){                       // Sequence: 회차별·재폐로 시간 허용범위 재계산
               const item=(CUR.spec.steps.flatMap(x=>x.items)).find(i=>i.key===k);
               const rule=(item||{}).tcTol||'rc'; const ff=sqFields(s,sn);
